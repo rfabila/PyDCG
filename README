@@ -1,0 +1,26 @@
+===============
+geometricbasics
+===============
+
+Source distribution for the test package of geometricbasic-related modules.
+To install it, run:
+    
+    python setup.py install
+    
+This will copy all the necessary files to the defalut python folder for
+installed packages. To install ina different place, use the --prefix option:
+
+    python setup.py install --prefix=/path/to/installation/folder
+    
+A C++ compiler supporting C++11 is required, since there is an extension in
+the package written in that language.
+
+The name of the package is gbasics_test, the modules it contains at the time
+are: 
+
+- geometricbasicsCpp
+- visualizer2
+- forbidden6
+- line
+
+Please refer to the docs folder for the documentation on each module.
