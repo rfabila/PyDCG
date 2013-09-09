@@ -1,25 +1,8 @@
-#ifndef HOLES_H_
-#define HOLES_H_
+#ifndef HOLESCPP_H_
+#define HOLESCPP_H_
+#include "geometricbasicsCpp.h"
 #include <vector>
 #include <queue>
-
-struct punto
-{
-	long long x, y;
-	int color;
-	punto();
-	punto(long long, long long);
-	punto(long long, long long, int);
-	bool operator==(const punto&) const;
-	bool operator!=(const punto&) const;
-};
-
-struct triangulo
-{
-	punto a, b, c;
-	triangulo();
-	triangulo(punto, punto, punto);
-};
 
 struct puntos_ordenados
 {
@@ -31,12 +14,6 @@ struct puntos_ordenados
 };
 
 //-------------------------------------------------------------
-
-double distance(punto, punto);
-
-std::vector<punto> scale(const std::vector<punto>&, float);
-
-int turn(const punto&, const punto&, const punto&);
 
 void sort_around_point(punto, const std::vector<punto>&, std::vector<punto> &, std::vector<punto> &, bool);
 
@@ -78,7 +55,6 @@ int count_convex_rholes(const std::vector<punto>&, int, bool=false);
 
 std::deque<std::vector<punto> > report_convex_rholes(const std::vector<punto>&, int, bool=false);
 
-//void count_convex_rholes_p(punto, const std::vector<punto>&, int, std::vector<std::vector<int> >&, std::vector<std::vector<int> >&, bool=false);
 void count_convex_rholes_p(punto, const std::vector<punto>&, int, int&, int&, bool=false);
 
 #endif /* HOLES_H_ */

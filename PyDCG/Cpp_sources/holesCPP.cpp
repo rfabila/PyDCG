@@ -10,58 +10,6 @@ using std::vector;
 using std::pair;
 using std::make_pair;
 
-static const short LEFT = -1;
-static const short RIGHT = 1;
-static const short COLLINEAR = 0;
-
-//Definiciones de la clase punto
-
-punto::punto() : x(0), y(0), color(0)
-{}
-
-punto::punto(long long x, long long y) : x(x), y(y), color(0)
-{}
-
-punto::punto(long long x, long long y, int c) : x(x), y(y), color(c)
-{}
-
-bool punto::operator==(const punto& q) const
-{
-	return (x==q.x && y == q.y);
-}
-
-bool punto::operator!=(const punto& q) const
-{
-	return !(*this==q);
-}
-
-//-------------------------------------------------------------
-
-double distance(punto p, punto q)
-{
-	//Returns the distance between two points
-	return sqrt((p.x-q.x)*(p.x-q.x)+(p.y-q.y)*(p.x-q.y));
-}
-
-vector<punto> scale(const vector<punto>& p, float r)
-{
-	//Regresa un arreglo de puntos escalado en r
-	vector<punto> q;
-	for(auto it=p.begin(); it!=p.end(); it++)
-		q.push_back(punto(round((*it).x*r), round((*it).x*r)));
-	return q;
-}
-
-//Definiciones de la clase triángulo
-
-triangulo::triangulo() : a(0,0), b(1,0), c(0,1)
-{}
-
-triangulo::triangulo(punto va, punto vb, punto vc) : a(va), b(vb), c(vc)
-{}
-
-//-------------------------------------------------------------
-
 //Definiciones para puntos_ordenados
 puntos_ordenados::puntos_ordenados() : p(), r(), l() { }
 
@@ -69,18 +17,6 @@ puntos_ordenados::puntos_ordenados(punto p, vector<punto> r, vector<punto> l) : 
 {}
 
 //-------------------------------------------------------------
-
-int turn(const punto& p0, const punto& p1, const punto& p2)
-{
-	//Function to check whether the segments p0p1 and p1p2 make
-	//a LEFT or RIGHT turn at p1 or are COLLINEAR
-	long long t=((p2.x-p0.x)*(p1.y-p0.y))-((p1.x-p0.x)*(p2.y-p0.y));
-	if(t>0)
-		return RIGHT;
-	else if(t<0)
-		return LEFT;
-	return COLLINEAR;
-}
 
 static vector<punto> _default;
 

@@ -1,5 +1,5 @@
 #include <Python.h>
-#include "gbCPP.h"
+#include "holesCPP.h"
 
 using std::vector;
 
