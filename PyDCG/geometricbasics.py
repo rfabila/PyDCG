@@ -1,16 +1,16 @@
 """Implementation of the basic geometric primitives"""
 
-import ctypes
 import pickle
 import random
+import geometricbasicsCpp as gbCpp
+import sys
+import os
 
-point_c=ctypes.c_long*2
-__config_file=open("config/geometricbasics.config","r")
+__config_file=open(os.path.join(os.path.dirname(__file__), "config/geometricbasics.config"), "r")
 __config=pickle.load(__config_file)
 __config_file.close()
 
-lib_geometricbasics=ctypes.CDLL('src/geometricbasics')
-
+sort_around_point_C = gbCpp.sort_around_point
 
 def safe_point_set(pts):
     """True if the it is safe to speed up with the given point set."""
@@ -64,24 +64,6 @@ def __test_sort_around_point_versions(n=100,k=10000000):
         j=j+1
         print j
     return (p,pts)
-    
-def sort_around_point_C(p,points):
-    n=len(points)
-    lib_geometricbasics.sort_around_point.argtypes=[point_c,ctypes.ARRAY(point_c,n),ctypes.c_long]
-    
-    arrpts=point_c*n
-    pts_c=arrpts()
-    for i in range (n):
-        pts_c[i][0]=points[i][0]
-        pts_c[i][1]=points[i][1]
-    
-    p_c=point_c()
-    p_c[0]=p[0]
-    p_c[1]=p[1]
-        
-    lib_geometricbasics.sort_around_point(p_c,pts_c,n)
-    res_pts=[[pts_c[i][0],pts_c[i][1]] for i in range(n)]
-    return res_pts
      
 def sort_around_point(p,points,join=True,speedup=False):
     """Sorts a set of points by angle around

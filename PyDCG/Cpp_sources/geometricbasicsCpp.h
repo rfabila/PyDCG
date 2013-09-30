@@ -7,9 +7,13 @@
 #define BIG_INT __int128_t
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <inttypes.h>
+#include <vector>
+#include <algorithm>
+
+using std::vector;
 
 static const short LEFT = -1;
 static const short RIGHT = 1;
@@ -33,7 +37,18 @@ struct triangulo
 	triangulo(punto, punto, punto);
 };
 
+struct puntos_ordenados
+{
+	punto p;
+	std::vector<punto> r;
+	std::vector<punto> l;
+	puntos_ordenados();
+	puntos_ordenados(punto, std::vector<punto>, std::vector<punto>);
+};
+
 int turn(const punto&, const punto&, const punto&);
+void orderandsplit(const std::vector<punto>&, std::vector<puntos_ordenados>&);
+int general_position(std::vector<punto>&);
 
 int turn(long p0[], long p1[], long p2[]);
 int cmp_points(const void *qp, const void *rp);

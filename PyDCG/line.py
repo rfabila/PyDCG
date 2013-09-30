@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from fractions import *
-import geometricbasicspy
+import geometricbasics
 
 def dual_point_to_line(point):
     l=Line(p=[0,point[1]],q=[1,point[0]+point[1]])
@@ -79,7 +79,7 @@ class Line:
             p=[self.b,0]
             q=[self.b,1]
         
-        inline=geometricbasicspy.turn(p,q,point)
+        inline=geometricbasics.turn(p,q,point)
         return inline
     
     def point_in_self(self,point):
@@ -197,12 +197,12 @@ def ConvexPolygon():
                 boundary_intersections.append(r)
         return boundary_intersections
     
-class ConvexWedge(ConvexPolygon):
-    
-    def poylgon_intersection(pol):
-        """Intersects this wedge with a polygon.
-           This intersections is either None or a polygon"""
-        pass
+#class ConvexWedge(ConvexPolygon):
+#    
+#    def poylgon_intersection(pol):
+#        """Intersects this wedge with a polygon.
+#           This intersections is either None or a polygon"""
+#        pass
                 
             
             

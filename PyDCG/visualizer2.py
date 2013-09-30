@@ -38,7 +38,7 @@ class Vis:
         if pic_button:
             frame=Frame(self.root)
             frame.pack(side=TOP)
-            photocam=PhotoImage(file="icons/camera.gif")
+            photocam=PhotoImage(file=os.path.join(os.path.dirname(__file__), "Icons/camera.gif"))
             picboton=Button(frame,image=photocam,command=self.take_picture)
             picboton.pack(side=LEFT)
             picboton.image = photocam

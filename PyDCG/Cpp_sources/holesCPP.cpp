@@ -10,11 +10,6 @@ using std::vector;
 using std::pair;
 using std::make_pair;
 
-//Definiciones para puntos_ordenados
-puntos_ordenados::puntos_ordenados() : p(), r(), l() { }
-
-puntos_ordenados::puntos_ordenados(punto p, vector<punto> r, vector<punto> l) : p(p), r(r), l(l)
-{}
 
 //-------------------------------------------------------------
 
@@ -85,52 +80,6 @@ void sort_around_point(punto p, const vector<punto>& points, vector<punto>& r,
 		}
 	}
 	_default.clear();
-}
-
-void orderandsplit(const vector<punto>& points, vector<puntos_ordenados> &orderedpoints)
-{
-	/*
-	 * For each p in points, sorts the remaining elements
-	 * that lie to the left and right of p, respectively, ccw.
-	 * The result is stored in orderedpoints.
-	 */
-	vector<punto> l, r;
-	r.reserve(points.size());
-	l.reserve(points.size());
-	for(auto &p : points)
-	{
-		punto p1(p.x, p.y+1);
-
-		for(auto &q : points)
-			if(q!=p)
-			{
-				if(turn(p, p1, q) == RIGHT)
-					r.push_back(q);
-				else if(turn(p, p1, q) == LEFT)
-					l.push_back(q);
-				else if(p.y >= q.y)
-					l.push_back(q);
-				else
-					r.push_back(q);
-			}
-
-		sort(l.begin(), l.end(), [&p](punto r, punto q)->bool{
-			if(turn(p, r, q)<0)
-				return true;
-			return false;
-		});
-
-		sort(r.begin(), r.end(), [&p](punto r, punto q)->bool{
-			if(turn(p, r, q)<0)
-				return true;
-			return false;
-		});
-
-		orderedpoints.emplace_back(p,r,l);
-
-		r.clear();
-		l.clear();
-	}
 }
 
 vector<vector<pair<vector<int>, vector<int> > > > compute_visibility_graph(const vector<puntos_ordenados>& sorted_points)
@@ -252,50 +201,6 @@ vector<pair<vector<int>, vector<int> > > visibility_graph_around_p(punto p, cons
 		vis_graph[i].second.insert(vis_graph[i].second.end(), vis_graph_temp[i].begin(),	vis_graph_temp[i].end());
 
 	return vis_graph;
-}
-
-int slow_generalposition(vector<punto>& pts)
-{
-	/*
-	 * Verifies if the points are in general position. Returns
-	 * the number of collinear subsets of 3 points.
-	 */
-	int col=0;
-
-	for(unsigned int i=0, s=pts.size(); i<s; i++)
-		for(unsigned int j=i+1; j<s; j++)
-			for(unsigned k=j+1; k<s; k++)
-				if(turn(pts[i], pts[j], pts[k]) == COLLINEAR)
-				{
-					printf("(%lld, %lld), (%lld, %lld), (%lld, %lld)\n",
-							pts[i].x, pts[i].y,
-							pts[j].x, pts[j].y,
-							pts[k].x, pts[k].y);
-					col++;
-				}
-
-	return col;
-}
-
-int general_position(vector<punto>& points)
-{
-	vector<puntos_ordenados> ord_points;
-	orderandsplit(points, ord_points);
-	int col=0;
-
-	for(auto& p : ord_points)
-	{
-		punto point(p.p);
-		auto rpoints=p.r;
-
-		for(unsigned int i=0, s=rpoints.size(); s>0 && i<s-1; i++)
-		{
-			vector<punto> temp = {point, rpoints[i], rpoints[i+1]};
-			col+=slow_generalposition(temp);
-		}
-	}
-
-	return col;
 }
 
 /*

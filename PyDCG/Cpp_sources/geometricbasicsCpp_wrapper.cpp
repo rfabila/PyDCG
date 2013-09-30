@@ -1,7 +1,6 @@
 #include <Python.h>
 #include "geometricbasicsCpp.h"
-
-static const long long max_val = (1 << 30);
+#include <iostream>
 
 static const char* turn_doc =
 "turn(p, q, r)\n\
@@ -68,31 +67,81 @@ extern "C" PyObject* turn_wrapper(PyObject* self, PyObject* args)
 }
 
 static const char* sort_around_point_doc =
-"sort_around_point(p, points, n)\n\
-    \n";
+"sort_around_point(p, pts)\n\
+    \n\
+    Sorts the points in `pts` around point `p`.\n\
+    \n\
+    This function counts how many convex `r`-holes are in `points` (the \n\
+    point set may be colored). It is an implementation of the algorithm \n\
+    presented in \"Searching for Empty Convex Polygons\" [1]_\n\
+    \n\
+    Parameters\n\
+    ----------\n\
+    p : list\n\
+        A point is represented as a list of 3 integers: the \n\
+		first two are the coordinates of the point, the third\n\
+        one is the color. The color is optional.\n\
+    pts : list\n\
+        A list containing points, each point in the format described \n\
+		above.\n\
+    \n\
+    Returns\n\
+    -------\n\
+    s_points : list\n\
+        A list with the points in `pts` sorted by angle around `p`\n\
+    \n\
+    Notes\n\
+    -----\n\
+    The coordinates of the points should be less than or equal to :math:`2^{30}` to\n\
+    prevent overflow on the C++ side.\n\
+    \n\
+    Examples\n\
+    --------\n\
+    >>> import geometricbasicsCpp as gb\n\
+    >>> p=[0,0]\n\
+	>>> q=[1,0]\n\
+	>>> p=[1,1]\n\
+    >>> gb.turn(p, q, r)\n\
+    -1\n";
 
 extern "C" PyObject* sort_around_point_wrapper(PyObject* self, PyObject* args)
 {
     //The C function prototype is:
     //void sort_around_point(long p[2], long pts[][2], int n);
-	PyObject* py_p;
 	PyObject* py_pts;
+	PyObject* py_p;
 
 	//The arguments must be: a list representing a point (a list of two or three integers)
-	//A list of points
-	//And an integer
 	if (!PyArg_ParseTuple(args, "O!O!:sort_around_point", &PyList_Type, &py_p, &PyList_Type, &py_pts))
 		return NULL;
 
-	if (PyList_Size(py_p)<2 || PyList_Size(py_pts) < 1)
+	Py_ssize_t pts_size = PyList_Size(py_pts);
+	long (*c_pts)[2] = new long [pts_size] [2];
+	long p[2];
+
+	p[0] = PyInt_AsLong(PyList_GetItem(py_p, 0));
+	p[1] = PyInt_AsLong(PyList_GetItem(py_p, 1));
+
+	for(int i=0; i<pts_size; i++)
 	{
-		PyErr_SetString(PyExc_ValueError, "Wrong number of values representing a point, must be 2 or 3.");
-		return NULL;
+		PyObject* temp = PyList_GetItem(py_pts, i); //Borrowed Reference
+		c_pts[i][0] = PyInt_AsLong(PyList_GetItem(temp, 0)); //Borrowed References
+		c_pts[i][1] = PyInt_AsLong(PyList_GetItem(temp, 1)); //Borrowed References
 	}
 
-	long p[2] = {PyLong_AsLong(PyList_GetItem(py_p, 0)), PyLong_AsLong(PyList_GetItem(py_p, 1))};
+	sort_around_point(p, c_pts, pts_size);
 
-	return Py_BuildValue("i",0);
+	PyObject* res = PyList_New(pts_size);
+
+	for(int i=0; i<pts_size; i++)
+	{
+		PyObject* temp = PyList_New(2); //New Reference
+		PyList_SetItem(temp, 0, PyInt_FromLong(c_pts[i][0])); //Steals Reference
+		PyList_SetItem(temp, 1, PyInt_FromLong(c_pts[i][1]));
+		PyList_SetItem(res, i, temp);
+	}
+
+	return res;
 }
 
 extern "C" PyMethodDef geometricbasicsCppMethods[] =

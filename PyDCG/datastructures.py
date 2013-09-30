@@ -9,7 +9,7 @@ def count_list_elements(list):
     """O(n) function to count the
        number of elements of a list"""
     total=0
-    while  not list.empty:
+    while not list.empty:
         total=total+1
         list=list.cdr
     return total

@@ -3,6 +3,9 @@
 
 using std::vector;
 
+#include <iostream>
+using std::cout;
+
 static const long long max_val = (1 << 30);
 
 static const char* count_convex_rholes_doc =
@@ -47,7 +50,7 @@ static const char* count_convex_rholes_doc =
     >>> holes.count_convex_rholes(points, 4, True)\n\
     1\n";
 
-extern "C" PyObject* count_convex_rholes(PyObject* self, PyObject* args)
+extern "C" PyObject* count_convex_rholes_wrapper(PyObject* self, PyObject* args)
 {
     //The C++ function prototype is: int count_convex_rholes(const std::vector<punto>&, int, bool=false);
     PyObject* py_pts;
@@ -139,7 +142,7 @@ static const char* count_convex_rholes_p_doc =
     prevent overflow on the C++ side. The point `p` must not be included\n\
     in points.";
 
-extern "C" PyObject* count_convex_rholes_p(PyObject* self, PyObject* args)
+extern "C" PyObject* count_convex_rholes_p_wrapper(PyObject* self, PyObject* args)
 {
     //The C++ function prototype is:
     //void count_convex_rholes_p(punto, const std::vector<punto>&, int, int&, int&, bool=false);
@@ -246,7 +249,7 @@ static const char* report_convex_rholes_doc =
     The coordinates of the points should be less than or equal to 2^30 to\n\
     prevent overflow on the C++ side.";
 
-extern "C" PyObject* report_convex_rholes(PyObject* self, PyObject* args)
+extern "C" PyObject* report_convex_rholes_wrapper(PyObject* self, PyObject* args)
 {
     //The C++ function prototype is:
     //std::deque<std::vector<punto> > report_convex_rholes(const std::vector<punto>&, int, bool=false);
@@ -336,7 +339,7 @@ extern "C" PyObject* report_convex_rholes(PyObject* self, PyObject* args)
     return py_res;
 }
 
-extern "C" PyObject* countEmptyTriangs(PyObject* self, PyObject* args)
+extern "C" PyObject* countEmptyTriangs_wrapper(PyObject* self, PyObject* args)
 {
     PyObject* py_pts;
 
@@ -367,10 +370,11 @@ extern "C" PyObject* countEmptyTriangs(PyObject* self, PyObject* args)
         //Se debería checar si no hubo exepción
         pts.emplace_back(x, y, color);
     }
+
     return Py_BuildValue("i", countEmptyTriangs(pts));
 }
 
-extern "C" PyObject* count_empty_triangles_p(PyObject* self, PyObject* args)
+extern "C" PyObject* count_empty_triangles_p_wrapper(PyObject* self, PyObject* args)
 {
     PyObject* py_pts;
     PyObject* py_p;
@@ -423,7 +427,7 @@ extern "C" PyObject* count_empty_triangles_p(PyObject* self, PyObject* args)
     return Py_BuildValue("ii", A, B);
 }
 
-extern "C" PyObject* general_position(PyObject* self, PyObject* args)
+extern "C" PyObject* general_position_wrapper(PyObject* self, PyObject* args)
 {
     //The C++ function prototype is: general_position(vector<punto>& points)
     PyObject* py_points;
@@ -472,14 +476,14 @@ extern "C" PyObject* general_position(PyObject* self, PyObject* args)
 
 extern "C" PyMethodDef holesCppMethods[] =
 {
-    {"count_convex_rholes", count_convex_rholes, METH_VARARGS, count_convex_rholes_doc},
-    {"count_convex_rholes_p", count_convex_rholes_p, METH_VARARGS, count_convex_rholes_p_doc},
-    {"report_convex_rholes", report_convex_rholes, METH_VARARGS, report_convex_rholes_doc},
-    {"countEmptyTriangs", countEmptyTriangs, METH_VARARGS,
+    {"count_convex_rholes", count_convex_rholes_wrapper, METH_VARARGS, count_convex_rholes_doc},
+    {"count_convex_rholes_p", count_convex_rholes_p_wrapper, METH_VARARGS, count_convex_rholes_p_doc},
+    {"report_convex_rholes", report_convex_rholes_wrapper, METH_VARARGS, report_convex_rholes_doc},
+    {"countEmptyTriangs", countEmptyTriangs_wrapper, METH_VARARGS,
         "Counts the number of empty triangles in points."},
-    {"count_empty_triangles_p", count_empty_triangles_p, METH_VARARGS,
+    {"count_empty_triangles_p", count_empty_triangles_p_wrapper, METH_VARARGS,
         "Returns (A_p, B_p), the number of empty triangles with p as a vertex and the number of triangles with only p inside. points must not contain p."},
-    {"general_position", general_position, METH_VARARGS, "Verify if a point set is in general position"},
+    {"general_position", general_position_wrapper, METH_VARARGS, "Verify if a point set is in general position"},
     {NULL, NULL, 0, NULL}
 };
 

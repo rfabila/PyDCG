@@ -1,3 +1,1 @@
 recursive-include PyDCG/docs *
-include PyDCG/Cpp_sources/holesCPP.h
-include PyDCG/C_sources/geometricbasicsC.h

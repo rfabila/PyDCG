@@ -1,9 +1,9 @@
 #include "count_crossing.h"
 #include "geometricbasicsCpp.h"
 
-long pivote[2];
-
 void sort_points(long p[2], void *pts, int length) {
+	long pivote[2]; //Moví este arreglo aquí porque causaba conflictos con un arreglo
+					//con el mismo nombre en geometricbasics. - Carlos
 	pivote[0] = p[0];
 	pivote[1] = p[1];
 	qsort(pts, length, 2 * sizeof(long), cmp_points);

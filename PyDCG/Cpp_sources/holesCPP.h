@@ -4,28 +4,17 @@
 #include <vector>
 #include <queue>
 
-struct puntos_ordenados
-{
-	punto p;
-	std::vector<punto> r;
-	std::vector<punto> l;
-	puntos_ordenados();
-	puntos_ordenados(punto, std::vector<punto>, std::vector<punto>);
-};
+
 
 //-------------------------------------------------------------
 
 void sort_around_point(punto, const std::vector<punto>&, std::vector<punto> &, std::vector<punto> &, bool);
-
-void orderandsplit(const std::vector<punto>&, std::vector<puntos_ordenados>&);
 
 std::vector<std::vector<std::pair<std::vector<int>, std::vector<int> > > > compute_visibility_graph(const std::vector<puntos_ordenados>&);
 
 std::vector<std::pair<std::vector<int>, std::vector<int> > > visibility_graph_around_p(punto, const std::vector<punto>&, bool debug=false);
 
 int slow_generalposition(std::vector<punto>&);
-
-int general_position(std::vector<punto>&);
 
 //-------------------------------------------------------------
 
