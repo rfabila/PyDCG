@@ -1,0 +1,295 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Datastructures module &mdash; PyDCG 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyDCG 0.0.1 documentation" href="index.html" />
+    <link rel="next" title="Geometricbasics module" href="geometricbasics.html" />
+    <link rel="prev" title="Crossing module" href="crossing.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="geometricbasics.html" title="Geometricbasics module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="crossing.html" title="Crossing module"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">PyDCG 0.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-datastructures">
+<span id="datastructures-module"></span><h1>Datastructures module<a class="headerlink" href="#module-datastructures" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="datastructures.Envelope_Mantainer">
+<em class="property">class </em><tt class="descclassname">datastructures.</tt><tt class="descname">Envelope_Mantainer</tt><big>(</big><em>lower=False</em><big>)</big><a class="headerlink" href="#datastructures.Envelope_Mantainer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mantains the Lower or Upper envelope of a set of lines</p>
+<p class="rubric">Methods</p>
+<dl class="class">
+<dt id="datastructures.Envelope_Mantainer.Line_Node">
+<em class="property">class </em><tt class="descname">Line_Node</tt><big>(</big><em>obj=&lt;line.Line instance at 0x3947bd8&gt;</em>, <em>lower=False</em><big>)</big><a class="headerlink" href="#datastructures.Envelope_Mantainer.Line_Node" title="Permalink to this definition">¶</a></dt>
+<dd><p>It stores all lines with a same slope.</p>
+<p class="rubric">Methods</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="datastructures.Envelope_Mantainer.Treap_Line">
+<em class="property">class </em><tt class="descclassname">Envelope_Mantainer.</tt><tt class="descname">Treap_Line</tt><big>(</big><em>lower=False</em><big>)</big><a class="headerlink" href="#datastructures.Envelope_Mantainer.Treap_Line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Treap representing the envelopes</p>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="datastructures.Envelope_Mantainer.Treap_Line.paste">
+<tt class="descname">paste</tt><big>(</big><em>node</em>, <em>T2</em><big>)</big><a class="headerlink" href="#datastructures.Envelope_Mantainer.Treap_Line.paste" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a new treap conaining self, the node and the
+treap T2. The original treaps, self and T2 no longer
+satisfy the heap property.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datastructures.Envelope_Mantainer.Treap_Line.split_at_node">
+<tt class="descname">split_at_node</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#datastructures.Envelope_Mantainer.Treap_Line.split_at_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Splits the treap a the given node.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="datastructures.Envelope_Mantainer.UP">
+<tt class="descclassname">Envelope_Mantainer.</tt><tt class="descname">UP</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#datastructures.Envelope_Mantainer.UP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Repairs what DOWN did.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="datastructures.Envelope_Mantainer.point_of_intersection">
+<em class="property">static </em><tt class="descclassname">Envelope_Mantainer.</tt><tt class="descname">point_of_intersection</tt><big>(</big><em>T1</em>, <em>T2</em><big>)</big><a class="headerlink" href="#datastructures.Envelope_Mantainer.point_of_intersection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given two convex treaps of lines T1 and T2,
+such that all the lines of T1 have
+smaller  slope that those of T2, it returns
+their point of intersection.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="datastructures.List">
+<em class="property">class </em><tt class="descclassname">datastructures.</tt><tt class="descname">List</tt><big>(</big><em>car=None</em><big>)</big><a class="headerlink" href="#datastructures.List" title="Permalink to this definition">¶</a></dt>
+<dd><p>linked list. Be careful when using the lenght
+field it does not get updated automatically.
+Its current use is for a queue for example.</p>
+<p class="rubric">Methods</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="datastructures.Treap">
+<em class="property">class </em><tt class="descclassname">datastructures.</tt><tt class="descname">Treap</tt><big>(</big><em>compare=&lt;function &lt;lambda&gt; at 0x39fe848&gt;</em>, <em>max_size=1000</em><big>)</big><a class="headerlink" href="#datastructures.Treap" title="Permalink to this definition">¶</a></dt>
+<dd><p>An implementation of a treap. Note that
+lower priority elements are at the top.
+Loosely based on the description in &#8220;Randomized Algorithms&#8221;
+by Motwani and Raghavan. All mistakes are mine</p>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="datastructures.Treap.join">
+<tt class="descname">join</tt><big>(</big><em>T2</em><big>)</big><a class="headerlink" href="#datastructures.Treap.join" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the join of self and T2, destroys
+the heap property of both in the proccess. It
+assumes T1&lt;=T2</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datastructures.Treap.max_tree">
+<tt class="descname">max_tree</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#datastructures.Treap.max_tree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the maximum value
+at the tree hanging from node
+as a root</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datastructures.Treap.min_tree">
+<tt class="descname">min_tree</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#datastructures.Treap.min_tree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the minimum value
+at the tree hanging from node
+as a root</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datastructures.Treap.move_node_to_root">
+<tt class="descname">move_node_to_root</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#datastructures.Treap.move_node_to_root" title="Permalink to this definition">¶</a></dt>
+<dd><p>Moves the node to the root, but
+breaks the heap property in the proccess.
+Afterwards a splitting a this vertex is trivial</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datastructures.Treap.paste">
+<tt class="descname">paste</tt><big>(</big><em>node</em>, <em>T2</em><big>)</big><a class="headerlink" href="#datastructures.Treap.paste" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a new treap conaining self, the node and the
+treap T2. The original treaps, self and T2 no longer
+satisfy the heap property.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datastructures.Treap.predecessor">
+<tt class="descname">predecessor</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#datastructures.Treap.predecessor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the predecessor of a node</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datastructures.Treap.restore_heap">
+<tt class="descname">restore_heap</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#datastructures.Treap.restore_heap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restores the heap property by
+rotating the node upwards if necessary</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datastructures.Treap.restore_heap_downwards">
+<tt class="descname">restore_heap_downwards</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#datastructures.Treap.restore_heap_downwards" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restores the heap property by rotating
+the node downwards if necessary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datastructures.Treap.split">
+<tt class="descname">split</tt><big>(</big><em>key</em><big>)</big><a class="headerlink" href="#datastructures.Treap.split" title="Permalink to this definition">¶</a></dt>
+<dd><p>Splits the treap at the given key
+value. Note that the old treap no longer
+satisfies the heap property; should
+be destroyed but it is difficult and
+undesirable to do so in Python.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datastructures.Treap.split_at_node">
+<tt class="descname">split_at_node</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#datastructures.Treap.split_at_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Splits the treap a the given node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datastructures.Treap.successor">
+<tt class="descname">successor</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#datastructures.Treap.successor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the succesor of node</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="datastructures.count_list_elements">
+<tt class="descclassname">datastructures.</tt><tt class="descname">count_list_elements</tt><big>(</big><em>list</em><big>)</big><a class="headerlink" href="#datastructures.count_list_elements" title="Permalink to this definition">¶</a></dt>
+<dd><p>O(n) function to count the
+number of elements of a list</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="datastructures.objs">
+<tt class="descclassname">datastructures.</tt><tt class="descname">objs</tt><em class="property"> = []</em><a class="headerlink" href="#datastructures.objs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Module implementing various data structures</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="datastructures.print_list_elements">
+<tt class="descclassname">datastructures.</tt><tt class="descname">print_list_elements</tt><big>(</big><em>list</em><big>)</big><a class="headerlink" href="#datastructures.print_list_elements" title="Permalink to this definition">¶</a></dt>
+<dd><p>O(n) function to print the elements of a list</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="crossing.html"
+                        title="previous chapter">Crossing module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="geometricbasics.html"
+                        title="next chapter">Geometricbasics module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/datastructures.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="geometricbasics.html" title="Geometricbasics module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="crossing.html" title="Crossing module"
+             >previous</a> |</li>
+        <li><a href="index.html">PyDCG 0.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Author.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

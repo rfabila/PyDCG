@@ -10,7 +10,7 @@ while 'install' in sys.argv and download not in ['Y', 'N']:
     download = raw_input('Download point sets? (~600 Mb) Y/N ')
 
 if download == 'Y':
-    names = ['03.b08', '04.b08', '05.b08', '06.b08', '07.b08', '08.b08', '09.b16', '10.b16']
+    names = ['03.b08', '04.b08']#, '05.b08', '06.b08', '07.b08', '08.b08', '09.b16', '10.b16']
     route = os.path.join(os.path.dirname(__file__), "PyDCG/point_sets/otypes")
     
     for file_name in names:
@@ -55,6 +55,6 @@ setup (name = 'PyDCG',
        version = '0.0.1',
        description = 'Python package with implementations of discrete and combinatorial geometry algorithms.',
        packages = ['PyDCG'],
-       package_data = {'PyDCG' : ['Icons/*.*', 'config/*.*', 'point_sets/*.*']},
+       package_data = {'PyDCG' : ['Icons/*.*', 'config/*.*', 'point_sets/*.*', 'doc/*.*']},
        ext_modules = [crossingCpp, holesCpp, geometricbasicsCpp]
       )
