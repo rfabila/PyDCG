@@ -1,10 +1,11 @@
+# -*- coding: utf-8 -*-
 """Implementation of the basic geometric primitives"""
 
 import pickle
 import random
 import geometricbasicsCpp as gbCpp
-import sys
 import os
+from functools import wraps
 
 __config_file=open(os.path.join(os.path.dirname(__file__), "config/geometricbasics.config"), "r")
 __config=pickle.load(__config_file)
@@ -34,9 +35,8 @@ def turn(p0,p1,p2):
     t=((p2[0]-p0[0])*(p1[1]-p0[1]))-((p1[0]-p0[0])*(p2[1]-p0[1]))
     if t >0:
         return 1
-    else:
-        if t < 0:
-            return -1
+    elif t < 0:
+        return -1
     return 0
 
 def sorted(p,pts):
@@ -51,7 +51,8 @@ def __test_sort_around_point_versions(n=100,k=10000000):
     pts=[[random.randint(-k,k),random.randint(-k,k)] for i in range(n)]
     p=[random.randint(-k,k),random.randint(-k,k)]
     #p=[0,0]
-    pts_1=sort_around_point_python(p,pts)
+#    pts_1=sort_around_point_python(p,pts)
+    pts_1=sort_around_point(p,pts)
     pts_2=sort_around_point_C(p,pts)
     j=1
     print(j)
@@ -59,44 +60,89 @@ def __test_sort_around_point_versions(n=100,k=10000000):
         pts=[[random.randint(-k,k),random.randint(-k,k)] for i in range(n)]
         #p=[0,0]
         p=[random.randint(-k,k),random.randint(-k,k)]
-        pts_1=sort_around_point_python(p,pts)
+#        pts_1=sort_around_point_python(p,pts)
+        pts_1=sort_around_point(p,pts)
         pts_2=sort_around_point_C(p,pts)
         j=j+1
         print j
     return (p,pts)
+
+#General decorator
+def accelerate(cfunc):
+    def bind_cfunc(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            speedup = False
+            join = True
+            if 'speedup' in kwargs:
+                speedup = kwargs['speedup']
+                del kwargs['speedup']
+            if 'join' in kwargs:
+                join = kwargs['join']
+                
+            if speedup == 'try':
+                speedup = safe_point_set(kwargs['points'] if 'points' in kwargs else args[1])
+                
+#            print "Speedup", speedup
+            if not speedup or not join:
+#                print "Llamando función de Python", func.func_name
+                return func(*args, **kwargs)
+            else:
+#                print "Llamando función de C++"
+                return cfunc(*args, **kwargs)
+        return wrapper
+    return bind_cfunc
+    
+#Signature specific decorator
+#def accelerate(cfunc):
+#    def bind_cfunc(func):
+#        @wraps(func)
+#        def wrapper(p, points, join=True, speedup=False):
+#            
+#            if speedup == 'try':
+#                speedup = safe_point_set(points)
+#            if not speedup:
+#                print "Llamando función de Python", func.func_name
+#                return func(p, points, join=True)
+#            else:
+#                print "Llamando función de C++"
+#                return cfunc(p, points)
+#        return wrapper
+#    return bind_cfunc
+    
      
-def sort_around_point(p,points,join=True,speedup=False):
-    """Sorts a set of points by angle around
-      a point p. If Join is set to False then a tuple
-      (l,r) is returned. l contains the points to the left
-      of p and r the points to the right. Both are sorted
-      by angle around p. If true it returs the union
-      of l and r. p should not be in points"""
-    if speedup=="try":
-        speedup=safe_point_set(pts)
-        
-    if speedup==False:
-        return sort_around_point_python(p,points,join=join)
-    elif speedup==True:
-        pts=sort_around_point_C(p,points)
-        if join:
-            return pts
-        else:
-            l=[]
-            r=[]
-            for x in pts:
-                if x[0]>p[0]:
-                    r.append(x)
-                elif x[0]<p[0]:
-                    l.append(x)
-                elif x[1]>p[1]:
-                    r.append(x)
-                else:
-                    l.append(x)
-            return (r,l)
+#def sort_around_point(p,points,join=True,speedup=False):
+#    """Sorts a set of points by angle around
+#      a point p. If Join is set to False then a tuple
+#      (l,r) is returned. l contains the points to the left
+#      of p and r the points to the right. Both are sorted
+#      by angle around p. If true it returs the union
+#      of l and r. p should not be in points"""
+#    if speedup=="try":
+#        speedup=safe_point_set(points)
+#        
+#    if speedup==False:
+#        return sort_around_point_python(p,points,join=join)
+#    elif speedup==True:
+#        pts=sort_around_point_C(p,points)
+#        if join:
+#            return pts
+#        else:
+#            l=[]
+#            r=[]
+#            for x in pts:
+#                if x[0]>p[0]:
+#                    r.append(x)
+#                elif x[0]<p[0]:
+#                    l.append(x)
+#                elif x[1]>p[1]:
+#                    r.append(x)
+#                else:
+#                    l.append(x)
+#            return (r,l)
                          
-      
-def sort_around_point_python(p,points,join=True):
+@accelerate(gbCpp.sort_around_point)
+def sort_around_point(p,points,join=True):
     l=0
     r=0
     p1=[p[0],p[1]+1]
@@ -154,7 +200,7 @@ def sort_around_point_python(p,points,join=True):
     else:
        return (r,l)
 
-def iterate_over_points(pts,f):
+def iterate_over_points(pts,f):                              #Se puede uar map (o alguna de esas)
     """Takes a function and a point set as a parameter.
        It applies f(p,pts-p) for every point p in pts"""
     res=[]

@@ -3,6 +3,7 @@
 import struct
 import geometricbasics
 import math
+import os
 
 #Access to the Graz order type database
 def point_set_iterator(n):
@@ -19,7 +20,7 @@ def point_set_iterator(n):
             pts.append([point[0],point[1]])
         return pts
     
-    file_name="datafiles/otypes"
+    file_name = os.path.join(os.path.dirname(__file__), "point_sets/otypes")
     
     if n<3 or n>10:
         raise OutOfBoundsError()

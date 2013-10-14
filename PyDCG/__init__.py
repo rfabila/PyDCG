@@ -1,5 +1,6 @@
 '''
-PyDCG, a collection of Discrete and Computational Geometry tools'''
+PyDCG, a collection of Discrete and Computational Geometry tools
+'''
 import crossing
 import geometricbasics
 import points
@@ -11,4 +12,4 @@ import visualizer2
 import holesCpp
 import geometricbasicsCpp
 import crossingCpp
-import points
+import holes

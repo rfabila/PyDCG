@@ -141,6 +141,8 @@ extern "C" PyObject* sort_around_point_wrapper(PyObject* self, PyObject* args)
 		PyList_SetItem(res, i, temp);
 	}
 
+	delete c_pts;
+
 	return res;
 }
 

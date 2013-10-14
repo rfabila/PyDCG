@@ -107,13 +107,13 @@ extern "C" PyObject* count_convex_rholes_wrapper(PyObject* self, PyObject* args)
 static const char* count_convex_rholes_p_doc =
 "count_convex_rholes_p(p, points, r, mono = True)\n\
     \n\
-    Counts the r-holes in a point set certain point as vertex and the.\n\
+    Counts the r-holes in a point set with certain point as vertex and the\n\
     r-gons with only that point inside them.\n\
     \n\
     This function counts how many convex `r`-holes in `points` have `p`\n\
     as a vertex and how many convex `r`-gons in `points` have only `p` \n\
-    inside them. The point set may be colored. The point `p` must not\n\
-    be contained inside `points`.\n\
+    inside them. The point set may be colored. Point `p` must not\n\
+    be contained in `points`.\n\
     \n\
     Parameters\n\
     ----------\n\
