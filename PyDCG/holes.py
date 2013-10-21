@@ -749,6 +749,19 @@ def count_convex_rholes(points,r,mono=False):
                             
     return total
 
+def report_empty_triangles(points):
+    """Reports the number of empty triangles in the point set"""
+    triangles=[]
+    sorted_points=orderandsplit(points)
+    G=compute_visibility_graph(sorted_points)
+    for p in range(len(points)):
+        right_points=sorted_points[p][1]
+        for q in range(len(right_points)):
+            incoming_edges=G[p][q][0]
+            for r in G[p][q][0]:
+                triangles.append([points[p],right_points[r],right_points[q]])
+    return triangles
+
 def report_convex_rholes(points,r,mono=False):
     """Reports the number of rholes in points; as described
         in search for empty convex polygons"""
