@@ -1,7 +1,53 @@
 from math import sqrt
 from combinatorics import binomial
-from geometricbasics import sort_around_point, turn
+from geometricbasics import sort_around_point, turn, safe_point_set, safe_val
 from collections import deque
+from functools import wraps
+import holesCpp
+
+def accelerate(cfunc):
+    def bind_cfunc(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            speedup = False
+            if 'speedup' in kwargs:
+                speedup = kwargs['speedup']
+                del kwargs['speedup']
+                
+            if speedup == 'try':
+                speedup = safe_point_set(kwargs.get('points', args[0]))
+                
+            if not speedup:
+                #print "Funcion de Python"
+                return func(*args, **kwargs)
+            else:
+                #print "Funcion de C++"
+                return cfunc(*args, **kwargs)
+        return wrapper
+    return bind_cfunc
+    
+def accelerate_p(cfunc):
+    def bind_cfunc(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            speedup = False
+            if 'speedup' in kwargs:
+                speedup = kwargs['speedup']
+                del kwargs['speedup']
+                
+            if speedup == 'try':
+                speedup = safe_point_set(kwargs.get('points', args[1]))
+                p = kwargs.get('p', args[0])
+                speedup = speedup and safe_val(p[0]) and safe_val(p[1])
+                
+            if not speedup:
+                #print "Python"
+                return func(*args, **kwargs)
+            else:
+                #print "C++"
+                return cfunc(*args, **kwargs)
+        return wrapper
+    return bind_cfunc
 
 def count_four_islands(pts,colored=False):
     """Counts the number of four-islands in a point set."""
@@ -302,7 +348,8 @@ def countEmptyTriangsVertex(rpoints):
         triangs=triangs+proceed(i,i+1)
         
     return triangs
-        
+
+@accelerate(holesCpp.countEmptyTriangs)
 def countEmptyTriangs(points):
     
     ordpoints=orderandsplit(points)
@@ -319,6 +366,7 @@ def slow_count_empty_triangles_p(p,points):
     A=count_empty_triangles_around_p(p,points)
     return (A,B)
     
+@accelerate_p(holesCpp.count_empty_triangles_p)    
 def count_empty_triangles_p(p,points):
     """Returns (A,B). Where A is the number of empty triangles.
         that contain p as a vertex and B the number of triangles
@@ -640,7 +688,8 @@ def compute_visibility_graph(sorted_points):
         G.append(vis_graph)
         
     return G
-    
+
+@accelerate(holesCpp.count_convex_rholes)
 def count_convex_rholes(points,r,mono=False):
     """Counts the number of rholes in points; as described
         in search for empty convex polygons"""
@@ -749,6 +798,7 @@ def count_convex_rholes(points,r,mono=False):
                             
     return total
 
+@accelerate(holesCpp.report_empty_triangles)
 def report_empty_triangles(points):
     """Reports the number of empty triangles in the point set"""
     triangles=[]
@@ -757,11 +807,12 @@ def report_empty_triangles(points):
     for p in range(len(points)):
         right_points=sorted_points[p][1]
         for q in range(len(right_points)):
-            incoming_edges=G[p][q][0]
+            #incoming_edges=G[p][q][0]
             for r in G[p][q][0]:
                 triangles.append([points[p],right_points[r],right_points[q]])
     return triangles
 
+@accelerate(holesCpp.report_convex_rholes)
 def report_convex_rholes(points,r,mono=False):
     """Reports the number of rholes in points; as described
         in search for empty convex polygons"""
@@ -1121,7 +1172,7 @@ def count_convex_rholes_difference(p,q,pts,r,colored=False):
     return -Ap+Aq+Bp-Bq
 
 ############################################################################
-
+@accelerate_p(holesCpp.count_convex_rholes_p)
 def count_convex_rholes_p(p, points, r, mono = False):
     '''
     Returns (A,B). Where A is the number of empty r-holes that contain p as

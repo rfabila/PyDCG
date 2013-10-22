@@ -339,6 +339,88 @@ extern "C" PyObject* report_convex_rholes_wrapper(PyObject* self, PyObject* args
     return py_res;
 }
 
+extern "C" PyObject* report_empty_triangles_wrapper(PyObject* self, PyObject* args)
+{
+    //The C++ function prototype is:
+    //std::vector<std::vector<punto> > report_empty_triangles(const std::vector<punto>&);
+    PyObject* py_pts;
+
+    //The argument must be a list with the points (each point is a list of two integers)
+    if (!PyArg_ParseTuple(args, "O!:report_empty_triangles", &PyList_Type, &py_pts))
+        return NULL;
+
+    Py_ssize_t points_size = PyList_Size(py_pts);
+
+    vector<punto> pts;
+    //Py_ssize_t can be bigger than an 2^32, but we don't expect
+    //to work with that many points.
+    pts.reserve(int(points_size));
+
+    for(Py_ssize_t i=0; i < points_size; i++)
+    {
+        PyObject *punto = PyList_GetItem(py_pts, i); //Borrowed Reference
+        Py_ssize_t n_coords = PyList_Size(punto);
+        long long x, y;
+
+        if(n_coords != 2)
+        {
+            PyErr_SetString(PyExc_ValueError, "Wrong number of values representing a point, must be 2.");
+            return NULL;
+        }
+
+        x = PyInt_AsLong(PyList_GetItem(punto, 0)); //Borrowed References
+        y = PyInt_AsLong(PyList_GetItem(punto, 1));
+
+        if(x > max_val || y > max_val || x < -max_val || y < -max_val)
+        {
+            PyErr_SetString(PyExc_ValueError, "The coordinates of each point must less than or equal to 2^30 in absolute value.");
+            return NULL;
+        }
+
+        pts.emplace_back(x, y);
+    }
+    auto res = report_empty_triangles(pts);
+    std::cout << "TRIANGS:" << std::endl;
+    for(auto t:res)
+    {
+    	for(auto p: t)
+    	{
+    		std::cout << "[" << p.x << ", " << p.y << "] ";
+    	}
+    	std::cout << std::endl;
+    }
+
+    PyObject* py_res = PyList_New(0);
+
+    for (auto triang : res)
+    {
+        PyObject* py_poli = PyList_New(0);
+        for(auto point : triang)
+        {
+            PyObject* py_point = PyList_New(0);
+
+            PyObject* coord = PyInt_FromLong(point.x);
+            if(PyList_Append(py_point, coord) == -1) //Append increases reference count
+                return NULL;
+            Py_DECREF(coord);
+
+            coord = PyInt_FromLong(point.y);
+            if(PyList_Append(py_point, coord) == -1) //Append increases reference count
+                return NULL;
+            Py_DECREF(coord);
+
+            if(PyList_Append(py_poli, py_point) == -1)
+                return NULL;
+            Py_DECREF(py_point);
+        }
+        if(PyList_Append(py_res, py_poli) == -1)
+            return NULL;
+        Py_DECREF(py_poli);
+    }
+
+    return py_res;
+}
+
 extern "C" PyObject* countEmptyTriangs_wrapper(PyObject* self, PyObject* args)
 {
     PyObject* py_pts;
@@ -481,6 +563,8 @@ extern "C" PyMethodDef holesCppMethods[] =
     {"report_convex_rholes", report_convex_rholes_wrapper, METH_VARARGS, report_convex_rholes_doc},
     {"countEmptyTriangs", countEmptyTriangs_wrapper, METH_VARARGS,
         "Counts the number of empty triangles in points."},
+    {"report_empty_triangles", report_empty_triangles_wrapper, METH_VARARGS,
+         "Report the number of empty triangles in points."},
     {"count_empty_triangles_p", count_empty_triangles_p_wrapper, METH_VARARGS,
         "Returns (A_p, B_p), the number of empty triangles with p as a vertex and the number of triangles with only p inside. points must not contain p."},
     {"general_position", general_position_wrapper, METH_VARARGS, "Verify if a point set is in general position"},

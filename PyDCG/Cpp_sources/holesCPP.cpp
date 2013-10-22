@@ -274,6 +274,22 @@ int countEmptyTriangs(const vector<punto>& points)
 	return triangs;
 }
 
+vector<vector<punto> > report_empty_triangles(const vector<punto>& points)
+{
+	vector<vector<punto> > triangles;
+	vector<puntos_ordenados> sorted_points;
+	orderandsplit(points, sorted_points);
+	auto G = compute_visibility_graph(sorted_points);
+	for(int p=0; p<points.size(); p++)
+	{
+		auto& right_points = sorted_points[p].r;
+		for(int q=0; q<right_points.size(); q++)
+			for(auto& r:G[p][q].first)
+				triangles.emplace_back(vector<punto>({points[p], right_points[r], right_points[q]}));
+	}
+	return triangles;
+}
+
 int slow_count_empty_triangles_containing_p(punto p, const vector<punto>& points)
 {
 	/* Counts the number of empty triangles in points that

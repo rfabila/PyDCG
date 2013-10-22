@@ -28,6 +28,8 @@ int countEmptyTriangsVertex(const std::vector<punto>&);
 
 int countEmptyTriangs(const std::vector<punto>&);
 
+std::vector<std::vector<punto> > report_empty_triangles(const std::vector<punto>&);
+
 int slow_count_empty_triangles_containing_p(punto p, const std::vector<punto>&);
 
 int count_empty_triangles_around_p(punto, const std::vector<punto>&);
