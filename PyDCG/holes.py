@@ -392,8 +392,41 @@ def count_empty_triangles_p(p,points):
                             sorted_points[O[k]])>=0:
                         if I[i] in G[O[k]][1]:
                                 B=B+1
-
     B=B/3
+    return (A,B)    
+    
+@accelerate_p(holesCpp.report_empty_triangles_p)
+def report_empty_triangles_p(p,points):
+    """Returns (A,B). Where A is a list with the empty triangles
+        that have p as a vertex and B is a list with the triangles
+        that contain only contain p in their interior."""
+    G=visibility_graph_around_p(p,points)
+    sorted_points=sort_around_point(p,points)
+    A = []
+    B_idx = set()
+    for q in range(len(sorted_points)):
+        incoming = G[q][0]
+        outgoing = G[q][1]
+        for r in incoming:
+            A.append([p, sorted_points[q], sorted_points[r]])
+        j = 0
+        for i in range(len(incoming)):
+            while (j < len(outgoing) and turn(sorted_points[incoming[i]],
+                                             sorted_points[q],
+                                             sorted_points[outgoing[j]]) > 0):
+                j += 1
+            if j < len(outgoing):
+                for k in range(j,len(outgoing)):
+                    if (turn(p, sorted_points[incoming[i]],
+                             sorted_points[outgoing[k]]) >= 0 
+                        and
+                        incoming[i] in G[outgoing[k]][1]):
+                        t = sorted([incoming[i], q, outgoing[k]])
+                        B_idx.add(tuple(t))
+    B=[]
+    for t in B_idx:
+        a,b,c = t
+        B.append([sorted_points[a],sorted_points[b],sorted_points[c]])
     return (A,B)
     
 def count_empty_triangles_pb(p,points):

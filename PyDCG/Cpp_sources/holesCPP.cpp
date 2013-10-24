@@ -5,6 +5,7 @@
 #include <deque>
 #include <unordered_map>
 #include <iostream>
+#include <list>
 
 using std::vector;
 using std::pair;
@@ -365,6 +366,42 @@ void count_empty_triangles_p(punto p, const vector<punto>& points, int& A, int& 
 	}
 	B /= 3;
 }
+
+//pair<list<punto>, list<punto> > report_empty_triangles_p(punto p,vector<punto> points)
+//{
+//	def report_empty_triangles_p(p,points):
+//	    """Returns (A,B). Where A is a list with the empty triangles
+//	        that have p as a vertex and B is a list with the triangles
+//	        that contain only contain p in their interior."""
+//	    G=visibility_graph_around_p(p,points)
+//	    sorted_points=sort_around_point(p,points)
+//	    A = []
+//	    B_idx = set()
+//	    for q in range(len(sorted_points)):
+//	        incoming = G[q][0]
+//	        outgoing = G[q][1]
+//	        for r in incoming:
+//	            A.append([p, sorted_points[q], sorted_points[r]])
+//	        j = 0
+//	        for i in range(len(incoming)):
+//	            while (j < len(outgoing) and turn(sorted_points[incoming[i]],
+//	                                             sorted_points[q],
+//	                                             sorted_points[outgoing[j]]) > 0):
+//	                j += 1
+//	            if j < len(outgoing):
+//	                for k in range(j,len(outgoing)):
+//	                    if (turn(p, sorted_points[incoming[i]],
+//	                             sorted_points[outgoing[k]]) >= 0
+//	                        and
+//	                        incoming[i] in G[outgoing[k]][1]):
+//	                        t = sorted([incoming[i], q, outgoing[k]])
+//	                        B_idx.add(tuple(t))
+//	    B=[]
+//	    for t in B_idx:
+//	        a,b,c = t
+//	        B.append([sorted_points[a],sorted_points[b],sorted_points[c]])
+//	    return (A,B)
+//}
 
 int count_empty_triangles_for_each_p(vector<punto> points)
 {
