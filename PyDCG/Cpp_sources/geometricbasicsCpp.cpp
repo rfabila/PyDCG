@@ -22,6 +22,19 @@ bool punto::operator!=(const punto& q) const
 	return !(*this==q);
 }
 
+bool punto::operator<(const punto& rhs) const
+{
+	if(this->x == rhs.x)
+		return this->y < rhs.y;
+	else
+		return this->x < rhs.x;
+}
+
+bool punto::operator>(const punto& rhs) const
+{
+	return rhs < *this;
+}
+
 //-------------------------------------------------------------
 
 //Definiciones de la clase triángulo
@@ -31,6 +44,16 @@ triangulo::triangulo() : a(0,0), b(1,0), c(0,1)
 
 triangulo::triangulo(punto va, punto vb, punto vc) : a(va), b(vb), c(vc)
 {}
+
+bool triangulo::operator==(const triangulo& q) const
+{
+	return (a==q.a && b == q.b && c == q.c);
+}
+
+bool triangulo::operator!=(const triangulo& q) const
+{
+	return !(*this == q);
+}
 
 //-------------------------------------------------------------
 
@@ -161,7 +184,7 @@ int turn(long p0[], long p1[], long p2[])
 
 int cmp_points(const void *qp, const void *rp)
 {
-    long qx, qy, rx, ry;
+    //long qx, qy, rx, ry;
     long q[2];
     long r[2];
     long origin[2] = { 0, 0 };

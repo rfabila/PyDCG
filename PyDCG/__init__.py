@@ -13,3 +13,4 @@ import holesCpp
 import geometricbasicsCpp
 import crossingCpp
 import holes
+import heuristics

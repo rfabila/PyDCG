@@ -28,6 +28,8 @@ struct punto
 	punto(long long, long long, int);
 	bool operator==(const punto&) const;
 	bool operator!=(const punto&) const;
+	bool operator<(const punto& rhs) const;
+	bool operator>(const punto& rhs) const;
 };
 
 struct triangulo
@@ -35,6 +37,8 @@ struct triangulo
 	punto a, b, c;
 	triangulo();
 	triangulo(punto, punto, punto);
+	bool operator==(const triangulo&) const;
+	bool operator!=(const triangulo&) const;
 };
 
 struct puntos_ordenados

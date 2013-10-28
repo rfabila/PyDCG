@@ -5,12 +5,11 @@
 #include <deque>
 #include <unordered_map>
 #include <iostream>
-#include <list>
 
 using std::vector;
 using std::pair;
 using std::make_pair;
-
+using std::list;
 
 //-------------------------------------------------------------
 
@@ -281,10 +280,10 @@ vector<vector<punto> > report_empty_triangles(const vector<punto>& points)
 	vector<puntos_ordenados> sorted_points;
 	orderandsplit(points, sorted_points);
 	auto G = compute_visibility_graph(sorted_points);
-	for(int p=0; p<points.size(); p++)
+	for(unsigned int p=0; p<points.size(); p++)
 	{
 		auto& right_points = sorted_points[p].r;
-		for(int q=0; q<right_points.size(); q++)
+		for(unsigned int q=0; q<right_points.size(); q++)
 			for(auto& r:G[p][q].first)
 				triangles.emplace_back(vector<punto>({points[p], right_points[r], right_points[q]}));
 	}
@@ -367,41 +366,75 @@ void count_empty_triangles_p(punto p, const vector<punto>& points, int& A, int& 
 	B /= 3;
 }
 
-//pair<list<punto>, list<punto> > report_empty_triangles_p(punto p,vector<punto> points)
-//{
-//	def report_empty_triangles_p(p,points):
-//	    """Returns (A,B). Where A is a list with the empty triangles
-//	        that have p as a vertex and B is a list with the triangles
-//	        that contain only contain p in their interior."""
-//	    G=visibility_graph_around_p(p,points)
-//	    sorted_points=sort_around_point(p,points)
-//	    A = []
-//	    B_idx = set()
-//	    for q in range(len(sorted_points)):
-//	        incoming = G[q][0]
-//	        outgoing = G[q][1]
-//	        for r in incoming:
-//	            A.append([p, sorted_points[q], sorted_points[r]])
-//	        j = 0
-//	        for i in range(len(incoming)):
-//	            while (j < len(outgoing) and turn(sorted_points[incoming[i]],
-//	                                             sorted_points[q],
-//	                                             sorted_points[outgoing[j]]) > 0):
-//	                j += 1
-//	            if j < len(outgoing):
-//	                for k in range(j,len(outgoing)):
-//	                    if (turn(p, sorted_points[incoming[i]],
-//	                             sorted_points[outgoing[k]]) >= 0
-//	                        and
-//	                        incoming[i] in G[outgoing[k]][1]):
-//	                        t = sorted([incoming[i], q, outgoing[k]])
-//	                        B_idx.add(tuple(t))
-//	    B=[]
-//	    for t in B_idx:
-//	        a,b,c = t
-//	        B.append([sorted_points[a],sorted_points[b],sorted_points[c]])
-//	    return (A,B)
-//}
+struct trio
+{
+	int a;
+	int b;
+	int c;
+};
+
+void sort_trio(trio &t)
+{
+	bool swapped = false;
+	do
+	{
+		swapped = false;
+		if(t.a > t.b)
+		{
+			std::swap(t.a, t.b);
+			swapped = true;
+		}
+		if(t.b > t.c)
+		{
+			std::swap(t.b, t.c);
+			swapped = true;
+		}
+	}while(swapped);
+}
+
+pair<list<triangulo>, std::unordered_set<triangulo, triangHash> > report_empty_triangles_p(punto p, const vector<punto>& points)
+{
+	auto G = visibility_graph_around_p(p, points);
+	vector<punto> sorted_points;
+	sort_around_point(p, points, sorted_points);
+
+	list<triangulo > A;
+	std::unordered_set<triangulo, triangHash> B;
+
+	for(unsigned int q = 0; q < sorted_points.size(); q++)
+	{
+		auto& incoming = G[q].first;
+		auto& outgoing = G[q].second;
+
+		for(auto r: incoming)
+			A.emplace_back(p, sorted_points[q], sorted_points[r]);
+
+		unsigned int j = 0;
+		for(unsigned int i = 0; i < incoming.size(); i++)
+		{
+			while(j < outgoing.size() && turn(sorted_points[incoming[i]],
+			                                  sorted_points[q], sorted_points[outgoing[j]]) > 0)
+			{
+				j++;
+			}
+
+			if(j < outgoing.size())
+			{
+				for(unsigned int k = j; k < outgoing.size(); k++)
+				{
+					if(turn(p, sorted_points[incoming[i]], sorted_points[outgoing[k]]) >= 0 &&
+					   std::find(G[outgoing[k]].second.begin(), G[outgoing[k]].second.end(), incoming[i]) != G[outgoing[k]].second.end())
+					{
+						trio aux = {incoming[i], int(q), outgoing[k]};
+						sort_trio(aux);
+						B.emplace(sorted_points[aux.a], sorted_points[aux.b], sorted_points[aux.c]);
+					}
+				}
+			}
+		}
+	}
+	return make_pair(A, B);
+}
 
 int count_empty_triangles_for_each_p(vector<punto> points)
 {
@@ -419,21 +452,6 @@ int count_empty_triangles_for_each_p(vector<punto> points)
 /*
  * rholes
  */
-
-class pairHash{
-public:
-    size_t operator()(const pair<int, int> &k) const{
-//    	if(k.first>=k.second)
-//    		return k.second*k.second+k.first;
-//    	return k.first*k.first+k.first+k.second;
-//
-//    	return ((k.first+k.second)*(k.first+k.second+1)+k.second)/2;
-
-    	return (k.first << 16) ^ k.second;
-    }
-
-};
-
 
 int count_convex_rholes(const vector<punto> &points, int r, bool mono)
 {

@@ -18,10 +18,10 @@ def accelerate(cfunc):
                 speedup = safe_point_set(kwargs.get('points', args[0]))
                 
             if not speedup:
-                #print "Funcion de Python"
+#                print "Funcion de Python"
                 return func(*args, **kwargs)
             else:
-                #print "Funcion de C++"
+#                print "Funcion de C++"
                 return cfunc(*args, **kwargs)
         return wrapper
     return bind_cfunc

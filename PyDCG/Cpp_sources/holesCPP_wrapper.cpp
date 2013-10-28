@@ -380,15 +380,6 @@ extern "C" PyObject* report_empty_triangles_wrapper(PyObject* self, PyObject* ar
         pts.emplace_back(x, y);
     }
     auto res = report_empty_triangles(pts);
-    std::cout << "TRIANGS:" << std::endl;
-    for(auto t:res)
-    {
-    	for(auto p: t)
-    	{
-    		std::cout << "[" << p.x << ", " << p.y << "] ";
-    	}
-    	std::cout << std::endl;
-    }
 
     PyObject* py_res = PyList_New(0);
 
@@ -509,6 +500,184 @@ extern "C" PyObject* count_empty_triangles_p_wrapper(PyObject* self, PyObject* a
     return Py_BuildValue("ii", A, B);
 }
 
+extern "C" PyObject* report_empty_triangles_p_wrapper(PyObject* self, PyObject* args)
+{
+    //The C++ function prototype is:
+    //pair<list<triangulo>, std::unordered_set<triangulo> > report_empty_triangles_p(punto, const vector<punto>&);
+	PyObject* py_pts;
+	PyObject* py_p;
+
+	vector<punto> pts;
+	punto p;
+
+	if (!PyArg_ParseTuple(args, "O!O!:report_empty_triangles_p", &PyList_Type, &py_p, &PyList_Type, &py_pts))
+		return NULL;
+
+	int N_points = (int)PyList_Size(py_pts);
+
+	//Pasar la lista de puntos a vector<punto>
+	for(int i=0; i<N_points; i++)
+	{
+		PyObject *punto = PyList_GetItem(py_pts, i); //BORROWED REFERENCE!
+		Py_ssize_t n_coords = PyList_Size(punto);
+		long x, y;
+
+		if(n_coords > 2)
+		{
+			printf("Demasiados valores en la lista.");
+			return NULL;
+		}
+		x = PyInt_AsLong(PyList_GetItem(punto, 0)); //BORROWED REFERENCES!
+		y = PyInt_AsLong(PyList_GetItem(punto, 1));
+
+		//Se debería checar si no hubo exepción
+//		printf("pongo %d, %d", x, y);
+		pts.emplace_back(x, y);
+	}
+
+	//Pasar py_p a punto
+	Py_ssize_t N_pt = PyList_Size(py_p);
+	if(N_pt > 2)
+	{
+		printf("Demasiados valores en p.");
+		return NULL;
+	}
+	p.x = PyInt_AsLong(PyList_GetItem(py_p, 0)); //BORROWED REFERENCES!
+	p.y = PyInt_AsLong(PyList_GetItem(py_p, 1));
+
+	auto res = report_empty_triangles_p(p, pts);
+
+	std::list<triangulo>& A = res.first;
+	std::unordered_set<triangulo, triangHash>& B = res.second;
+
+	PyObject* py_A = PyList_New(0);
+	PyObject* py_B = PyList_New(0);
+
+	for (auto triang : A)
+	{
+		PyObject* py_triang = PyList_New(0);
+		PyObject* py_point = PyList_New(0);
+
+		PyObject* coord1 = PyInt_FromLong(triang.a.x);
+		PyObject* coord2 = PyInt_FromLong(triang.a.y);
+
+		//Insert triang.a
+		if(PyList_Append(py_point, coord1) == -1) //Append increases reference count
+			return NULL;
+		Py_DECREF(coord1);
+
+		if(PyList_Append(py_point, coord2) == -1) //Append increases reference count
+			return NULL;
+		Py_DECREF(coord2);
+
+		if(PyList_Append(py_triang, py_point) == -1)
+			return NULL;
+		Py_DECREF(py_point);
+		py_point = PyList_New(0);
+
+		//Insert triang.b
+		coord1 = PyInt_FromLong(triang.b.x);
+		coord2 = PyInt_FromLong(triang.b.y);
+
+		if(PyList_Append(py_point, coord1) == -1) //Append increases reference count
+			return NULL;
+		Py_DECREF(coord1);
+
+		if(PyList_Append(py_point, coord2) == -1) //Append increases reference count
+			return NULL;
+		Py_DECREF(coord2);
+
+		if(PyList_Append(py_triang, py_point) == -1)
+			return NULL;
+		Py_DECREF(py_point);
+		py_point = PyList_New(0);
+
+		//Insert triang.c
+		coord1 = PyInt_FromLong(triang.c.x);
+		coord2 = PyInt_FromLong(triang.c.y);
+
+		if(PyList_Append(py_point, coord1) == -1) //Append increases reference count
+			return NULL;
+		Py_DECREF(coord1);
+
+		if(PyList_Append(py_point, coord2) == -1) //Append increases reference count
+			return NULL;
+		Py_DECREF(coord2);
+
+		if(PyList_Append(py_triang, py_point) == -1)
+			return NULL;
+		Py_DECREF(py_point);
+
+		//Append triangle to py_A
+		if(PyList_Append(py_A, py_triang) == -1)
+			return NULL;
+		Py_DECREF(py_triang);
+	}
+
+	for (auto triang : B)
+	{
+		PyObject* py_triang = PyList_New(0);
+		PyObject* py_point = PyList_New(0);
+
+		PyObject* coord1 = PyInt_FromLong(triang.a.x);
+		PyObject* coord2 = PyInt_FromLong(triang.a.y);
+
+		//Insert triang.a
+		if(PyList_Append(py_point, coord1) == -1) //Append increases reference count
+			return NULL;
+		Py_DECREF(coord1);
+
+		if(PyList_Append(py_point, coord2) == -1) //Append increases reference count
+			return NULL;
+		Py_DECREF(coord2);
+
+		if(PyList_Append(py_triang, py_point) == -1)
+			return NULL;
+		Py_DECREF(py_point);
+		py_point = PyList_New(0);
+
+		//Insert triang.b
+		coord1 = PyInt_FromLong(triang.b.x);
+		coord2 = PyInt_FromLong(triang.b.y);
+
+		if(PyList_Append(py_point, coord1) == -1) //Append increases reference count
+			return NULL;
+		Py_DECREF(coord1);
+
+		if(PyList_Append(py_point, coord2) == -1) //Append increases reference count
+			return NULL;
+		Py_DECREF(coord2);
+
+		if(PyList_Append(py_triang, py_point) == -1)
+			return NULL;
+		Py_DECREF(py_point);
+		py_point = PyList_New(0);
+
+		//Insert triang.c
+		coord1 = PyInt_FromLong(triang.c.x);
+		coord2 = PyInt_FromLong(triang.c.y);
+
+		if(PyList_Append(py_point, coord1) == -1) //Append increases reference count
+			return NULL;
+		Py_DECREF(coord1);
+
+		if(PyList_Append(py_point, coord2) == -1) //Append increases reference count
+			return NULL;
+		Py_DECREF(coord2);
+
+		if(PyList_Append(py_triang, py_point) == -1)
+			return NULL;
+		Py_DECREF(py_point);
+
+		//Append triangle to py_B
+		if(PyList_Append(py_B, py_triang) == -1)
+			return NULL;
+		Py_DECREF(py_triang);
+	}
+
+	return Py_BuildValue("OO", py_A, py_B);
+}
+
 extern "C" PyObject* general_position_wrapper(PyObject* self, PyObject* args)
 {
     //The C++ function prototype is: general_position(vector<punto>& points)
@@ -559,14 +728,16 @@ extern "C" PyObject* general_position_wrapper(PyObject* self, PyObject* args)
 extern "C" PyMethodDef holesCppMethods[] =
 {
     {"count_convex_rholes", count_convex_rholes_wrapper, METH_VARARGS, count_convex_rholes_doc},
-    {"count_convex_rholes_p", count_convex_rholes_p_wrapper, METH_VARARGS, count_convex_rholes_p_doc},
     {"report_convex_rholes", report_convex_rholes_wrapper, METH_VARARGS, report_convex_rholes_doc},
+    {"count_convex_rholes_p", count_convex_rholes_p_wrapper, METH_VARARGS, count_convex_rholes_p_doc},
     {"countEmptyTriangs", countEmptyTriangs_wrapper, METH_VARARGS,
         "Counts the number of empty triangles in points."},
     {"report_empty_triangles", report_empty_triangles_wrapper, METH_VARARGS,
          "Report the number of empty triangles in points."},
     {"count_empty_triangles_p", count_empty_triangles_p_wrapper, METH_VARARGS,
         "Returns (A_p, B_p), the number of empty triangles with p as a vertex and the number of triangles with only p inside. points must not contain p."},
+	{"report_empty_triangles_p", report_empty_triangles_p_wrapper, METH_VARARGS,
+			 "Report the the empty triangles in points that have p as a vertex and the triangles in points that have only p inside them."},
     {"general_position", general_position_wrapper, METH_VARARGS, "Verify if a point set is in general position"},
     {NULL, NULL, 0, NULL}
 };

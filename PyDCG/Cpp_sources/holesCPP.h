@@ -3,8 +3,8 @@
 #include "geometricbasicsCpp.h"
 #include <vector>
 #include <queue>
-
-
+#include <list>
+#include <unordered_set>
 
 //-------------------------------------------------------------
 
@@ -17,6 +17,25 @@ std::vector<std::pair<std::vector<int>, std::vector<int> > > visibility_graph_ar
 int slow_generalposition(std::vector<punto>&);
 
 //-------------------------------------------------------------
+class pairHash{
+public:
+    size_t operator()(const std::pair<int, int> &k) const{
+//    	if(k.first>=k.second)
+//    		return k.second*k.second+k.first;
+//    	return k.first*k.first+k.first+k.second;
+//
+//    	return ((k.first+k.second)*(k.first+k.second+1)+k.second)/2;
+
+    	return (k.first << 16) ^ k.second;
+    }
+};
+
+class pointHash{
+public:
+    size_t operator()(const punto &k) const{
+    	return (k.x << 16) ^ k.y;
+    }
+};
 
 bool pointInTriang(punto, triangulo);
 
@@ -33,6 +52,16 @@ std::vector<std::vector<punto> > report_empty_triangles(const std::vector<punto>
 int slow_count_empty_triangles_containing_p(punto p, const std::vector<punto>&);
 
 int count_empty_triangles_around_p(punto, const std::vector<punto>&);
+
+class triangHash{
+public:
+    size_t operator()(const triangulo &triang) const{
+    	pointHash phash;
+    	return (phash(triang.a) << 22) ^ (phash(triang.b) << 12 ^ phash(triang.c));
+    }
+};
+
+std::pair<std::list<triangulo>, std::unordered_set<triangulo, triangHash> > report_empty_triangles_p(punto, const vector<punto>&);
 
 void slow_count_empty_triangles_p(punto, const std::vector<punto>&, int&, int&);
 

@@ -53,7 +53,7 @@ extern "C" PyObject* crossing_wrapper(PyObject* self, PyObject* args)
     PyObject* py_pts;
 
     //The arguments must be: a list with the points (each point is a list of two integers),
-    if (!PyArg_ParseTuple(args, "O!:crossing", &PyList_Type))
+    if (!PyArg_ParseTuple(args, "O!:crossing", &PyList_Type, &py_pts))
         return NULL;
 
     Py_ssize_t points_size = PyList_Size(py_pts);
