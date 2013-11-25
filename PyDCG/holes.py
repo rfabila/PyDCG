@@ -3,7 +3,14 @@ from combinatorics import binomial
 from geometricbasics import sort_around_point, turn, safe_point_set, safe_val
 from collections import deque
 from functools import wraps
-import holesCpp
+import pickle, os
+
+__config_file=open(os.path.join(os.path.dirname(__file__), "config/geometricbasics.config"), "r")
+__config=pickle.load(__config_file)
+__config_file.close()
+
+if not __config['PURE_PYTHON']:
+    import holesCpp
 
 def accelerate(cfunc):
     def bind_cfunc(func):
@@ -349,7 +356,7 @@ def countEmptyTriangsVertex(rpoints):
         
     return triangs
 
-@accelerate(holesCpp.countEmptyTriangs)
+#@accelerate(holesCpp.countEmptyTriangs)
 def countEmptyTriangs(points):
     
     ordpoints=orderandsplit(points)
@@ -359,6 +366,10 @@ def countEmptyTriangs(points):
         triangs=triangs+countEmptyTriangsVertex(ordpoints[i][1])
     
     return triangs
+############################## This used to be a decorator ###################
+if not __config['PURE_PYTHON']:
+    countEmptyTriangs = accelerate(holesCpp.countEmptyTriangs)(countEmptyTriangs)
+##############################################################################
 
 def slow_count_empty_triangles_p(p,points):
     """Slow version of count_triangles_p."""
@@ -366,7 +377,7 @@ def slow_count_empty_triangles_p(p,points):
     A=count_empty_triangles_around_p(p,points)
     return (A,B)
     
-@accelerate_p(holesCpp.count_empty_triangles_p)    
+#@accelerate_p(holesCpp.count_empty_triangles_p)    
 def count_empty_triangles_p(p,points):
     """Returns (A,B). Where A is the number of empty triangles.
         that contain p as a vertex and B the number of triangles
@@ -393,9 +404,13 @@ def count_empty_triangles_p(p,points):
                         if I[i] in G[O[k]][1]:
                                 B=B+1
     B=B/3
-    return (A,B)    
+    return (A,B) 
+############################## This used to be a decorator ###################
+if not __config['PURE_PYTHON']:
+    count_empty_triangles_p = accelerate_p(holesCpp.count_empty_triangles_p)(count_empty_triangles_p)
+##############################################################################
     
-@accelerate_p(holesCpp.report_empty_triangles_p)
+#@accelerate_p(holesCpp.report_empty_triangles_p)
 def report_empty_triangles_p(p,points):
     """Returns (A,B). Where A is a list with the empty triangles
         that have p as a vertex and B is a list with the triangles
@@ -428,6 +443,11 @@ def report_empty_triangles_p(p,points):
         a,b,c = t
         B.append([sorted_points[a],sorted_points[b],sorted_points[c]])
     return (A,B)
+############################## This used to be a decorator ###################
+if not __config['PURE_PYTHON']:
+    report_empty_triangles_p = accelerate_p(holesCpp.report_empty_triangles_p)(report_empty_triangles_p)
+##############################################################################
+
     
 def count_empty_triangles_pb(p,points):
     """Returns (A,B). Where A is the number of empty triangles.
@@ -722,7 +742,7 @@ def compute_visibility_graph(sorted_points):
         
     return G
 
-@accelerate(holesCpp.count_convex_rholes)
+#@accelerate(holesCpp.count_convex_rholes)
 def count_convex_rholes(points,r,mono=False):
     """Counts the number of rholes in points; as described
         in search for empty convex polygons"""
@@ -830,8 +850,12 @@ def count_convex_rholes(points,r,mono=False):
                         t=t+1
                             
     return total
+############################## This used to be a decorator ###################
+if not __config['PURE_PYTHON']:
+    count_convex_rholes = accelerate(holesCpp.count_convex_rholes)(count_convex_rholes)
+##############################################################################
 
-@accelerate(holesCpp.report_empty_triangles)
+#@accelerate(holesCpp.report_empty_triangles)
 def report_empty_triangles(points):
     """Reports the number of empty triangles in the point set"""
     triangles=[]
@@ -844,8 +868,12 @@ def report_empty_triangles(points):
             for r in G[p][q][0]:
                 triangles.append([points[p],right_points[r],right_points[q]])
     return triangles
+############################## This used to be a decorator ###################
+if not __config['PURE_PYTHON']:
+    report_empty_triangles = accelerate(holesCpp.report_empty_triangles)(report_empty_triangles)
+##############################################################################
 
-@accelerate(holesCpp.report_convex_rholes)
+#@accelerate(holesCpp.report_convex_rholes)
 def report_convex_rholes(points,r,mono=False):
     """Reports the number of rholes in points; as described
         in search for empty convex polygons"""
@@ -955,6 +983,10 @@ def report_convex_rholes(points,r,mono=False):
                                 C[(q,outgoing_by_W[t])].append(chprime)
                         t=t+1
     return list(report)
+############################## This used to be a decorator ###################
+if not __config['PURE_PYTHON']:
+    report_convex_rholes = accelerate(holesCpp.report_convex_rholes)(report_convex_rholes)
+##############################################################################
                 
                 
 def count_rholes_maker(r,mono=False):      
@@ -1205,7 +1237,7 @@ def count_convex_rholes_difference(p,q,pts,r,colored=False):
     return -Ap+Aq+Bp-Bq
 
 ############################################################################
-@accelerate_p(holesCpp.count_convex_rholes_p)
+#@accelerate_p(holesCpp.count_convex_rholes_p)
 def count_convex_rholes_p(p, points, r, mono = False):
     '''
     Returns (A,B). Where A is the number of empty r-holes that contain p as
@@ -1516,3 +1548,7 @@ def count_convex_rholes_p(p, points, r, mono = False):
                             ChainsA[v, Sop[t]].append(chp)
                     t+=1
     return resA, resB
+############################## This used to be a decorator ###################
+if not __config['PURE_PYTHON']:
+    count_convex_rholes_p = accelerate_p(holesCpp.count_convex_rholes_p)(count_convex_rholes_p)
+##############################################################################

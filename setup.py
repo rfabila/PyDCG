@@ -4,13 +4,20 @@ import pickle
 import urllib2
 import os
 
-download = None
+options = {}
 
-while 'install' in sys.argv and download not in ['Y', 'N']:
-    download = raw_input('Download point sets? (~600 Mb) Y/N ')
+with open("options.cfg") as options_file:    
+    for opt in options_file:
+        k, v = opt.split()
+        options[k] = int(v)
 
-if download == 'Y':
-    names = ['03.b08', '04.b08']#, '05.b08', '06.b08', '07.b08', '08.b08', '09.b16', '10.b16']
+#download = None
+
+#while 'install' in sys.argv and download not in ['Y', 'N']:
+#    download = raw_input('Download point sets? (~600 Mb) Y/N ')
+
+if options['DOWNLOAD_POINT_SETS'] == 1 and 'install' in sys.argv:
+    names = ['03.b08', '04.b08', '05.b08', '06.b08', '07.b08', '08.b08', '09.b16', '10.b16']
     route = os.path.join(os.path.dirname(__file__), "PyDCG/point_sets/otypes")
     
     for file_name in names:
@@ -32,10 +39,6 @@ if sys.maxsize > (2**31-1):
 else:
     geometricbasics_config["MAX_INT"]=2**30
     
-geometricbasics_config_file=open("PyDCG/config/geometricbasics.config","w")
-pickle.dump(geometricbasics_config,geometricbasics_config_file)
-geometricbasics_config_file.close()
-    
 geometricbasicsCpp = Extension('PyDCG.geometricbasicsCpp',
                     sources = [sources_dir+"geometricbasicsCpp_wrapper.cpp", sources_dir+"geometricbasicsCpp.cpp"])
 geometricbasicsCpp.extra_compile_args = ['--std=c++0x', arch]
@@ -48,6 +51,18 @@ crossingCpp = Extension('PyDCG.crossingCpp',
                     sources = [sources_dir+"count_crossing_wrapper.cpp", sources_dir+"count_crossing.cpp", sources_dir+"geometricbasicsCpp.cpp"])
 crossingCpp.extra_compile_args = ['--std=c++0x', arch];
 
+modules = []
+
+if options['PURE_PYTHON'] == 0:
+    modules = [crossingCpp, holesCpp, geometricbasicsCpp]
+    geometricbasics_config['PURE_PYTHON'] = False
+else:
+    geometricbasics_config['PURE_PYTHON'] = True
+    
+geometricbasics_config_file=open("PyDCG/config/geometricbasics.config","w")
+pickle.dump(geometricbasics_config,geometricbasics_config_file)
+geometricbasics_config_file.close()
+
 setup (name = 'PyDCG',
        author = 'author',
        author_email = 'author@email.com',
@@ -55,6 +70,6 @@ setup (name = 'PyDCG',
        version = '0.0.1',
        description = 'Python package with implementations of discrete and combinatorial geometry algorithms.',
        packages = ['PyDCG'],
-       package_data = {'PyDCG' : ['Icons/*.*', 'config/*.*', 'point_sets/*.*', 'doc/*.*']},
-       ext_modules = [crossingCpp, holesCpp, geometricbasicsCpp]
+       package_data = {'PyDCG' : ['Icons/*.*', 'config/*.*', 'point_sets/*.*', 'doc/*.*', 'options.cfg']},
+       ext_modules = modules
       )

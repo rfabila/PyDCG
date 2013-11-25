@@ -3,7 +3,6 @@
 
 import pickle
 import random
-import geometricbasicsCpp as gbCpp
 import os
 from functools import wraps
 
@@ -11,7 +10,11 @@ __config_file=open(os.path.join(os.path.dirname(__file__), "config/geometricbasi
 __config=pickle.load(__config_file)
 __config_file.close()
 
-sort_around_point_C = gbCpp.sort_around_point
+sort_around_point_C = None
+if not __config['PURE_PYTHON']:
+    import geometricbasicsCpp as gbCpp
+    sort_around_point_C = gbCpp.sort_around_point
+
 
 def safe_point_set(pts):
     """True if the it is safe to speed up with the given point set."""
@@ -45,6 +48,9 @@ def sorted(p,pts):
         if turn(p,pts[i],pts[i+1])>0:
             return False
     return True
+    
+#if __config['PURE_PYTHON']:
+#    sort_around_point_C = sort_around_point
 
 def __test_sort_around_point_versions(n=100,k=10000000):
     """Tests whether the two sort_around_point functions match"""
@@ -141,7 +147,7 @@ def accelerate(cfunc):
 #                    l.append(x)
 #            return (r,l)
                          
-@accelerate(gbCpp.sort_around_point)
+#@accelerate(gbCpp.sort_around_point)
 def sort_around_point(p,points,join=True):
     l=0
     r=0
@@ -199,6 +205,11 @@ def sort_around_point(p,points,join=True):
        return tpts
     else:
        return (r,l)
+
+############################## This used to be a decorator ###################
+if not __config['PURE_PYTHON']:
+    sort_around_point = accelerate(gbCpp.sort_around_point)(sort_around_point)
+##############################################################################
 
 def iterate_over_points(pts,f):                              #Se puede uar map (o alguna de esas)
     """Takes a function and a point set as a parameter.

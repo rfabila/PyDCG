@@ -1,4 +1,5 @@
 recursive-include sphinx_docs/build/html *
-recursive-include PyDCG/Cpp_sources *.h
+recursive-include PyDCG/Cpp_sources *.*
 recursive-include PyDCG/point_sets *.tmp
 recursive-include PyDCG/doc *.*
+include options.cfg
