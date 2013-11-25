@@ -58,7 +58,7 @@ def P(vcurrent,vnew,T,minimize=True):
 #AttributeError: 'module' object has no attribute 'report_empty_triangles_p'
 
 def simmulated_annealing(n=10,pts=[],run_time=10,k=10000000,k_f=kirkpatrick_cooling(10000000,0.999),
-                         t=1000000,f=[],T=kirkpatrick_cooling(100,0.999),rand_move=rand_move,minimize=True,
+                         f=[],T=kirkpatrick_cooling(100,0.999),rand_move=rand_move,minimize=True,
                          print_function=None):
     """Implementation of a simulated annealing algorithm to search for good point sets."""
 
