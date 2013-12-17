@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import random
 import line
+import fractions
+from geometricbasics import turn
 
 objs=[]
 """Module implementing various data structures"""
@@ -57,7 +59,7 @@ class List:
 #Or I am just a bad programmer.
 #This could be a source for big improvement in the future.
 #Seems to be working ok though.
-class Treap:
+class Treap(object):
     """An implementation of a treap. Note that
        lower priority elements are at the top.
        Loosely based on the description in "Randomized Algorithms"
@@ -250,25 +252,25 @@ class Treap:
             
     
     def rotate_right(self,node):
-            if node.left!=None:
-                grandpa=node.parent
-                nnode=node.left
-                nnode.parent=grandpa
-                node.parent=nnode
-                
-                if grandpa!=None:
-                    if grandpa.left==node:
-                        grandpa.left=nnode
-                    else:
-                        grandpa.right=nnode
+        if node.left!=None:
+            grandpa=node.parent
+            nnode=node.left
+            nnode.parent=grandpa
+            node.parent=nnode
+            
+            if grandpa!=None:
+                if grandpa.left==node:
+                    grandpa.left=nnode
                 else:
-                    self.root=nnode
-                
-                node.left=nnode.right
-                nnode.right=node
-                
-                if node.left!=None:
-                  node.left.parent=node
+                    grandpa.right=nnode
+            else:
+                self.root=nnode
+            
+            node.left=nnode.right
+            nnode.right=node
+            
+            if node.left!=None:
+              node.left.parent=node
                         
                                         
     
@@ -412,7 +414,7 @@ class Treap:
             return None
         
    
-    class Node:
+    class Node(object):
         
         def __init__(self,key=0,obj=None):
         
@@ -446,12 +448,12 @@ class Treap:
 def treap_sort(s,t=100):
     treap=Treap(max_size=s)
     for i in range(t):
-        #print "sort",i
+#        print "sort",i
         for j in range(s):
             treap.insert(random.randint(0,2*s))
         while not treap.empty:
             node=treap.min()
-            #print node.key
+#            print node.key
             treap.delete(node.key)
             
         
@@ -1168,3 +1170,314 @@ class Envelope_Mantainer(Treap):
                 tail=lst
             return (head,tail)
             
+
+class dynamic_ch(object):
+    
+    def __init__(self):
+        self.root=None
+        self.empty = True
+        
+    def insert(self, p):
+        v = self.Node(key = p)
+#        v.Ql.insert(key = p)
+        v.J = p
+        
+        if self.empty:
+            self.root = v
+            self.empty = False
+            return
+        
+        v.Ql.insert(key = p)
+        u = self.DOWN(self.root, v)
+        print "DOWN gave", u, u.Ql.root
+        
+        if u.key != v.key:
+            aux = self.Node()
+            parent = u.parent
+            if parent is None:                       #u was the root
+                u.Ql.insert(u.key)
+                print "root"
+                self.root = aux
+                u.parent = aux
+                v.parent = aux
+                if v.key[1] >= u.key[1]:
+                    aux.key = [0,u.key[1]]
+                    aux.left = u
+                    aux.right = v
+                    aux.J = u.key
+                else:
+                    aux.key = [0,v.key[1]]
+                    aux.left = v
+                    aux.right = u
+                    aux.J = v.key
+            elif parent.right is u:
+                parent.right = aux
+                aux.parent = parent
+                u.parent = aux
+                v.parent = aux
+                if v.key[1] >= u.key[1]:
+#                    aux.key = [0,v.key[1]]
+                    aux.left = u
+                    aux.right = v
+                else:
+#                    aux.key = [0,u.key[1]]
+                    aux.left = v
+                    aux.right = u
+            else:
+                parent.left = aux
+                aux.parent = parent
+#                if v.key[1] >= u.key[1]:
+#                    aux.key = [0,v.key[1]]
+#                    aux.left = u
+#                    aux.right = v
+#                    aux.J = u.key
+#                else:
+#                aux.key = [0,u.key[1]]
+                aux.left = v
+                aux.right = u
+                aux.J = v.key
+                u.parent = aux
+                v.parent = aux
+            
+        else:
+            print "Point already in the tree"
+            self.UP(u)
+            return
+        
+        self.UP(v)
+        
+    def delete(self, p):
+        aux = self.Node(key=p)
+        u = self.DOWN(self.root, aux)
+        print "DOWN gave", u
+
+        if u.key != p:
+            print "Point not found"
+            self.UP(u)
+            return
+
+        sib = u.parent.right
+        if sib is u:
+            sib = u.parent.left
+            
+        grandpa = u.parent.parent
+        
+        if grandpa.left is u.parent:
+            grandpa.left = sib
+        else:
+            grandpa.right = sib
+            
+        sib.parent = grandpa
+        
+        self.UP(sib)
+        
+        
+        
+    def isLeaf(self, node):
+        return node.right is None and node.left is None
+        
+    def DOWN(self, v, p):
+#        print "DOWN checks", v
+        if not self.isLeaf(v):
+#            print "        ... not a leaf"
+#            print "splitting", v.Ql.root
+#            print "at key", v.J
+            Q1, r, Q2 = v.Ql.split(v.J)
+            Q1.insert_node(r)
+            if v.left != None:
+                v.left.Ql = Q1.join(v.left.Ql)
+            if v.right != None:
+                v.right.Ql = v.right.Ql.join(Q2)
+            if p.key[1] <= v.key[1]:
+                v = v.left
+            else:
+                v = v.right
+            return self.DOWN(v, p)
+        else:
+            return v
+            
+    def UP(self, v):
+        if v != self.root:
+            Q1, Q2, Q3, Q4, J = None,None,None,None,None,
+            print "UP Brigding", v, v.Ql.root
+            print "and        ",
+            if v.parent.left is v:                
+                print v.parent.right, v.parent.right.Ql.root
+                Q1, Q2, Q3, Q4, J = dynamic_ch.bridge(v.Ql, v.parent.right.Ql)
+            else:
+                print v.parent.left, v.parent.left.Ql.root
+                Q1, Q2, Q3, Q4, J = dynamic_ch.bridge(v.parent.left.Ql, v.Ql)
+            v.parent.left.Ql = Q2
+            v.parent.right.Ql = Q3
+            v.parent.Ql = Q1.join(Q4)
+            v.parent.J = J
+            v.parent.key = [0,max(v.parent.key[1], v.parent.left.key[1])]
+            self.UP(v.parent)
+        return 
+            
+    @classmethod        
+    def treapToList(cls, T):
+        l = []
+        def inOrder(node):
+            if node.right == None and node.left == None:
+                l.append(node.key)
+                return
+            if node.left != None:
+                inOrder(node.left)
+            l.append(node.key)
+            if node.right != None:
+                inOrder(node.right)
+        if not T.empty:
+            inOrder(T.root)
+        return l
+        
+    @classmethod
+    def bridge(cls, Lower, Upper):           #The points in Lower should have smaller y coordinates than the ones in Upper
+        L1 = dynamic_ch.treapToList(Lower)
+        L2 = dynamic_ch.treapToList(Upper)
+        
+#        print "IN BRIDGE", L1
+#        print "         ", L2
+        
+        maxy = L1[-1][1]        #The biggest y coordinate of Lower
+        
+        iq = max(len(L1)/2-1, 0)
+        iqm = iq if iq-1 < 0 else iq-1
+        iqM = iq if iq+1 >= len(L1) else iq+1
+        
+        q = L1[iq]
+        qm = L1[iqm]
+        qM = L1[iqM]
+        
+        ip = max(len(L2)/2-1, 0)
+        ipm = ip if ip-1 < 0 else ip-1
+        ipM = ip if ip+1 >= len(L2) else ip+1
+        
+        p = L2[ip]
+        pm = L2[ipm]
+        pM = L2[ipM]
+        
+        while turn(q, p, qm) < 0 or turn(q, p, qM) < 0 or turn(q, p, pm) < 0 or turn(q, p, pM) < 0:
+#            x = raw_input()
+#            print "IN BRIDGE"
+            #Caso 2
+            if turn(q, p, qM) >=0 and turn(q, p, pm) >=0 and turn(q, p, pM) >=0 and turn(q, p, qm) < 0:
+#                print "C2"
+                L2 = L2[ipm:]
+                L1 = L1[:iq+1]
+            #Caso 3
+            elif turn(q, p, pm) >=0 and turn(q, p, qm) >=0 and turn(q, p, pM) >=0 and turn(q, p, qM) < 0:
+#                print "C3"
+                L2 = L2[ipm:]
+                L1 = L1[iqm:]
+            #Caso 4
+            elif turn(q, p, pm) >=0 and turn(q, p, qm) >=0 and turn(q, p, qM) >=0 and turn(q, p, pM) < 0:
+#                print "C4"
+                L2 = L2[ipm:]
+                L1 = L1[iqm:]
+            #Caso 5
+            elif turn(q, p, pM) >=0 and turn(q, p, qm) >=0 and turn(q, p, qM) >=0 and turn(q, p, pm) < 0:
+#                print "C5"
+                L2 = L2[:ipM+1]
+                L1 = L1[:iqM+1]
+            #Caso 6
+            elif turn(q, p, pm) >=0 and turn(q, p, qM) >=0 and turn(q, p, qm) < 0 and turn(q, p, pM) < 0:
+#                print "C6"
+                L2 = L2[ipm:]
+                L1 = L1[:iqM+1]
+            #caso 7
+            elif turn(q, p, pM) >=0 and turn(q, p, qM) >=0 and turn(q, p, qm) < 0 and turn(q, p, pm) < 0:
+#                print "C7"
+                L1 = L1[:iqM+1]
+            #Caso 8
+            elif turn(q, p, pm) >=0 and turn(q, p, qm) >=0 and turn(q, p, qM) < 0 and turn(q, p, pM) < 0:
+#                print "C8"
+                L2 = L2[ipm:]
+            #Caso 9
+            elif turn(q, p, pM) >=0 and turn(q, p, qm) >=0 and turn(q, p, qM) < 0 and turn(q, p, pm) < 0:
+#                print "C9"
+                #Calculamos la coordenada y donde se intersectan las tangentes ppm y qqM
+                a1 = p[1]-pm[1]
+                b1 = p[0]-pm[0]
+                
+                a2 = q[1]-qm[1]
+                b2 = q[0]-qm[0]
+                
+                c1 = b1*p[1]-a1*p[0]
+                c2 = b2*1[1]-a2*q[0]
+                
+                y = float(a2*c1 - a1*c2)/float(a2*b1 - a1*b2)
+                
+                #Subcaso 1:
+                if y <= maxy:
+                    L1 = L1[qm:]
+                else:
+                    L2 = L2[:pM+1]
+                
+            if max(len(L1)/2-1,0) == iq:
+                if iq+1 < len(L1):
+                    iq += 1
+                elif iq-1 >= 0:
+                    iq -= 1
+            iqm = iq if iq-1 < 0 else iq-1
+            iqM = iq if iq+1 >= len(L1) else iq+1
+            
+            q = L1[iq]
+            qm = L1[iqm]
+            qM = L1[iqM]
+            
+            if max(len(L2)/2-1,0) == ip:
+                if ip+1 < len(L2):
+                    ip += 1
+                elif ip-1 >= 0:
+                    ip -= 1
+            ipm = ip if ip-1 < 0 else ip-1
+            ipM = ip if ip+1 >= len(L2) else ip+1
+            
+            p = L2[ip]
+            pm = L2[ipm]
+            pM = L2[ipM]
+        
+        #p and q are the indices of the points that form the bridge
+        J = q
+        print q, p
+        
+        Q1, q, Q2 = Lower.split(q)
+        Q3, p, Q4 = Upper.split(p)
+        
+        Q1.insert_node(q)
+        Q4.insert_node(p)
+        print "DONE!"
+        print Q1.root
+        print Q2.root
+        print Q3.root
+        print Q4.root
+        print J
+        return Q1, Q2, Q3, Q4, J
+        
+    class Node(object):
+        
+        def __init__(self,key = [0,0]):
+        
+            self.key = key          #A point is the node is a leaf, otherwise [0, maxy] where maxy is the biggest y coordinate in the left subtree
+            self.Ql = Treap(lambda p, q: p[1]-q[1])       #This part does not contribute to the lc-hull of parent
+            self.J = key           #The position of the support point in parent's lc-hull
+            self.parent = None
+            self.right = None
+            self.left = None
+
+        #for debugging purposes
+        def __str__(self):
+            
+            if self.left==None:
+                sleft="()"
+            else:
+                sleft=self.left.__str__()
+                
+            if self.right==None:
+                sright="()"
+            else:
+                sright=self.right.__str__()
+            snode="(key="+self.key.__str__()+")"
+            s="("+snode+"("+sleft+","+sright+")"+")"
+            return s
