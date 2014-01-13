@@ -1427,25 +1427,46 @@ class dynamic_ch(object):
             elif turn(q, p, pM) >=0 and turn(q, p, qm) >=0 and turn(q, p, qM) < 0 and turn(q, p, pm) < 0:
                 print "C9"
                 #Calculamos la coordenada y donde se intersectan las tangentes ppm y qqM
-                a1 = p[1]-pm[1]
-                b1 = p[0]-pm[0]
                 
-                a2 = q[1]-qm[1]
-                b2 = q[0]-qm[0]
+                if pm==p:
+                    a1 = p[1]-pM[1]
+                    b1 = p[0]-pM[0]
+                else:
+                    a1 = p[1]-pm[1]
+                    b1 = p[0]-pm[0]
+                    
+                if q==qm:
+                    a2 = q[1]-qM[1]
+                    b2 = q[0]-qM[0]
+                else:
+                    a2 = q[1]-qm[1]
+                    b2 = q[0]-qm[0]
+                
+                #a1 = p[1]-pm[1]
+                #b1 = p[0]-pm[0]
+                
+                #a2 = q[1]-qm[1]
+                #b2 = q[0]-qm[0]
                 
                 c1 = b1*p[1]-a1*p[0]
-                c2 = b2*1[1]-a2*q[0]
-                
+                c2 = b2*q[1]-a2*q[0]
+                print "p,q,pm,qm"
+                print p,q,pm,qm
+                print "a1,a2,b1,b2"
+                print a1,b1,a2,b2
                 y = float(a2*c1 - a1*c2)/float(a2*b1 - a1*b2)
                 
+                
+            
                 #Subcaso 1:
                 if y <= maxy:
 #                    iqmin = qm
-                    q_aux = q_aux if q_aux.left is None else q_aux.left
+                    q_aux = q_aux if q_aux.right is None else q_aux.right
                 #Subcaso 2
                 else:
 #                    ipmax = pM
-                    p_aux = p_aux = p_aux if p_aux.right is None else p_aux.right
+                    p_aux = p_aux if p_aux.left is None else p_aux.left
+            
             
 ###################################################################################################33
 #            iq = (iqmax + iqmin)/2
@@ -1475,7 +1496,17 @@ class dynamic_ch(object):
             qm = Lower.predecessor(q_aux)
             qm = q if qm is None else qm.key
             qM = Lower.successor(q_aux)
-            qm = q if qM is None else qM.key
+            qM = q if qM is None else qM.key
+            
+            print "Puntos"
+            print pm, p, pM
+            print qm, q, qM
+            
+            print "Treaps"
+            print "Lower"
+            print(Lower.root)
+            print "Upper"
+            print(Upper.root)
         #ip and iq are the indices of the points that form the bridge
         J = q
 #        print "p y q", q, p
