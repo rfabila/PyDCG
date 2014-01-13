@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #!/usr/bin/env python
 import random
 import line
@@ -1179,12 +1180,11 @@ class dynamic_ch(object):
         
     def insert(self, p):
         v = self.Node(key = p)
-#        v.Ql.insert(key = p)
         v.J = p
         
         if self.empty:
             self.root = v
-            self.empty = False
+            self.empty = False       #XXX: Ql debería tener a p, no?
             return
         
         v.Ql.insert(key = p)
@@ -1204,38 +1204,35 @@ class dynamic_ch(object):
                     aux.key = [0,u.key[1]]
                     aux.left = u
                     aux.right = v
-                    aux.J = u.key
+#                    aux.J = u.key
                 else:
                     aux.key = [0,v.key[1]]
                     aux.left = v
                     aux.right = u
-                    aux.J = v.key
+#                    aux.J = v.key
+                    
             elif parent.right is u:
                 parent.right = aux
                 aux.parent = parent
                 u.parent = aux
                 v.parent = aux
                 if v.key[1] >= u.key[1]:
-#                    aux.key = [0,v.key[1]]
+                    aux.key = [0,u.key[1]]
                     aux.left = u
                     aux.right = v
+#                    aux.J = u.key
                 else:
-#                    aux.key = [0,u.key[1]]
+                    aux.key = [0,v.key[1]]
                     aux.left = v
                     aux.right = u
+#                    aux.J = v.key
             else:
                 parent.left = aux
                 aux.parent = parent
-#                if v.key[1] >= u.key[1]:
-#                    aux.key = [0,v.key[1]]
-#                    aux.left = u
-#                    aux.right = v
-#                    aux.J = u.key
-#                else:
-#                aux.key = [0,u.key[1]]
+                aux.key = [0,v.key[1]]
                 aux.left = v
                 aux.right = u
-                aux.J = v.key
+#                aux.J = v.key
                 u.parent = aux
                 v.parent = aux
             
@@ -1299,13 +1296,13 @@ class dynamic_ch(object):
     def UP(self, v):
         if v != self.root:
             Q1, Q2, Q3, Q4, J = None,None,None,None,None,
-            print "UP Brigding", v, v.Ql.root
+            print "UP Brigding", v, "Ql:", v.Ql.root
             print "and        ",
             if v.parent.left is v:                
-                print v.parent.right, v.parent.right.Ql.root
+                print v.parent.right, "Ql", v.parent.right.Ql.root, "this is a right son"
                 Q1, Q2, Q3, Q4, J = dynamic_ch.bridge(v.Ql, v.parent.right.Ql)
             else:
-                print v.parent.left, v.parent.left.Ql.root
+                print v.parent.left, "Ql", v.parent.left.Ql.root, "this is a left son"
                 Q1, Q2, Q3, Q4, J = dynamic_ch.bridge(v.parent.left.Ql, v.Ql)
             v.parent.left.Ql = Q2
             v.parent.right.Ql = Q3
@@ -1336,66 +1333,99 @@ class dynamic_ch(object):
         L1 = dynamic_ch.treapToList(Lower)
         L2 = dynamic_ch.treapToList(Upper)
         
-#        print "IN BRIDGE", L1
-#        print "         ", L2
+        print "IN BRIDGE", L1
+        print "         ", L2
         
         maxy = L1[-1][1]        #The biggest y coordinate of Lower
+################### This code works when using the list representation of the treaps ###########
+#        iqmin = 0
+#        iqmax = len(L1)-1
+#        iq = (iqmax + iqmin)/2                          #Indices of points q, qm, qM
+#        iqm = iq if iq-1 < 0 else iq-1
+#        iqM = iq if iq+1 >= len(L1) else iq+1
+#        
+#        q = L1[iq]                          #The points q, qm and qM
+#        qm = L1[iqm]
+#        qM = L1[iqM]
+#        
+#        ipmin = 0
+#        ipmax = len(L2)-1
+#        ip = (ipmax + ipmin)/2                      #Analogous to q
+#        ipm = ip if ip-1 < 0 else ip-1
+#        ipM = ip if ip+1 >= len(L2) else ip+1
+#        
+#        p = L2[ip]
+#        pm = L2[ipm]
+#        pM = L2[ipM]
+#####################################################################################################
+
+        p_aux = Upper.root
+        p = p_aux.key
+        pm = Upper.predecessor(p_aux)
+        pm = p if pm is None else pm.key
+        pM = Upper.successor(p_aux)
+        pM = p if pM is None else pM.key
         
-        iq = max(len(L1)/2-1, 0)
-        iqm = iq if iq-1 < 0 else iq-1
-        iqM = iq if iq+1 >= len(L1) else iq+1
+        q_aux = Lower.root
+        q = q_aux.key
+        qm = Lower.predecessor(q_aux)
+        qm = q if qm is None else qm.key
+        qM = Lower.successor(q_aux)
+        qM = q if qM is None else qM.key
         
-        q = L1[iq]
-        qm = L1[iqm]
-        qM = L1[iqM]
-        
-        ip = max(len(L2)/2-1, 0)
-        ipm = ip if ip-1 < 0 else ip-1
-        ipM = ip if ip+1 >= len(L2) else ip+1
-        
-        p = L2[ip]
-        pm = L2[ipm]
-        pM = L2[ipM]
+        print "Puntos"
+        print pm, p, pM
+        print qm, q, qM
         
         while turn(q, p, qm) < 0 or turn(q, p, qM) < 0 or turn(q, p, pm) < 0 or turn(q, p, pM) < 0:
 #            x = raw_input()
-#            print "IN BRIDGE"
+            print "IN BRIDGE"
             #Caso 2
             if turn(q, p, qM) >=0 and turn(q, p, pm) >=0 and turn(q, p, pM) >=0 and turn(q, p, qm) < 0:
-#                print "C2"
-                L2 = L2[ipm:]
-                L1 = L1[:iq+1]
+                print "C2"
+#                ipmin = ip
+#                iqmax = max(0, iq - 1)
+                q_aux = q_aux if q_aux.left is None else q_aux.left
+                
             #Caso 3
             elif turn(q, p, pm) >=0 and turn(q, p, qm) >=0 and turn(q, p, pM) >=0 and turn(q, p, qM) < 0:
-#                print "C3"
-                L2 = L2[ipm:]
-                L1 = L1[iqm:]
+                print "C3"
+#                ipmin = ip
+#                iqmin = min(iqm + 1, len(L1)-1)
+                q_aux = q_aux if q_aux.right is None else q_aux.right
             #Caso 4
             elif turn(q, p, pm) >=0 and turn(q, p, qm) >=0 and turn(q, p, qM) >=0 and turn(q, p, pM) < 0:
-#                print "C4"
-                L2 = L2[ipm:]
-                L1 = L1[iqm:]
+                print "C4"
+#                ipmin = min(ip + 1, len(L2)-1)
+#                iqmax = iq
+                p_aux = p_aux if p_aux.right is None else p_aux.right
             #Caso 5
             elif turn(q, p, pM) >=0 and turn(q, p, qm) >=0 and turn(q, p, qM) >=0 and turn(q, p, pm) < 0:
-#                print "C5"
-                L2 = L2[:ipM+1]
-                L1 = L1[:iqM+1]
+                print "C5"
+#                ipmax = max(0, ip - 1)
+#                iqmax = iq
+                p_aux = p_aux if p_aux.left is None else p_aux.left
             #Caso 6
             elif turn(q, p, pm) >=0 and turn(q, p, qM) >=0 and turn(q, p, qm) < 0 and turn(q, p, pM) < 0:
-#                print "C6"
-                L2 = L2[ipm:]
-                L1 = L1[:iqM+1]
+                print "C6"
+#                ipmin = min(ip + 1, len(L2)-1)
+#                iqmax = max(0, iq - 1)
+                p_aux = p_aux = p_aux if p_aux.right is None else p_aux.right
+                q_aux = q_aux if q_aux.left is None else q_aux.left
             #caso 7
             elif turn(q, p, pM) >=0 and turn(q, p, qM) >=0 and turn(q, p, qm) < 0 and turn(q, p, pm) < 0:
-#                print "C7"
-                L1 = L1[:iqM+1]
+                print "C7"
+#                L1 = L1[:iqM+1]
+#                iqmax = max(0, iq - 1)
+                q_aux = q_aux if q_aux.left is None else q_aux.left
             #Caso 8
             elif turn(q, p, pm) >=0 and turn(q, p, qm) >=0 and turn(q, p, qM) < 0 and turn(q, p, pM) < 0:
-#                print "C8"
-                L2 = L2[ipm:]
+                print "C8"
+#                ipmin = min(ip + 1, len(L2)-1)
+                p_aux = p_aux = p_aux if p_aux.right is None else p_aux.right
             #Caso 9
             elif turn(q, p, pM) >=0 and turn(q, p, qm) >=0 and turn(q, p, qM) < 0 and turn(q, p, pm) < 0:
-#                print "C9"
+                print "C9"
                 #Calculamos la coordenada y donde se intersectan las tangentes ppm y qqM
                 a1 = p[1]-pm[1]
                 b1 = p[0]-pm[0]
@@ -1410,37 +1440,45 @@ class dynamic_ch(object):
                 
                 #Subcaso 1:
                 if y <= maxy:
-                    L1 = L1[qm:]
+#                    iqmin = qm
+                    q_aux = q_aux if q_aux.left is None else q_aux.left
+                #Subcaso 2
                 else:
-                    L2 = L2[:pM+1]
-                
-            if max(len(L1)/2-1,0) == iq:
-                if iq+1 < len(L1):
-                    iq += 1
-                elif iq-1 >= 0:
-                    iq -= 1
-            iqm = iq if iq-1 < 0 else iq-1
-            iqM = iq if iq+1 >= len(L1) else iq+1
+#                    ipmax = pM
+                    p_aux = p_aux = p_aux if p_aux.right is None else p_aux.right
             
-            q = L1[iq]
-            qm = L1[iqm]
-            qM = L1[iqM]
+###################################################################################################33
+#            iq = (iqmax + iqmin)/2
+#            iqm = max(0, iq-1)
+#            iqM = min(len(L1)-1, iq+1)
+#            
+#            q = L1[iq]
+#            qm = L1[iqm]
+#            qM = L1[iqM]
+#            
+#            ip = (ipmax + ipmin)/2
+#            ipm = max(0, iq-1)
+#            ipM = min(len(L2)-1, iq+1)
+#            
+#            p = L2[ip]
+#            pm = L2[ipm]
+#            pM = L2[ipM]
+#######################################################################################################
             
-            if max(len(L2)/2-1,0) == ip:
-                if ip+1 < len(L2):
-                    ip += 1
-                elif ip-1 >= 0:
-                    ip -= 1
-            ipm = ip if ip-1 < 0 else ip-1
-            ipM = ip if ip+1 >= len(L2) else ip+1
+            p = p_aux.key
+            pm = Upper.predecessor(p_aux)
+            pm = p if pm is None else pm.key
+            pM = Upper.successor(p_aux)
+            pM = p if pM is None else pM.key
             
-            p = L2[ip]
-            pm = L2[ipm]
-            pM = L2[ipM]
-        
-        #p and q are the indices of the points that form the bridge
+            q = q_aux.key
+            qm = Lower.predecessor(q_aux)
+            qm = q if qm is None else qm.key
+            qM = Lower.successor(q_aux)
+            qm = q if qM is None else qM.key
+        #ip and iq are the indices of the points that form the bridge
         J = q
-        print q, p
+#        print "p y q", q, p
         
         Q1, q, Q2 = Lower.split(q)
         Q3, p, Q4 = Upper.split(p)
