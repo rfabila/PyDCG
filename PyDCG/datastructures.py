@@ -2,6 +2,7 @@
 #!/usr/bin/env python
 import random
 import line
+import fractions
 from geometricbasics import turn
 
 objs=[]
@@ -425,6 +426,7 @@ class Treap(object):
             self.parent=None
             self.right=None
             self.left=None
+
         
         #for debugging purposes
         def __str__(self):
@@ -1328,6 +1330,8 @@ class dynamic_ch(object):
         
         self.UP(sib)
         
+        
+        
     def isLeaf(self, node):
         return node.right is None and node.left is None
         
@@ -1399,6 +1403,22 @@ class dynamic_ch(object):
             v.parent.key = [0,max(v.parent.key[1], v.parent.left.key[1])]
             self.UP(v.parent)
         return 
+            
+    @classmethod        
+    def treapToList(cls, T):
+        l = []
+        def inOrder(node):
+            if node.right == None and node.left == None:
+                l.append(node.key)
+                return
+            if node.left != None:
+                inOrder(node.left)
+            l.append(node.key)
+            if node.right != None:
+                inOrder(node.right)
+        if not T.empty:
+            inOrder(T.root)
+        return l
         
     @classmethod
     def bridge(cls, Lower, Upper):           #The points in Lower should have smaller y coordinates than the ones in Upper        
@@ -1539,6 +1559,7 @@ class dynamic_ch(object):
             
         #p and q are the points that determine the bridge
         J = q
+#        print "p y q", q, p
         
         Q1, q, Q2 = Lower.split(q)
         Q3, p, Q4 = Upper.split(p)
