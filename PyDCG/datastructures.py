@@ -2,7 +2,6 @@
 #!/usr/bin/env python
 import random
 import line
-import fractions
 from geometricbasics import turn
 
 objs=[]
@@ -134,7 +133,7 @@ class Treap(object):
         node=self.Node(key=key,obj=obj)
         self.insert_node(node)
     
-    def insert_node(self,node):    
+    def insert_node(self,node):  
         if self.empty:
             self.root=node
             self.empty=False
@@ -169,6 +168,7 @@ class Treap(object):
                 self.rotate_left(node.parent)
             if node.parent==None:
                 break
+            
     def restore_heap_downwards(self,node):
         """Restores the heap property by rotating
            the node downwards if necessary."""
@@ -425,7 +425,6 @@ class Treap(object):
             self.parent=None
             self.right=None
             self.left=None
-
         
         #for debugging purposes
         def __str__(self):
@@ -457,7 +456,21 @@ def treap_sort(s,t=100):
 #            print node.key
             treap.delete(node.key)
             
-        
+def treapToList(T):
+    l = []
+    def inOrder(node):
+        if node.right == None and node.left == None:
+            l.append(node.key)
+            return
+        if node.left != None:
+            inOrder(node.left)
+        l.append(node.key)
+        if node.right != None:
+            inOrder(node.right)
+    if not T.empty:
+        inOrder(T.root)
+    return l
+    
 #Maintainers
 
 #This is an implementation of an Algorithm"
@@ -1178,23 +1191,67 @@ class dynamic_ch(object):
         self.root=None
         self.empty = True
         
+    def right_rotation(self, node):
+        if node.left != None:
+            parent = node.parent
+            lson = node.left
+            
+            lson.parent = parent
+            if parent != None:
+                if parent.right == node:
+                    parent.right = lson
+                else:
+                    parent.left = lson
+            else:
+                self.root = lson
+                    
+            node.left = lson.right
+            if node.left is not None:
+                node.left.parent = node
+                
+            node.parent = lson
+            lson.right = node
+    
+    def left_rotation(self, node):
+        if node.right != None:
+            parent = node.parent
+            rson = node.right
+            
+            rson.parent = parent            
+            if parent != None:
+                if parent.right == node:
+                    parent.right = rson
+                else:
+                    parent.left = rson
+            else:
+                self.root = rson
+                    
+            node.right = rson.left
+            if node.right is not None:
+                node.right.parent = node
+                
+            node.parent = rson
+            rson.left = node
+        
     def insert(self, p):
+        print "inserting", p
+        # v is the new node
         v = self.Node(key = p)
         v.J = p
         
         if self.empty:
             self.root = v
-            self.empty = False       #XXX: Ql debería tener a p, no?
+            self.empty = False       #XXX: Shouldn't Ql contain p? ### No, it will be inserted in line 1198
             return
         
         v.Ql.insert(key = p)
         u = self.DOWN(self.root, v)
-        print "DOWN gave", u, u.Ql.root
+#        print "DOWN gave", u, u.Ql.root
         
         if u.key != v.key:
             aux = self.Node()
             parent = u.parent
-            if parent is None:                       #u was the root
+            if parent is None:                       # u is currently the root
                 u.Ql.insert(u.key)
                 print "root"
                 self.root = aux
@@ -1211,7 +1268,7 @@ class dynamic_ch(object):
                     aux.right = u
 #                    aux.J = v.key
                     
-            elif parent.right is u:
+            elif parent.right is u:     # u is a right son
                 parent.right = aux
                 aux.parent = parent
                 u.parent = aux
@@ -1227,7 +1284,7 @@ class dynamic_ch(object):
                     aux.right = u
 #                    aux.J = v.key
             else:
-                parent.left = aux
+                parent.left = aux      # u is a left son
                 aux.parent = parent
                 aux.key = [0,v.key[1]]
                 aux.left = v
@@ -1237,10 +1294,13 @@ class dynamic_ch(object):
                 v.parent = aux
             
         else:
-            print "Point already in the tree"
+            print "Point", p, "is already in the tree"
             self.UP(u)
             return
-        
+            
+        aux.make_priority_smaller()    #The new node has smaller priority than its sons, this way there's no need
+                             #to rebalance at the the sons. UP may need to rebalance at aux tough
+#        print "parent, right, left", aux.priority, aux.left.priority, aux.right.priority
         self.UP(v)
         
     def delete(self, p):
@@ -1268,8 +1328,6 @@ class dynamic_ch(object):
         
         self.UP(sib)
         
-        
-        
     def isLeaf(self, node):
         return node.right is None and node.left is None
         
@@ -1295,14 +1353,44 @@ class dynamic_ch(object):
             
     def UP(self, v):
         if v != self.root:
+            #First we check if a rotaion is neccesary
+            if v.parent != self.root:
+                parent = v.parent
+                grandpa = parent.parent
+                while parent == grandpa:
+                    parent.append(random.random())
+                    grandpa.priority.append(random.random())
+                    
+                if parent.priority <= grandpa.priority:
+#                    print self.root
+#                    print treapToList(self)
+#                    print "v is", v.key, v.priority
+#                    print "parent is", parent.key, parent.priority
+#                    print "grandpa is", grandpa.key, grandpa.priority
+                    print "Rotating ",
+                    sibbling = parent.left if parent.right is v else parent.right
+                    if grandpa.right == parent:           # We will continue UP at v or its sibbling new position
+                        print "left"                      #depending on who gets a lower position
+                        self.left_rotation(grandpa)
+#                        v = v.left                     #v's parent became v's rson
+                    else:
+                        print "right"
+                        self.right_rotation(grandpa)
+#                        v = v.right                    #v's parent became v's lson
+#                    print self.root
+#                    print treapToList(self)
+                    if sibbling.parent == grandpa:
+                        v = sibbling
+#                    print "v is", v.key, v.priority
+                    
             Q1, Q2, Q3, Q4, J = None,None,None,None,None,
-            print "UP Brigding", v, "Ql:", v.Ql.root
-            print "and        ",
+#            print "UP Brigding", v.key#, "Ql:", treapToList(v.Ql)
+#            print "and        ",
             if v.parent.left is v:                
-                print v.parent.right, "Ql", v.parent.right.Ql.root, "this is a right son"
+#                print v.parent.right.key#, "Ql", treapToList(v.parent.right.Ql), "this is a right son"
                 Q1, Q2, Q3, Q4, J = dynamic_ch.bridge(v.Ql, v.parent.right.Ql)
             else:
-                print v.parent.left, "Ql", v.parent.left.Ql.root, "this is a left son"
+#                print v.parent.left.key#, "Ql", treapToList(v.parent.left.Ql), "this is a left son"
                 Q1, Q2, Q3, Q4, J = dynamic_ch.bridge(v.parent.left.Ql, v.Ql)
             v.parent.left.Ql = Q2
             v.parent.right.Ql = Q3
@@ -1311,186 +1399,160 @@ class dynamic_ch(object):
             v.parent.key = [0,max(v.parent.key[1], v.parent.left.key[1])]
             self.UP(v.parent)
         return 
-            
-    @classmethod        
-    def treapToList(cls, T):
-        l = []
-        def inOrder(node):
-            if node.right == None and node.left == None:
-                l.append(node.key)
-                return
-            if node.left != None:
-                inOrder(node.left)
-            l.append(node.key)
-            if node.right != None:
-                inOrder(node.right)
-        if not T.empty:
-            inOrder(T.root)
-        return l
         
     @classmethod
-    def bridge(cls, Lower, Upper):           #The points in Lower should have smaller y coordinates than the ones in Upper
-        L1 = dynamic_ch.treapToList(Lower)
-        L2 = dynamic_ch.treapToList(Upper)
+    def bridge(cls, Lower, Upper):           #The points in Lower should have smaller y coordinates than the ones in Upper        
+        SUPPORT = 1
+        CONCAVE = 2
+        REFLEX = 3
         
-        print "IN BRIDGE", L1
-        print "         ", L2
+#        print "UPPER    ", treapToList(Upper)
+#        print "LOWER    ", treapToList(Lower)
         
-        maxy = L1[-1][1]        #The biggest y coordinate of Lower
-################### This code works when using the list representation of the treaps ###########
-#        iqmin = 0
-#        iqmax = len(L1)-1
-#        iq = (iqmax + iqmin)/2                          #Indices of points q, qm, qM
-#        iqm = iq if iq-1 < 0 else iq-1
-#        iqM = iq if iq+1 >= len(L1) else iq+1
-#        
-#        q = L1[iq]                          #The points q, qm and qM
-#        qm = L1[iqm]
-#        qM = L1[iqM]
-#        
-#        ipmin = 0
-#        ipmax = len(L2)-1
-#        ip = (ipmax + ipmin)/2                      #Analogous to q
-#        ipm = ip if ip-1 < 0 else ip-1
-#        ipM = ip if ip+1 >= len(L2) else ip+1
-#        
-#        p = L2[ip]
-#        pm = L2[ipm]
-#        pM = L2[ipM]
-#####################################################################################################
+        maxy = Lower.max().key[1]
 
+        def update_point(heap, t_aux):
+            t = t_aux.key
+            tm = heap.predecessor(t_aux)
+            tm = t if tm is None else tm.key
+            tM = heap.successor(t_aux)
+            tM = t if tM is None else tM.key
+            return t, tm, tM
+            
         p_aux = Upper.root
-        p = p_aux.key
-        pm = Upper.predecessor(p_aux)
-        pm = p if pm is None else pm.key
-        pM = Upper.successor(p_aux)
-        pM = p if pM is None else pM.key
+        p, pm, pM = update_point(Upper, p_aux)
         
         q_aux = Lower.root
-        q = q_aux.key
-        qm = Lower.predecessor(q_aux)
-        qm = q if qm is None else qm.key
-        qM = Lower.successor(q_aux)
-        qM = q if qM is None else qM.key
+        q, qm, qM = update_point(Lower, q_aux)
         
-        print "Puntos"
-        print pm, p, pM
-        print qm, q, qM
+        def find_case():
+            p_case = 0
+            q_case = 0
+            if turn(q, p, pm) >= 0 and turn(q, p, pM) >= 0:
+                p_case = SUPPORT
+            elif turn(q, p, pm) < 0 and turn(q, p, pM) >= 0:
+                p_case = CONCAVE
+            else:
+                p_case = REFLEX
+                
+            if turn(q, p, qm) >= 0 and turn(q, p, qM) >= 0:
+                q_case = SUPPORT
+            elif turn(q, p, qm) >= 0 and turn(q, p, qM) < 0:
+                q_case = CONCAVE
+            else:
+                q_case = REFLEX
+                
+            return p_case, q_case
+            
+        pcase, qcase = find_case()
         
-        while turn(q, p, qm) < 0 or turn(q, p, qM) < 0 or turn(q, p, pm) < 0 or turn(q, p, pM) < 0:
-#            x = raw_input()
+#        print "Puntos"
+#        print pm, p, pM
+#        print qm, q, qM
+        
+        while pcase != SUPPORT or qcase != SUPPORT:
+            
             print "IN BRIDGE"
             #Caso 2
-            if turn(q, p, qM) >=0 and turn(q, p, pm) >=0 and turn(q, p, pM) >=0 and turn(q, p, qm) < 0:
+            if pcase == SUPPORT and qcase == REFLEX:
                 print "C2"
-#                ipmin = ip
-#                iqmax = max(0, iq - 1)
-                q_aux = q_aux if q_aux.left is None else q_aux.left
-                
+                pm = p
+                q_aux = q_aux.left
+                q, qm, qM = update_point(Lower, q_aux)
             #Caso 3
-            elif turn(q, p, pm) >=0 and turn(q, p, qm) >=0 and turn(q, p, pM) >=0 and turn(q, p, qM) < 0:
+            elif pcase == SUPPORT and qcase == CONCAVE:
                 print "C3"
-#                ipmin = ip
-#                iqmin = min(iqm + 1, len(L1)-1)
-                q_aux = q_aux if q_aux.right is None else q_aux.right
+                pm = p
+                q_aux = q_aux.right
+                q, qm, qM = update_point(Lower, q_aux)
             #Caso 4
-            elif turn(q, p, pm) >=0 and turn(q, p, qm) >=0 and turn(q, p, qM) >=0 and turn(q, p, pM) < 0:
+            elif pcase == REFLEX and qcase == SUPPORT:
                 print "C4"
-#                ipmin = min(ip + 1, len(L2)-1)
-#                iqmax = iq
-                p_aux = p_aux if p_aux.right is None else p_aux.right
+                qM = q
+                p_aux = p_aux.right
+                p, pm, pM = update_point(Upper, p_aux)
             #Caso 5
-            elif turn(q, p, pM) >=0 and turn(q, p, qm) >=0 and turn(q, p, qM) >=0 and turn(q, p, pm) < 0:
+            elif pcase == CONCAVE and qcase == SUPPORT:
                 print "C5"
-#                ipmax = max(0, ip - 1)
-#                iqmax = iq
-                p_aux = p_aux if p_aux.left is None else p_aux.left
+                qM = q
+                p_aux = p_aux.left
+                p, pm, pM = update_point(Upper, p_aux)
             #Caso 6
-            elif turn(q, p, pm) >=0 and turn(q, p, qM) >=0 and turn(q, p, qm) < 0 and turn(q, p, pM) < 0:
+            elif pcase == REFLEX and qcase == REFLEX:
                 print "C6"
-#                ipmin = min(ip + 1, len(L2)-1)
-#                iqmax = max(0, iq - 1)
-                p_aux = p_aux = p_aux if p_aux.right is None else p_aux.right
-                q_aux = q_aux if q_aux.left is None else q_aux.left
+                p_aux = p_aux.right
+                p, pm, pM = update_point(Upper, p_aux)
+                q_aux = q_aux.left
+                q, qm, qM = update_point(Lower, q_aux)
             #caso 7
-            elif turn(q, p, pM) >=0 and turn(q, p, qM) >=0 and turn(q, p, qm) < 0 and turn(q, p, pm) < 0:
+            elif pcase == CONCAVE and qcase == REFLEX:
                 print "C7"
-#                L1 = L1[:iqM+1]
-#                iqmax = max(0, iq - 1)
-                q_aux = q_aux if q_aux.left is None else q_aux.left
+                q_aux = q_aux.left
+                q, qm, qM = update_point(Lower, q_aux)
             #Caso 8
-            elif turn(q, p, pm) >=0 and turn(q, p, qm) >=0 and turn(q, p, qM) < 0 and turn(q, p, pM) < 0:
+            elif pcase == REFLEX and qcase == CONCAVE:
                 print "C8"
-#                ipmin = min(ip + 1, len(L2)-1)
-                p_aux = p_aux = p_aux if p_aux.right is None else p_aux.right
+                p_aux = p_aux.right
+                p, pm, pM = update_point(Upper, p_aux)
             #Caso 9
-            elif turn(q, p, pM) >=0 and turn(q, p, qm) >=0 and turn(q, p, qM) < 0 and turn(q, p, pm) < 0:
+            elif pcase == CONCAVE and qcase == CONCAVE:
                 print "C9"
-                #Calculamos la coordenada y donde se intersectan las tangentes ppm y qqM
-                a1 = p[1]-pm[1]
-                b1 = p[0]-pm[0]
+                #We need the y coordinate of the intersection of tangents ppm and qqM
+                #Slope of line ppm
+                ap = p[1]-pm[1]
+                bp = p[0]-pm[0]
+                #Slope of line qqM
+                aq = q[1]-qM[1]
+                bq = q[0]-qM[0]
+                #Each line equation looks like ax - by = ax_0 - by_0, we store the rhs of this equation on c
+                cp = ap*p[0]-bp*p[1]
+                cq = aq*q[0]-bq*q[1]
+                #Solving for y  we have y = (ap*cq - cp*aq)/(ap*bq - bp*aq)
+                y_num = ap*cq - aq*cp
+                y_den = aq*bp - ap*bq
                 
-                a2 = q[1]-qm[1]
-                b2 = q[0]-qm[0]
+                if y_den < 0:  # This is to avoid multiplying by a negative number in the next if, thus changing the inequality
+                    y_den *= -1
+                    y_num *= -1
                 
-                c1 = b1*p[1]-a1*p[0]
-                c2 = b2*1[1]-a2*q[0]
-                
-                y = float(a2*c1 - a1*c2)/float(a2*b1 - a1*b2)
-                
-                #Subcaso 1:
-                if y <= maxy:
-#                    iqmin = qm
-                    q_aux = q_aux if q_aux.left is None else q_aux.left
-                #Subcaso 2
+                #Subcase 1:
+                if y_num <= (maxy * y_den):
+#                    print "se va q"
+                    if qm != q: #We can only eliminate the lower part of the hull
+                        qm = q
+                    else: # q is the first point of the chain, so we can move on to the upper part
+                        q_aux = q_aux.right
+                        q, qm, qM = update_point(Lower, q_aux)
+                #Subcase 2
                 else:
-#                    ipmax = pM
-                    p_aux = p_aux = p_aux if p_aux.right is None else p_aux.right
+                    if pM != p: #We can only eliminate the upper part of the hull
+                        pM = p
+                    else: # q is the last point of the chain, so we can move on to the lower part
+                        p_aux = p_aux.left
+                        p, pm, pM = update_point(Upper, p_aux)
             
-###################################################################################################33
-#            iq = (iqmax + iqmin)/2
-#            iqm = max(0, iq-1)
-#            iqM = min(len(L1)-1, iq+1)
-#            
-#            q = L1[iq]
-#            qm = L1[iqm]
-#            qM = L1[iqM]
-#            
-#            ip = (ipmax + ipmin)/2
-#            ipm = max(0, iq-1)
-#            ipM = min(len(L2)-1, iq+1)
-#            
-#            p = L2[ip]
-#            pm = L2[ipm]
-#            pM = L2[ipM]
-#######################################################################################################
+            pcase, qcase = find_case()
             
-            p = p_aux.key
-            pm = Upper.predecessor(p_aux)
-            pm = p if pm is None else pm.key
-            pM = Upper.successor(p_aux)
-            pM = p if pM is None else pM.key
+#            print "Puntos"
+#            print pm, p, pM
+#            print qm, q, qM
             
-            q = q_aux.key
-            qm = Lower.predecessor(q_aux)
-            qm = q if qm is None else qm.key
-            qM = Lower.successor(q_aux)
-            qm = q if qM is None else qM.key
-        #ip and iq are the indices of the points that form the bridge
+        #p and q are the points that determine the bridge
         J = q
-#        print "p y q", q, p
         
         Q1, q, Q2 = Lower.split(q)
         Q3, p, Q4 = Upper.split(p)
         
         Q1.insert_node(q)
         Q4.insert_node(p)
-        print "DONE!"
-        print Q1.root
-        print Q2.root
-        print Q3.root
-        print Q4.root
-        print J
+        print
+        print "DONE!"# the queues are:"
+#        print "Q1", treapToList(Q1)
+#        print "Q2", treapToList(Q2)
+#        print "Q3", treapToList(Q3)
+#        print "Q4", treapToList(Q4)
+#        print "J", J
+        print
         return Q1, Q2, Q3, Q4, J
         
     class Node(object):
@@ -1503,19 +1565,59 @@ class dynamic_ch(object):
             self.parent = None
             self.right = None
             self.left = None
+            self.priority = [random.random()]
+            
+        def make_priority_smaller(self):
+            '''Makes this node's priority is smaller than its sons'''
+            parent_priority = self.priority
+            left_priority = self.left.priority if self.left is not None else [float("inf")]
+            right_priority = self.right.priority if self.right is not None else [float("inf")]
+            
+            if parent_priority < right_priority and parent_priority < left_priority:
+                return
+            
+            def correct_priority(son_priority):
+                index = 0
+                if parent_priority >= son_priority:
+                    while index < len(parent_priority) and index < len(son_priority) and parent_priority[index] == son_priority:
+                        index += 1
+                    if index >= len(parent_priority):
+                        parent_priority.append(random.random())
+                    if index >= len(son_priority):
+                        son_priority.append(random.random())
+                    while parent_priority[index] >= son_priority[index]:
+                        parent_priority[index] = random.random()
+            
+            correct_priority(left_priority)
+            correct_priority(right_priority)
 
         #for debugging purposes
         def __str__(self):
             
-            if self.left==None:
-                sleft="()"
+            if self.left == None:
+                sleft = "()"
             else:
-                sleft=self.left.__str__()
+                sleft = str(self.left)
                 
-            if self.right==None:
+            if self.right == None:
                 sright="()"
             else:
-                sright=self.right.__str__()
-            snode="(key="+self.key.__str__()+")"
-            s="("+snode+"("+sleft+","+sright+")"+")"
+                sright = str(self.right)
+                
+            snode = "(key = " + str(self.key) + ")"
+            s = "(%s(%s,%s))" % (snode, sleft, sright)
             return s
+            
+def paint_hull(pts, hull, color = 0):
+    h = treapToList(hull.root.Ql)
+    for p in h:
+        pts[pts.index(p)].append(color)
+        
+
+def compute_height(node):
+    if node == None:
+        return 0
+    left = compute_height(node.left)
+    right = compute_height(node.right)
+    h = max(left,right)
+    return h + 1
