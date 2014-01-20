@@ -1184,8 +1184,7 @@ class Envelope_Mantainer(Treap):
                 lst.cdr=rhead
             else:
                 tail=lst
-            return (head,tail)
-            
+            return (head,tail)            
 
 class dynamic_ch(object):
     
@@ -1243,7 +1242,7 @@ class dynamic_ch(object):
         
         if self.empty:
             self.root = v
-            self.empty = False       #XXX: Shouldn't Ql contain p? ### No, it will be inserted in line 1198
+            self.empty = False
             return
         
         v.Ql.insert(key = p)
@@ -1402,23 +1401,7 @@ class dynamic_ch(object):
             v.parent.J = J
             v.parent.key = [0,max(v.parent.key[1], v.parent.left.key[1])]
             self.UP(v.parent)
-        return 
-            
-    @classmethod        
-    def treapToList(cls, T):
-        l = []
-        def inOrder(node):
-            if node.right == None and node.left == None:
-                l.append(node.key)
-                return
-            if node.left != None:
-                inOrder(node.left)
-            l.append(node.key)
-            if node.right != None:
-                inOrder(node.right)
-        if not T.empty:
-            inOrder(T.root)
-        return l
+        return
         
     @classmethod
     def bridge(cls, Lower, Upper):           #The points in Lower should have smaller y coordinates than the ones in Upper        
