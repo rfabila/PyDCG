@@ -11,6 +11,7 @@ import visualizer
 import visualizer2
 import holes
 import heuristics
+import convexhull
 
 import pickle, os
 __config_file=open(os.path.join(os.path.dirname(__file__), "config/geometricbasics.config"), "r")

@@ -1378,7 +1378,7 @@ class dynamic_half_hull(object):
 #                    print "v is", v.key, v.priority
 #                    print "parent is", parent.key, parent.priority
 #                    print "grandpa is", grandpa.key, grandpa.priority
-                    print "Rotating ",
+                    #print "Rotating ",
                     sibbling = parent.left if parent.right is v else parent.right
                     if grandpa.right == parent:           # We will continue UP at v or its sibbling new position
 #                        print "left"                      #depending on who gets a lower position
@@ -1484,48 +1484,48 @@ class dynamic_half_hull(object):
 #            print "IN BRIDGE"
             #Caso 2
             if pcase == SUPPORT and qcase == REFLEX:
-                print "C2"
+                #print "C2"
                 pm = p
                 q_aux = q_aux.left
                 q, qm, qM = update_point(Left, q_aux)
             #Caso 3
             elif pcase == SUPPORT and qcase == CONCAVE:
-                print "C3"
+                #print "C3"
                 pm = p
                 q_aux = q_aux.right
                 q, qm, qM = update_point(Left, q_aux)
             #Caso 4
             elif pcase == REFLEX and qcase == SUPPORT:
-                print "C4"
+                #print "C4"
                 qM = q
                 p_aux = p_aux.right
                 p, pm, pM = update_point(Right, p_aux)
             #Caso 5
             elif pcase == CONCAVE and qcase == SUPPORT:
-                print "C5"
+                #print "C5"
                 qM = q
                 p_aux = p_aux.left
                 p, pm, pM = update_point(Right, p_aux)
             #Caso 6
             elif pcase == REFLEX and qcase == REFLEX:
-                print "C6"
+                #print "C6"
                 p_aux = p_aux.right
                 p, pm, pM = update_point(Right, p_aux)
                 q_aux = q_aux.left
                 q, qm, qM = update_point(Left, q_aux)
             #caso 7
             elif pcase == CONCAVE and qcase == REFLEX:
-                print "C7"
+                #print "C7"
                 q_aux = q_aux.left
                 q, qm, qM = update_point(Left, q_aux)
             #Caso 8
             elif pcase == REFLEX and qcase == CONCAVE:
-                print "C8"
+                #print "C8"
                 p_aux = p_aux.right
                 p, pm, pM = update_point(Right, p_aux)
             #Caso 9
             elif pcase == CONCAVE and qcase == CONCAVE:
-                print "C9"
+                #print "C9"
                 #We need the y coordinate of the intersection of tangents ppm and qqM
                 #Slope of line ppm
                 ap = p[1]-pm[1]
