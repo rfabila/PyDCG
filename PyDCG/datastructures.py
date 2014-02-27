@@ -2,8 +2,16 @@
 #!/usr/bin/env python
 import random
 import line
-import fractions
 from geometricbasics import turn
+import fractions
+
+#TODO: modificar clase treap para que utilice listas de python
+#TODO: cambiar bridge a miembro o sacarla de la clase (actualmente es miembro de clase)
+
+LEFT = 0
+RIGHT = 1
+UPPER = 3
+LOWER = 4
 
 objs=[]
 """Module implementing various data structures"""
@@ -443,6 +451,9 @@ class Treap(object):
             snode="(key="+self.key.__str__()+",pr="+self.priority.car.__str__()+","+self.obj.__str__()+")"
             s="("+snode+"("+sleft+","+sright+")"+")"
             return s
+            
+        def isLeaf(self):
+            return self.right is None and self.left is None
                 
                 
 
@@ -469,7 +480,7 @@ def treapToList(T):
         l.append(node.key)
         if node.right != None:
             inOrder(node.right)
-    if not T.empty:
+    if not T.root.isLeaf():
         inOrder(T.root)
     return l
     
@@ -1186,11 +1197,12 @@ class Envelope_Mantainer(Treap):
                 tail=lst
             return (head,tail)            
 
-class dynamic_ch(object):
+class dynamic_half_hull(object):
     
-    def __init__(self):
+    def __init__(self, side = UPPER):
         self.root=None
         self.empty = True
+        self.side = side
         
     def right_rotation(self, node):
         if node.left != None:
@@ -1235,36 +1247,39 @@ class dynamic_ch(object):
             rson.left = node
         
     def insert(self, p):
-        print "inserting", p
+#        print "inserting", p
         # v is the new node
         v = self.Node(key = p)
         v.J = p
+        v.Q.insert(key = p)
         
         if self.empty:
             self.root = v
             self.empty = False
             return
         
-        v.Ql.insert(key = p)
+#        v.Q.insert(key = p)
         u = self.DOWN(self.root, v)
 #        print "DOWN gave", u, u.Ql.root
         
         if u.key != v.key:
             aux = self.Node()
+            aux.priority[0] = random.random()
             parent = u.parent
             if parent is None:                       # u is currently the root
-                u.Ql.insert(u.key)
-                print "root"
+#                u.Q.insert(u.key)
+#                print "root"
                 self.root = aux
                 u.parent = aux
                 v.parent = aux
-                if v.key[1] >= u.key[1]:
-                    aux.key = [0,u.key[1]]
+#                START!
+                if v.key[0] >= u.key[0]:
+                    aux.key = [u.key[0],0]
                     aux.left = u
                     aux.right = v
 #                    aux.J = u.key
                 else:
-                    aux.key = [0,v.key[1]]
+                    aux.key = [v.key[0],0]
                     aux.left = v
                     aux.right = u
 #                    aux.J = v.key
@@ -1274,20 +1289,20 @@ class dynamic_ch(object):
                 aux.parent = parent
                 u.parent = aux
                 v.parent = aux
-                if v.key[1] >= u.key[1]:
-                    aux.key = [0,u.key[1]]
+                if v.key[0] >= u.key[0]:
+                    aux.key = [u.key[0],0]
                     aux.left = u
                     aux.right = v
 #                    aux.J = u.key
                 else:
-                    aux.key = [0,v.key[1]]
+                    aux.key = [v.key[0],0]
                     aux.left = v
                     aux.right = u
 #                    aux.J = v.key
             else:
                 parent.left = aux      # u is a left son
                 aux.parent = parent
-                aux.key = [0,v.key[1]]
+                aux.key = [v.key[0],0]
                 aux.left = v
                 aux.right = u
 #                aux.J = v.key
@@ -1299,18 +1314,16 @@ class dynamic_ch(object):
             self.UP(u)
             return
             
-        aux.make_priority_smaller()    #The new node has smaller priority than its sons, this way there's no need
-                             #to rebalance at the the sons. UP may need to rebalance at aux tough
 #        print "parent, right, left", aux.priority, aux.left.priority, aux.right.priority
         self.UP(v)
         
     def delete(self, p):
         aux = self.Node(key=p)
         u = self.DOWN(self.root, aux)
-        print "DOWN gave", u
+#        print "DOWN gave", u
 
         if u.key != p:
-            print "Point not found"
+#            print "Point not found"
             self.UP(u)
             return
 
@@ -1329,24 +1342,19 @@ class dynamic_ch(object):
         
         self.UP(sib)
         
-        
-        
-    def isLeaf(self, node):
-        return node.right is None and node.left is None
-        
     def DOWN(self, v, p):
 #        print "DOWN checks", v
-        if not self.isLeaf(v):
+        if not v.isLeaf():
 #            print "        ... not a leaf"
 #            print "splitting", v.Ql.root
 #            print "at key", v.J
-            Q1, r, Q2 = v.Ql.split(v.J)
+            Q1, r, Q2 = v.Q.split(v.J)
             Q1.insert_node(r)
             if v.left != None:
-                v.left.Ql = Q1.join(v.left.Ql)
+                v.left.Q = Q1.join(v.left.Q)
             if v.right != None:
-                v.right.Ql = v.right.Ql.join(Q2)
-            if p.key[1] <= v.key[1]:
+                v.right.Q = v.right.Q.join(Q2)
+            if p.key[0] <= v.key[0]:
                 v = v.left
             else:
                 v = v.right
@@ -1356,12 +1364,12 @@ class dynamic_ch(object):
             
     def UP(self, v):
         if v != self.root:
-            #First we check if a rotaion is neccesary
+            #First we check if a rotation is neccesary
             if v.parent != self.root:
                 parent = v.parent
                 grandpa = parent.parent
-                while parent == grandpa:
-                    parent.append(random.random())
+                while parent.priority == grandpa.priority:
+                    parent.priority.append(random.random())
                     grandpa.priority.append(random.random())
                     
                 if parent.priority <= grandpa.priority:
@@ -1373,11 +1381,11 @@ class dynamic_ch(object):
                     print "Rotating ",
                     sibbling = parent.left if parent.right is v else parent.right
                     if grandpa.right == parent:           # We will continue UP at v or its sibbling new position
-                        print "left"                      #depending on who gets a lower position
+#                        print "left"                      #depending on who gets a lower position
                         self.left_rotation(grandpa)
 #                        v = v.left                     #v's parent became v's rson
                     else:
-                        print "right"
+#                        print "right"
                         self.right_rotation(grandpa)
 #                        v = v.right                    #v's parent became v's lson
 #                    print self.root
@@ -1390,21 +1398,21 @@ class dynamic_ch(object):
 #            print "UP Brigding", v.key#, "Ql:", treapToList(v.Ql)
 #            print "and        ",
             if v.parent.left is v:                
-#                print v.parent.right.key#, "Ql", treapToList(v.parent.right.Ql), "this is a right son"
-                Q1, Q2, Q3, Q4, J = dynamic_ch.bridge(v.Ql, v.parent.right.Ql)
+#                print v.parent.right.key, "Ql", treapToList(v.parent.right.Q), "this is a right son"
+                Q1, Q2, Q3, Q4, J = dynamic_half_hull.bridge(v.Q, v.parent.right.Q, self.side)
             else:
-#                print v.parent.left.key#, "Ql", treapToList(v.parent.left.Ql), "this is a left son"
-                Q1, Q2, Q3, Q4, J = dynamic_ch.bridge(v.parent.left.Ql, v.Ql)
-            v.parent.left.Ql = Q2
-            v.parent.right.Ql = Q3
-            v.parent.Ql = Q1.join(Q4)
+#                print v.parent.left.key, "Ql", treapToList(v.parent.left.Q), "this is a left son"
+                Q1, Q2, Q3, Q4, J = dynamic_half_hull.bridge(v.parent.left.Q, v.Q, self.side)
+            v.parent.left.Q = Q2
+            v.parent.right.Q = Q3
+            v.parent.Q = Q1.join(Q4)
             v.parent.J = J
-            v.parent.key = [0,max(v.parent.key[1], v.parent.left.key[1])]
+            v.parent.key = [max(v.parent.key[0], v.parent.left.key[0]),0]
             self.UP(v.parent)
         return
         
     @classmethod
-    def bridge(cls, Lower, Upper):           #The points in Lower should have smaller y coordinates than the ones in Upper        
+    def bridge(cls, Left, Right, side = UPPER):           #The points in Lower should have smaller y coordinates than the ones in Upper        
         SUPPORT = 1
         CONCAVE = 2
         REFLEX = 3
@@ -1412,39 +1420,57 @@ class dynamic_ch(object):
 #        print "UPPER    ", treapToList(Upper)
 #        print "LOWER    ", treapToList(Lower)
         
-        maxy = Lower.max().key[1]
+        maxx = Left.max().key[0]
 
-        def update_point(heap, t_aux):
+        def update_point(treap, t_aux):
             t = t_aux.key
-            tm = heap.predecessor(t_aux)
+            tm = treap.predecessor(t_aux)
             tm = t if tm is None else tm.key
-            tM = heap.successor(t_aux)
+            tM = treap.successor(t_aux)
             tM = t if tM is None else tM.key
             return t, tm, tM
             
-        p_aux = Upper.root
-        p, pm, pM = update_point(Upper, p_aux)
+        p_aux = Right.root
+#        print "right", treapToList(Right)
+        p, pm, pM = update_point(Right, p_aux)
         
-        q_aux = Lower.root
-        q, qm, qM = update_point(Lower, q_aux)
+        q_aux = Left.root
+#        print "left", treapToList(Left)
+        q, qm, qM = update_point(Left, q_aux)
         
         def find_case():
             p_case = 0
             q_case = 0
-            if turn(q, p, pm) >= 0 and turn(q, p, pM) >= 0:
-                p_case = SUPPORT
-            elif turn(q, p, pm) < 0 and turn(q, p, pM) >= 0:
-                p_case = CONCAVE
-            else:
-                p_case = REFLEX
-                
-            if turn(q, p, qm) >= 0 and turn(q, p, qM) >= 0:
-                q_case = SUPPORT
-            elif turn(q, p, qm) >= 0 and turn(q, p, qM) < 0:
-                q_case = CONCAVE
-            else:
-                q_case = REFLEX
-                
+            if side == UPPER:
+                if turn(q, p, pm) >= 0 and turn(q, p, pM) >= 0:
+                    p_case = SUPPORT
+                elif turn(q, p, pm) < 0 and turn(q, p, pM) >= 0:
+                    p_case = CONCAVE
+                else:
+                    p_case = REFLEX
+                    
+                if turn(q, p, qm) >= 0 and turn(q, p, qM) >= 0:
+                    q_case = SUPPORT
+                elif turn(q, p, qm) >= 0 and turn(q, p, qM) < 0:
+                    q_case = CONCAVE
+                else:
+                    q_case = REFLEX
+                    
+            elif side == LOWER:
+                if turn(q, p, pm) <= 0 and turn(q, p, pM) <= 0:
+                    p_case = SUPPORT
+                elif turn(q, p, pm) > 0 and turn(q, p, pM) <= 0:
+                    p_case = CONCAVE
+                else:
+                    p_case = REFLEX
+                    
+                if turn(q, p, qm) <= 0 and turn(q, p, qM) <= 0:
+                    q_case = SUPPORT
+                elif turn(q, p, qm) <= 0 and turn(q, p, qM) > 0:
+                    q_case = CONCAVE
+                else:
+                    q_case = REFLEX
+                    
             return p_case, q_case
             
         pcase, qcase = find_case()
@@ -1455,48 +1481,48 @@ class dynamic_ch(object):
         
         while pcase != SUPPORT or qcase != SUPPORT:
             
-            print "IN BRIDGE"
+#            print "IN BRIDGE"
             #Caso 2
             if pcase == SUPPORT and qcase == REFLEX:
                 print "C2"
                 pm = p
                 q_aux = q_aux.left
-                q, qm, qM = update_point(Lower, q_aux)
+                q, qm, qM = update_point(Left, q_aux)
             #Caso 3
             elif pcase == SUPPORT and qcase == CONCAVE:
                 print "C3"
                 pm = p
                 q_aux = q_aux.right
-                q, qm, qM = update_point(Lower, q_aux)
+                q, qm, qM = update_point(Left, q_aux)
             #Caso 4
             elif pcase == REFLEX and qcase == SUPPORT:
                 print "C4"
                 qM = q
                 p_aux = p_aux.right
-                p, pm, pM = update_point(Upper, p_aux)
+                p, pm, pM = update_point(Right, p_aux)
             #Caso 5
             elif pcase == CONCAVE and qcase == SUPPORT:
                 print "C5"
                 qM = q
                 p_aux = p_aux.left
-                p, pm, pM = update_point(Upper, p_aux)
+                p, pm, pM = update_point(Right, p_aux)
             #Caso 6
             elif pcase == REFLEX and qcase == REFLEX:
                 print "C6"
                 p_aux = p_aux.right
-                p, pm, pM = update_point(Upper, p_aux)
+                p, pm, pM = update_point(Right, p_aux)
                 q_aux = q_aux.left
-                q, qm, qM = update_point(Lower, q_aux)
+                q, qm, qM = update_point(Left, q_aux)
             #caso 7
             elif pcase == CONCAVE and qcase == REFLEX:
                 print "C7"
                 q_aux = q_aux.left
-                q, qm, qM = update_point(Lower, q_aux)
+                q, qm, qM = update_point(Left, q_aux)
             #Caso 8
             elif pcase == REFLEX and qcase == CONCAVE:
                 print "C8"
                 p_aux = p_aux.right
-                p, pm, pM = update_point(Upper, p_aux)
+                p, pm, pM = update_point(Right, p_aux)
             #Caso 9
             elif pcase == CONCAVE and qcase == CONCAVE:
                 print "C9"
@@ -1507,32 +1533,41 @@ class dynamic_ch(object):
                 #Slope of line qqM
                 aq = q[1]-qM[1]
                 bq = q[0]-qM[0]
+                if bp == 0 or bq == 0:
+                    print "Recta vertical"
+                if fractions.Fraction(ap, bq) == fractions.Fraction(aq,bq):
+                    print "Misma pendiente"
                 #Each line equation looks like ax - by = ax_0 - by_0, we store the rhs of this equation on c
                 cp = ap*p[0]-bp*p[1]
                 cq = aq*q[0]-bq*q[1]
-                #Solving for y  we have y = (ap*cq - cp*aq)/(ap*bq - bp*aq)
-                y_num = ap*cq - aq*cp
-                y_den = aq*bp - ap*bq
+#If we are calculating the right/left hulls we solve for y:
+#                #y = (ap*cq - cp*aq)/(-ap*bq + bp*aq)
+#                y_num = ap*cq - aq*cp
+#                y_den = aq*bp - ap*bq
+#If we are calculating the upper/lower hulls we solve for x
+                #x = (-cp*bq + cq*bp)/(-ap*bq + bp*aq)
+                x_num = cq*bp - cp*bq
+                x_den = aq*bp - ap*bq
                 
-                if y_den < 0:  # This is to avoid multiplying by a negative number in the next if, thus changing the inequality
-                    y_den *= -1
-                    y_num *= -1
+                if x_den < 0:  # This is to avoid multiplying by a negative number in the next if, thus changing the inequality
+                    x_den *= -1
+                    x_num *= -1
                 
                 #Subcase 1:
-                if y_num <= (maxy * y_den):
+                if x_num <= (maxx * x_den):
 #                    print "se va q"
                     if qm != q: #We can only eliminate the lower part of the hull
                         qm = q
                     else: # q is the first point of the chain, so we can move on to the upper part
                         q_aux = q_aux.right
-                        q, qm, qM = update_point(Lower, q_aux)
+                        q, qm, qM = update_point(Left, q_aux)
                 #Subcase 2
                 else:
                     if pM != p: #We can only eliminate the upper part of the hull
                         pM = p
                     else: # q is the last point of the chain, so we can move on to the lower part
                         p_aux = p_aux.left
-                        p, pm, pM = update_point(Upper, p_aux)
+                        p, pm, pM = update_point(Right, p_aux)
             
             pcase, qcase = find_case()
             
@@ -1544,56 +1579,42 @@ class dynamic_ch(object):
         J = q
 #        print "p y q", q, p
         
-        Q1, q, Q2 = Lower.split(q)
-        Q3, p, Q4 = Upper.split(p)
+        Q1, q, Q2 = Left.split(q)
+        Q3, p, Q4 = Right.split(p)
         
         Q1.insert_node(q)
         Q4.insert_node(p)
-        print
-        print "DONE!"# the queues are:"
+#        print
+#        print "DONE!"# the queues are:"
 #        print "Q1", treapToList(Q1)
 #        print "Q2", treapToList(Q2)
 #        print "Q3", treapToList(Q3)
 #        print "Q4", treapToList(Q4)
 #        print "J", J
-        print
+#        print
         return Q1, Q2, Q3, Q4, J
+        
+    def toList(self):
+        res = treapToList(self.root.Q)
+        if self.side == LOWER:
+            res.reverse()
+        return res
         
     class Node(object):
         
         def __init__(self,key = [0,0]):
         
             self.key = key          #A point is the node is a leaf, otherwise [0, maxy] where maxy is the biggest y coordinate in the left subtree
-            self.Ql = Treap(lambda p, q: p[1]-q[1])       #This part does not contribute to the lc-hull of parent
+            self.Q = Treap(lambda p, q: p[0]-q[0])       #This part does not contribute to the lc-hull of parent
             self.J = key           #The position of the support point in parent's lc-hull
             self.parent = None
             self.right = None
             self.left = None
-            self.priority = [random.random()]
+#            self.priority = [random.random()]
+            self.priority = [2]
             
-        def make_priority_smaller(self):
-            '''Makes this node's priority is smaller than its sons'''
-            parent_priority = self.priority
-            left_priority = self.left.priority if self.left is not None else [float("inf")]
-            right_priority = self.right.priority if self.right is not None else [float("inf")]
-            
-            if parent_priority < right_priority and parent_priority < left_priority:
-                return
-            
-            def correct_priority(son_priority):
-                index = 0
-                if parent_priority >= son_priority:
-                    while index < len(parent_priority) and index < len(son_priority) and parent_priority[index] == son_priority:
-                        index += 1
-                    if index >= len(parent_priority):
-                        parent_priority.append(random.random())
-                    if index >= len(son_priority):
-                        son_priority.append(random.random())
-                    while parent_priority[index] >= son_priority[index]:
-                        parent_priority[index] = random.random()
-            
-            correct_priority(left_priority)
-            correct_priority(right_priority)
+        def isLeaf(self):
+            return self.right is None and self.left is None
 
         #for debugging purposes
         def __str__(self):
@@ -1612,12 +1633,53 @@ class dynamic_ch(object):
             s = "(%s(%s,%s))" % (snode, sleft, sright)
             return s
             
-def paint_hull(pts, hull, color = 0):
-    h = treapToList(hull.root.Ql)
-    for p in h:
-        pts[pts.index(p)].append(color)
+def paint_hull(pts, hull, color_u = 0, color_l = 1, color_int = 2):
+    def paint(pts_prime, color):
+        for p in pts_prime:
+            if len(p) < 3:
+                pts[pts.index(p)].append(color)
+            else:
+                pts[pts.index(p)][2] = color
+                
+    if isinstance(hull, dynamic_half_hull):
+        paint(hull.toList(), color_u)
         
-
+    elif isinstance(hull, dynamic_convex_hull):
+        u = hull.upper.toList()
+        l = hull.lower.toList()
+        intersection_points  = [l.pop(), u.pop()]
+        l.pop(0)
+        u.pop(0)
+        paint(u, color_u)
+        paint(l, color_l)
+        paint(intersection_points, color_int)
+        
+            
+class dynamic_convex_hull(object):
+    
+    def __init__(self):
+        self.upper = dynamic_half_hull(UPPER)
+        self.lower = dynamic_half_hull(LOWER)
+        
+    def insert(self, p):
+        self.upper.insert(p)
+        self.lower.insert(p)
+        
+    def delete(self, p):
+        self.upper.delete(p)
+        self.lower.delete(p)
+        
+    def toList(self):
+        u = self.upper.toList()
+        u.pop()
+        l = self.lower.toList()
+        l.reverse()
+        u.extend(l)
+        u.pop()
+        
+    def __str__(self):
+        print self.toList()        
+        
 def compute_height(node):
     if node == None:
         return 0
@@ -1625,3 +1687,13 @@ def compute_height(node):
     right = compute_height(node.right)
     h = max(left,right)
     return h + 1
+    
+def in_order_priorities(node):
+    if node.right == None and node.left == None:
+        print node.priority
+        return
+    if node.left != None:
+        in_order_priorities(node.left)
+    print node.priority
+    if node.right != None:
+        in_order_priorities(node.right)
