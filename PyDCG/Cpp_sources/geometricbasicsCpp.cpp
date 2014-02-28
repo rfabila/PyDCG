@@ -199,10 +199,12 @@ int cmp_points(const void *qp, const void *rp)
         return turn(origin, q, r);
     //Each in a different open semiplane
     if (tempres < 0)
+    {
         if (r[0] < 0)
             return -1;
         else
             return 1;
+    }
     //Both of them on the Y-axis
     if (r[0] == q[0])
     {
@@ -267,8 +269,8 @@ void shift(long pts[][2], int s, int n)
         reverse_in_place(pts, s, n - 1);
         reverse_in_place(pts, 0, n - 1);
     }
-
 }
+
 void print_pts(long pts[][2], int n)
 {
     int i;

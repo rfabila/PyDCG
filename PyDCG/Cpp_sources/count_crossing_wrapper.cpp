@@ -89,10 +89,85 @@ extern "C" PyObject* crossing_wrapper(PyObject* self, PyObject* args)
     delete[] pts;
     return Py_BuildValue("i", res);
 }
+//TODO: Añadir docstring de count_crossings_candidate_list
+//TODO: Añadir una función para pasar listas d epython a vectores/arreglos de C++
+extern "C" PyObject* count_crossings_candidate_list_wrapper(PyObject* self, PyObject* args)
+{
+    //The C++ function prototype is: vector<int> count_crossings_candidate_list(int point_index, vector<punto> &candidate_list, vector<punto> &puntos)
+    PyObject* py_candidate_list = NULL;
+    PyObject* py_points = NULL;
+
+    int index;
+
+    //The arguments must be: an integer and two lists with points (each point is a list of two integers)
+    if (!PyArg_ParseTuple(args, "iO!O!:count_crossings_candidate_list", &index, &PyList_Type, &py_candidate_list, &PyList_Type, &py_points))
+        return NULL;
+
+    Py_ssize_t points_size = PyList_Size(py_points);
+    Py_ssize_t candidates_size = PyList_Size(py_candidate_list);
+
+    vector<punto> pts;
+    vector<punto> candidates;
+    //Py_ssize_t can be bigger than an 2^32, but we don't expect
+    //to work with that many points.
+    pts.reserve(int(points_size));
+    candidates.reserve(int(candidates_size));
+
+    for(Py_ssize_t i=0; i < points_size; i++)
+    {
+        PyObject *punto = PyList_GetItem(py_points, i); //Borrowed Reference
+        Py_ssize_t n_coords = PyList_Size(punto);
+        long long x, y;
+
+        if(n_coords > 3 || n_coords < 2)
+        {
+            PyErr_SetString(PyExc_ValueError, "Wrong number of values representing a point, must be 2 or 3.");
+            return NULL;
+        }
+
+        x = PyInt_AsLong(PyList_GetItem(punto, 0)); //Borrowed References
+        y = PyInt_AsLong(PyList_GetItem(punto, 1));
+
+        pts.emplace_back(x, y);
+    }
+
+    for(Py_ssize_t i=0; i < candidates_size; i++)
+    {
+        PyObject *punto = PyList_GetItem(py_candidate_list, i); //Borrowed Reference
+        Py_ssize_t n_coords = PyList_Size(punto);
+        long long x, y;
+
+        if(n_coords > 3 || n_coords < 2)
+        {
+            PyErr_SetString(PyExc_ValueError, "Wrong number of values representing a point, must be 2 or 3.");
+            return NULL;
+        }
+
+        x = PyInt_AsLong(PyList_GetItem(punto, 0)); //Borrowed References
+        y = PyInt_AsLong(PyList_GetItem(punto, 1));
+
+        candidates.emplace_back(x, y);
+    }
+
+    vector<int> res = count_crossings_candidate_list(index, candidates, pts);
+
+    PyObject* py_res = PyList_New(0);
+
+    for(auto &crossings : res)
+    {
+        PyObject* py_crossings = PyInt_FromLong(crossings);
+        if(PyList_Append(py_res, py_crossings) == -1) //Append increases reference count
+            return NULL;
+        Py_DECREF(py_crossings);
+    }
+
+    return py_res;
+}
 
 extern "C" PyMethodDef crossingCppMethods[] =
 {
     {"crossing", crossing_wrapper, METH_VARARGS, crossing_doc},
+    {"count_crossings_candidate_list", count_crossings_candidate_list_wrapper, METH_VARARGS, ""},
     {NULL, NULL, 0, NULL}
 };
 
