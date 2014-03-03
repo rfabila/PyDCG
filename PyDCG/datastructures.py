@@ -3,9 +3,7 @@
 import random
 import line
 from geometricbasics import turn
-import fractions
 
-#TODO: modificar clase treap para que utilice listas de python
 #TODO: cambiar bridge a miembro o sacarla de la clase (actualmente es miembro de clase)
 
 LEFT = 0
@@ -193,20 +191,33 @@ class Treap(object):
     def show(self):
         print self.root.__str__()
 
+#    def compare_priorities(self,x,y):
+#        if x==y or x==None or y==None:
+#            return 0
+#        prx=x.priority
+#        pry=y.priority
+#        while prx.car==pry.car:
+#            if prx.cdr.empty:
+#                prx.cdr=List(car=random.random())
+#            prx=prx.cdr
+#            if pry.cdr.empty:
+#                pry.cdr=List(car=random.random())
+#            pry=pry.cdr
+#                
+#        if prx.car < pry.car:
+#            return -1
+#        else:
+#            return 1
+
     def compare_priorities(self,x,y):
         if x==y or x==None or y==None:
             return 0
-        prx=x.priority
-        pry=y.priority
-        while prx.car==pry.car:
-            if prx.cdr.empty:
-                prx.cdr=List(car=random.random())
-            prx=prx.cdr
-            if pry.cdr.empty:
-                pry.cdr=List(car=random.random())
-            pry=pry.cdr
-                
-        if prx.car < pry.car:
+        while x.priority == y.priority:
+            x.priority.append(random.random())
+            y.priority.append(random.random())
+            
+        
+        if x.priority < y.priority:
             return -1
         else:
             return 1
@@ -430,7 +441,7 @@ class Treap(object):
         
             self.key=key
             self.obj=obj
-            self.priority=List(car=random.random())
+            self.priority = []#List(car=random.random())
             self.parent=None
             self.right=None
             self.left=None
@@ -1533,10 +1544,10 @@ class dynamic_half_hull(object):
                 #Slope of line qqM
                 aq = q[1]-qM[1]
                 bq = q[0]-qM[0]
-                if bp == 0 or bq == 0:
-                    print "Recta vertical"
-                if fractions.Fraction(ap, bq) == fractions.Fraction(aq,bq):
-                    print "Misma pendiente"
+#                if bp == 0 or bq == 0:
+#                    print "Recta vertical"
+#                if fractions.Fraction(ap, bq) == fractions.Fraction(aq,bq):
+#                    print "Misma pendiente"
                 #Each line equation looks like ax - by = ax_0 - by_0, we store the rhs of this equation on c
                 cp = ap*p[0]-bp*p[1]
                 cq = aq*q[0]-bq*q[1]
@@ -1673,9 +1684,9 @@ class dynamic_convex_hull(object):
         u = self.upper.toList()
         u.pop()
         l = self.lower.toList()
-        l.reverse()
         u.extend(l)
         u.pop()
+        return u
         
     def __str__(self):
         print self.toList()        
@@ -1697,3 +1708,71 @@ def in_order_priorities(node):
     print node.priority
     if node.right != None:
         in_order_priorities(node.right)
+        
+######################### TESTS #####################################
+
+def randPoint(k = 1000000):
+    return [random.randint(-k,k), random.randint(-k,k)]
+
+def time_test(n = 100, k = 100000, skip = 1, fileName = "tests.txt"):
+    import convexhull, time, copy
+    f = open(fileName, "w")
+    pts = []
+    cont = 0
+    ch = dynamic_convex_hull()
+    for i in xrange(n):
+#        f.close()
+#        f = open(fileName, "a")
+        if not i%skip:
+            print cont,
+            f.write( "%d," % (cont) )
+            cont += 1
+        p = randPoint(k)
+        pts.append(p)
+        t0 = time.time()
+        ch.insert(p)
+        t1 = time.time()
+        if not i%skip:
+            print t1-t0,
+            f.write( "%.10f," % (t1-t0) )
+        
+        s = copy.deepcopy(pts)
+        t0 = time.time()
+        U,L = convexhull.hulls(s)
+        t1 = time.time()
+        if not i%skip:
+            print t1-t0
+            f.write("%.10f\n" % (t1-t0) )
+    f.close()
+        
+def profile(n = 1000, k = 1000000, functions = None, fileName = "profiler_res"):
+    import line_profiler
+    prof = line_profiler.LineProfiler()
+    if functions is not None:
+        for f in functions:
+            prof.add_function(f)
+    else:
+        prof.add_function(dynamic_half_hull.insert)
+        prof.add_function(dynamic_half_hull.UP)
+        prof.add_function(dynamic_half_hull.bridge)
+#        prof.add_function(dynamic_half_hull.DOWN)
+        
+    ch = dynamic_convex_hull()
+    pts = [randPoint(k) for i in xrange(n)]
+    
+
+    for i in xrange(len(pts)):
+        for j in xrange(i+1, len(pts)):
+            if pts[i][0] == pts[j][0]:
+                print "Misma coordenada x:", pts[i], pts[j]
+    
+    def aux(ch, pts):
+        for p in pts:
+            ch.insert(p)
+            
+#    prof.runcall(aux, (ch,pts), {})
+    prof.runctx("aux(ch, pts)", {'ch':ch, 'pts':pts, 'aux':aux}, None)
+    f = open(fileName, "w")
+    prof.print_stats(f)
+    f.close()
+    print "Done. Stats saved in '%s'" % fileName
