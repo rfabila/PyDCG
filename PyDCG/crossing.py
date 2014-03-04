@@ -83,7 +83,7 @@ def count_crossings(pts):
     return cr-(total/4)
 
 if not __config['PURE_PYTHON']:
-    count_crossings = accelerate(crossingCpp.count_crossings)(count_crossings)
+    count_crossings = accelerate(crossingCpp.crossing)(count_crossings)
 
 def count_crossings_candidate_list(point_index,candidate_list,pts):
     """Let k=len(candidate_list), n=len(pts). Returns the
