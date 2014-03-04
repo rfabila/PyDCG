@@ -284,54 +284,6 @@ def sortpoints(pts):
         p.pop()
     return ptsordsplit
 
-def countCrossings(pts):
-    """Cuenta el numero de cruces rectilineo de un
-        conjunto de puntos, corre en tiempo O(n^2logn). No
-        es correcta si los puntos No estan en posicion general"""
-    ordpts=sortpoints(pts)
-    cr=0
-    n=len(pts)
-    for lp in ordpts:
-        po=lp[0]
-        j=0
-        for i in range(len(lp[1])):
-            pi=lp[1][i]
-
-            while turn(po,pi,lp[1][(j+1)%len(lp[1])]) <=0 and (j+1)%len(lp[1])!=i:
-                j=j+1
-                
-            cr=cr+binomial((j-i)%len(lp[1]),2)
-    
-    total=n*(n-3)*binomial(n-1,2)
-    
-    #Voodoo magic!
-    return cr-(total/4)
-
-#FUncion para contar el numero de cruces rectilineo
-#de un conjunto de puntos, corre en tiempo O(n^4)
-def countslowCrossings(pts):
-    cross=0
-    
-    def convexquad(pts):
-        if pointInTriang(pts[0],[pts[1],pts[2],pts[3]]):
-            return 0
-        elif pointInTriang(pts[1],[pts[0],pts[2],pts[3]]):
-            return 0
-        elif pointInTriang(pts[2],[pts[0],pts[1],pts[3]]):
-            return 0
-        elif pointInTriang(pts[3],[pts[0],pts[1],pts[2]]):
-            return 0
-        else:
-            return 1
-            
-    for i in range(0,len(pts)):
-        for j in range(i+1,len(pts)):
-            for k in range(j+1,len(pts)):
-                for l in range(k+1,len(pts)):
-                    cross=cross+convexquad([pts[i],pts[j],pts[k],pts[l]])
-
-    return cross
-
 def countEmptyTriangsVertex(rpoints):
     
     triangs=0
