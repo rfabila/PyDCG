@@ -7,11 +7,11 @@ using std::vector;
 using std::cout;
 
 #ifdef INT32
-static const long long max_val = (1 << 30);
-char* max_val_error = "The coordinates of each point must less than or equal to 2^30 in absolute value."
+static const long long max_val = (1L << 30);
+const char max_val_error[] = "The coordinates of each point must less than or equal to 2^30 in absolute value.";
 #else
-static const long long max_val = (1 << 62);
-char* max_val_error = "The coordinates of each point must less than or equal to 2^62 in absolute value."
+static const long long max_val = (1L << 62);
+const char max_val_error[] = "The coordinates of each point must less than or equal to 2^62 in absolute value.";
 #endif
 
 
