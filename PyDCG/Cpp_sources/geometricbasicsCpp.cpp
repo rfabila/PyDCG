@@ -69,7 +69,14 @@ int turn(const punto& p0, const punto& p1, const punto& p2)
 {
 	//Function to check whether the segments p0p1 and p1p2 make
 	//a LEFT or RIGHT turn at p1 or are COLLINEAR
-	long long t=((p2.x-p0.x)*(p1.y-p0.y))-((p1.x-p0.x)*(p2.y-p0.y));
+	BIG_INT p0x, p2x, p3x, p0y, p2y, p3y;
+	p0x = BIG_INT(p0.x);
+	p1x = BIG_INT(p1.x);
+	p2x = BIG_INT(p2.x);
+	p0y = BIG_INT(p0.y);
+	p1y = BIG_INT(p1.y);
+	p2y = BIG_INT(p2.y);
+	BIG_INT t=((p2x-p0x)*(p1y-p0y))-((p1x-p0x)*(p2y-p0y));
 	if(t>0)
 		return RIGHT;
 	else if(t<0)

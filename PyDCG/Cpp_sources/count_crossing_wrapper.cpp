@@ -3,7 +3,13 @@
 
 using std::vector;
 
+#ifdef INT32
 static const long long max_val = (1 << 30);
+char* max_val_error = "The coordinates of each point must less than or equal to 2^30 in absolute value."
+#else
+static const long long max_val = (1 << 62);
+char* max_val_error = "The coordinates of each point must less than or equal to 2^62 in absolute value."
+#endif
 
 static const char* crossing_doc =
 "count_convex_rholes(points, r, mono = True)\n\
@@ -78,7 +84,7 @@ extern "C" PyObject* crossing_wrapper(PyObject* self, PyObject* args)
 
         if(x > max_val || y > max_val || x < -max_val || y < -max_val)
         {
-            PyErr_SetString(PyExc_ValueError, "The coordinates of each point must less than or equal to 2^30 in absolute value.");
+            PyErr_SetString(PyExc_ValueError, max_val_error);
             return NULL;
         }
 
@@ -125,9 +131,14 @@ extern "C" PyObject* count_crossings_candidate_list_wrapper(PyObject* self, PyOb
             return NULL;
         }
 
-        x = PyInt_AsLong(PyList_GetItem(punto, 0)); //Borrowed References
-        y = PyInt_AsLong(PyList_GetItem(punto, 1));
+        x = PyInt_AsLong(PyList_GetItem(point, 0)); //Borrowed References
+        y = PyInt_AsLong(PyList_GetItem(point, 1));
 
+        if(x > max_val || y > max_val || x < -max_val || y < -max_val)
+        {
+            PyErr_SetString(PyExc_ValueError, max_val_error);
+            return NULL;
+        }
         pts.emplace_back(x, y);
     }
 

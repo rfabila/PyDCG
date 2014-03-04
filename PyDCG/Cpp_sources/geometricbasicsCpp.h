@@ -2,7 +2,7 @@
 #define GEOMETRICBASICSCPP_H_
 
 #ifdef INT32
-#define BIG_INT long
+#define BIG_INT int64_t
 #else
 #define BIG_INT __int128_t
 #endif
