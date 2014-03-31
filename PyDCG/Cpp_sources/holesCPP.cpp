@@ -461,6 +461,7 @@ int count_convex_rholes(const vector<punto> &points, int r, bool mono)
 	 */
 	int total = 0;
 	vector<puntos_ordenados> sorted_points;
+	sorted_points.reserve(points.size());
 	orderandsplit(points, sorted_points);
 	auto G=compute_visibility_graph(sorted_points);
 	//vector<std::unordered_map<pair<int, int>, int, pairHash> > L_array;

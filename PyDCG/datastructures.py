@@ -215,8 +215,7 @@ class Treap(object):
         while x.priority == y.priority:
             x.priority.append(random.random())
             y.priority.append(random.random())
-            
-        
+                    
         if x.priority < y.priority:
             return -1
         else:
@@ -1428,10 +1427,17 @@ class dynamic_half_hull(object):
         CONCAVE = 2
         REFLEX = 3
         
+        
+        
 #        print "UPPER    ", treapToList(Upper)
 #        print "LOWER    ", treapToList(Lower)
         
         maxx = Left.max().key[0]
+        
+        ############   Using lists instead of treaps  ################
+#        Left = treapToList(Left)
+#        Right = treapToList(Right)
+        ##############################################################
 
         def update_point(treap, t_aux):
             t = t_aux.key
@@ -1441,13 +1447,25 @@ class dynamic_half_hull(object):
             tM = t if tM is None else tM.key
             return t, tm, tM
             
+#################### Treaps ######################
         p_aux = Right.root
-#        print "right", treapToList(Right)
         p, pm, pM = update_point(Right, p_aux)
+#################################################
+
+#        print "right", treapToList(Right)
+
+#################### Lists ##################################################
+#        p = len(Right)/2
+#        pm = p if len(Right)/2-1 < 0 else len(Right)/2-1
+#        pM = p if len(Right)/2+1 >= len(Right) else len(Right)/2+1
+#############################################################################        
         
         q_aux = Left.root
+#        q = len(Left)/2
 #        print "left", treapToList(Left)
         q, qm, qM = update_point(Left, q_aux)
+#        qm = q if len(Left)/2-1 < 0 else len(Left)/2-1
+#        qM = q if len(Left)/2+1 >= len(Left) else len(Left)/2+1
         
         def find_case():
             p_case = 0
@@ -1682,10 +1700,12 @@ class dynamic_convex_hull(object):
         
     def toList(self):
         u = self.upper.toList()
-        u.pop()
+        if len(u) > 0:
+            u.pop()
         l = self.lower.toList()
         u.extend(l)
-        u.pop()
+        if len(u) > 0:
+            u.pop()
         return u
         
     def __str__(self):
