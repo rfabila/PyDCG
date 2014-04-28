@@ -53,6 +53,35 @@ def accelerate_list(cfunc):
         return wrapper
     return bind_cfunc
 
+def count_k_edges(pts,k):
+    """Returns the number of k edges in pts"""
+    n=len(pts)
+    tmp_pts=[[0,0] for i in range(n-1)]
+    k_edges=0
+    for i in range(n):
+        #pivote
+        p=pts[i]
+        #We copy the points distinct from p to tmp_pts
+        for j in range(0,i):
+            tmp_pts[j]=pts[j][:]
+        for j in range(i+1,n):
+            tmp_pts[j-1]=pts[j][:]
+        tmp_pts=sort_around_point(p,tmp_pts)
+        j=0
+        for i in range(len(tmp_pts)):
+            while (turn(p,tmp_pts[i],tmp_pts[(j+1)%(n-1)])<=0 and
+                    (j+1)%(n-1)!=i):
+                j=j+1
+                    
+            ni=(j-i)%(n-1)
+            if ni==k:
+                k_edges+=1
+        
+    return k_edges
+
+def count_halving_lines(pts):
+    """Counts the number of $\lfoor n/2 \rfloor$ k-edges"""
+    return count_k_edges(pts,(n-2)/2)
 
 def count_crossings(pts):
     """Returns the he number of crossings in the complete

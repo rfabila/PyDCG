@@ -3,6 +3,7 @@
 from Tkinter import *
 from tkFileDialog import *
 from fractions import *
+import os
 import line
 
 
