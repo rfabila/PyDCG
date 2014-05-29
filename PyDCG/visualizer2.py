@@ -9,18 +9,30 @@ import line
 
 class Vis:
     
-    def __init__(self, h=500, w=500, points=[],lines=[],segments=[],center=[0,0],
-                 deltazoom=Fraction(1,10),t=3,zoom=Fraction(50,1),pic_button=False,paper_side=BOTTOM,pack=True):
+    def __init__(self, h=500, w=500, points=[],lines=[],segments=[],center=None,
+                 deltazoom=Fraction(1,10),t=3,zoom=None,pic_button=False,paper_side=BOTTOM,pack=True):
         self.root=Tk()
         self.paper=Canvas(self.root,background="white",
                           height=h,
                           width=w)
         print self.paper['width'], self.paper['height']
-        self.center=center
+        
         self.points=points
+        
+        if center!=None:
+            self.center=center
+        else:
+            self.center=self.compute_center()
+        
+        print "center",self.center
+            
+        if zoom!=None:
+            self.zoom=zoom
+        else:
+            self.zoom=self.compute_zoom(h,w)
+        
         self.lines=lines
         self.segments=segments
-        self.zoom=zoom
         self.h=h
         self.w=w
         self.t=t
@@ -34,6 +46,7 @@ class Vis:
         self.paper.bind("<Button-3>",self.rightclick)
         self.paper.bind("<Button-5>",self.zoomout)
         self.paper.bind("<Button-4>",self.zoomin)
+        self.first_time=True
         self.draw()
     
         if pic_button:
@@ -46,15 +59,47 @@ class Vis:
         if pack:
             self.paper.pack(fill=BOTH,expand=YES,side=paper_side)
     
-  
+    def compute_zoom(self,h,w):
+        zoom=Fraction(1,1)
+        h=h/2
+        w=w/2
+        for x,y in self.points:
+            x=max(abs(x-self.center[0]),1)
+            y=max(abs(-(y-self.center[1])),1)
+            z1=Fraction(w,2*x)
+            z2=Fraction(h,2*y)
+            if zoom>z1:
+                zoom=z1
+            if zoom>z2:
+                zoom=z2
+        return zoom
+    
+    def compute_center(self):
+        if len(self.points)==0:
+            return [0,0]
+        X=[p[0] for p in self.points]
+        Y=[p[1] for p in self.points]
+        max_x=max(X)
+        min_x=min(X)
+        max_y=max(Y)
+        min_y=min(Y)
+        return [Fraction((max_x+min_x)/2,1),Fraction((max_y+min_y)/2,1)]
+        
+    
     def convert_to_screen_coords(self,point):
         """Converts the point to screen coordinates"""
+        if self.first_time:
+            width=self.w
+            height=self.h
+        else:
+            width=self.paper.winfo_width()
+            height=self.paper.winfo_height()
         x=point[0]-self.center[0]
         y=-(point[1]-self.center[1])
         x=x*self.zoom
         y=y*self.zoom
-        x=x+self.paper.winfo_width()/2
-        y=y+self.paper.winfo_height()/2
+        x=x+width/2
+        y=y+height/2
         x=int(x)
         y=int(y)
         
@@ -64,12 +109,17 @@ class Vis:
       self.drawLines()
       self.drawSegments()
       self.drawPoints()
+      self.first_time=False
         
     def drawLines(self):
         self.destroylines()
         
-        width=self.paper.winfo_width()
-        height=self.paper.winfo_height()
+        if self.first_time:
+            width=self.w
+            height=self.h
+        else:
+            width=self.paper.winfo_width()
+            height=self.paper.winfo_height()
         real_width=(Fraction(width,1)/self.zoom)/2
         real_height=(Fraction(height,1)/self.zoom)/2
         
