@@ -36,7 +36,7 @@ def turn(p0,p1,p2):
         -1 if it is a turn to the left, 1 if it is to the right
         and 0 otherwise"""
     t=((p2[0]-p0[0])*(p1[1]-p0[1]))-((p1[0]-p0[0])*(p2[1]-p0[1]))
-    if t >0:
+    if t > 0:
         return 1
     elif t < 0:
         return -1
@@ -148,7 +148,8 @@ def accelerate(cfunc):
 #            return (r,l)
                          
 #@accelerate(gbCpp.sort_around_point)
-def sort_around_point(p,points,join=True):
+def sort_around_point(p,points,join=True, checkConcave = True):
+    """Sorts each element of `points` around `p` in CCW order"""
     l=0
     r=0
     p1=[p[0],p[1]+1]
@@ -192,6 +193,10 @@ def sort_around_point(p,points,join=True):
           tpts[i]=r[i][:]
        for j in range(len(l)):
           tpts[len(r)+j]=l[j][:]
+          
+       if not checkConcave:
+           return tpts
+           
        concave=False
        for i in range(len(tpts)):
           if turn(tpts[i],p,tpts[(i+1)%len(tpts)])<0:
