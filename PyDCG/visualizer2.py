@@ -33,7 +33,6 @@ class Vis:
         
         self.lines=lines
         self.segments=segments
-        self.zoom=zoom
         self.h=h
         self.w=w
         self.t=t
