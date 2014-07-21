@@ -1380,8 +1380,7 @@ class dynamic_half_hull(object):
             return
             
 #        print "parent, right, left", aux.priority, aux.left.priority, aux.right.priority
-#        print "\nAbout to call UP\n"
-        self.UP(v, True) #TODO: Erase the second argument from UP's definition
+        self.UP(v)
 #        print "DONE!"
 #        print "Currently we have:"
 #        aux = self.toList()
@@ -1389,7 +1388,6 @@ class dynamic_half_hull(object):
 #            print cosa[0], cosa[1].getPoints()
         
     def delete(self, p):
-        #TODO: Agragar casos especiales (hijo único, hijo de la raíz)
 #        print "deleting", p
         aux = self.Node(key=p)
         u = self.DOWN(self.root, aux)
@@ -1435,7 +1433,7 @@ class dynamic_half_hull(object):
 #            print "at key", v.J
             Q1, r, Q2 = v.Q.split(v.J)
             if Q1 is None or Q2 is None:
-                raise StandardError
+                raise StandardError("Inside DOWN, split failed")
             Q1.insert_node(r)
             if v.left != None:
                 v.left.Q = Q1.join(v.left.Q)
@@ -1449,10 +1447,7 @@ class dynamic_half_hull(object):
         else:
             return v
             
-    def UP(self, v, first = False):
-        if first:
-#            print "First call to up!"
-            first = False
+    def UP(self, v):
         if v != self.root:
             #First we check if a rotation is neccesary
         
@@ -1550,7 +1545,7 @@ class dynamic_half_hull(object):
 #            print "Done"
             v.parent.J = J
             v.parent.key = [max(v.parent.key[0], v.parent.left.key[0]),0]
-            self.UP(v.parent, first)
+            self.UP(v.parent)
         return
         
     @classmethod
@@ -1742,16 +1737,16 @@ class dynamic_half_hull(object):
 #            print qm, q, qM
             
         #p and q are the points that determine the bridge
-        #####################################COLINEAR CASES###################################
-        while turn(q, qM, p) == 0 and q != qM:
-#            print "collinear!"
-            q_aux = Left.successor(q_aux)
-            q, qm, qM = update_point(Left, q_aux)
-            
-        while turn(p, pm, q) == 0 and p != pm:
-#            print "collinear!"
-            p_aux = Right.predecessor(p_aux)
-            p, pm, pM = update_point(Right, p_aux)
+        #####################################COLINEAR CASES################################### TODO: Are these neccesary?
+#        while turn(q, qM, p) == 0 and q != qM:
+##            print "collinear!"
+#            q_aux = Left.successor(q_aux)
+#            q, qm, qM = update_point(Left, q_aux)
+#            
+#        while turn(p, pm, q) == 0 and p != pm:
+##            print "collinear!"
+#            p_aux = Right.predecessor(p_aux)
+#            p, pm, pM = update_point(Right, p_aux)
             
             
         ############################################################33333333####################
@@ -1767,209 +1762,7 @@ class dynamic_half_hull(object):
         Q3, p, Q4 = Right.split(p)
         
         if Q1 is None or Q2 is None or Q3 is None or Q4 is None:
-#            print "Q1, Q2", Q1, Q2
-#            print "Q3, Q4", Q3, Q4
-            raise StandardError
-        
-        Q1.insert_node(q)
-        Q4.insert_node(p)
-#        print
-#        print "DONE!"# the queues are:"
-#        print "Q1", treapToList(Q1)
-#        print "Q2", treapToList(Q2)
-#        print "Q3", treapToList(Q3)
-#        print "Q4", treapToList(Q4)
-#        print "J", J
-#        print
-        return Q1, Q2, Q3, Q4, J
-        
-    @classmethod
-    def bridgeWithLists(cls, Left, Right, side = UPPER):           #The points in Lower should have smaller y coordinates than the ones in Upper        
-        SUPPORT = 1
-        CONCAVE = 2
-        REFLEX = 3
-        
-#        print "UPPER    ", treapToList(Upper)
-#        print "LOWER    ", treapToList(Lower)
-        
-        maxx = Left.max().key[0]
-        
-        ############   Using lists instead of treaps  ################
-        Left = treapToList(Left)
-        Right = treapToList(Right)
-        ##############################################################
-
-        def update_point(treap, t_aux):
-            t = t_aux.key
-            tm = treap.predecessor(t_aux)
-            tm = t if tm is None else tm.key
-            tM = treap.successor(t_aux)
-            tM = t if tM is None else tM.key
-            return t, tm, tM
-            
-#################### Treaps ######################
-        p_aux = Right.root
-        p, pm, pM = update_point(Right, p_aux)
-#################################################
-
-#        print "right", treapToList(Right)
-
-#################### Lists ##################################################
-#        p = len(Right)/2
-#        pm = p if len(Right)/2-1 < 0 else len(Right)/2-1
-#        pM = p if len(Right)/2+1 >= len(Right) else len(Right)/2+1
-#############################################################################        
-        
-        q_aux = Left.root
-#        q = len(Left)/2
-#        print "left", treapToList(Left)
-        q, qm, qM = update_point(Left, q_aux)
-#        qm = q if len(Left)/2-1 < 0 else len(Left)/2-1
-#        qM = q if len(Left)/2+1 >= len(Left) else len(Left)/2+1
-        
-        def find_case():
-            p_case = 0
-            q_case = 0
-            if side == UPPER:
-                if turn(q, p, pm) >= 0 and turn(q, p, pM) >= 0:
-                    p_case = SUPPORT
-                elif turn(q, p, pm) < 0 and turn(q, p, pM) >= 0:
-                    p_case = CONCAVE
-                else:
-                    p_case = REFLEX
-                    
-                if turn(q, p, qm) >= 0 and turn(q, p, qM) >= 0:
-                    q_case = SUPPORT
-                elif turn(q, p, qm) >= 0 and turn(q, p, qM) < 0:
-                    q_case = CONCAVE
-                else:
-                    q_case = REFLEX
-                    
-            elif side == LOWER:
-                if turn(q, p, pm) <= 0 and turn(q, p, pM) <= 0:
-                    p_case = SUPPORT
-                elif turn(q, p, pm) > 0 and turn(q, p, pM) <= 0:
-                    p_case = CONCAVE
-                else:
-                    p_case = REFLEX
-                    
-                if turn(q, p, qm) <= 0 and turn(q, p, qM) <= 0:
-                    q_case = SUPPORT
-                elif turn(q, p, qm) <= 0 and turn(q, p, qM) > 0:
-                    q_case = CONCAVE
-                else:
-                    q_case = REFLEX
-                    
-            return p_case, q_case
-            
-        pcase, qcase = find_case()
-        
-#        print "Puntos"
-#        print pm, p, pM
-#        print qm, q, qM
-        
-        while pcase != SUPPORT or qcase != SUPPORT:
-            
-#            print "IN BRIDGE"
-            #Caso 2
-            if pcase == SUPPORT and qcase == REFLEX:
-                #print "C2"
-                pm = p
-                q_aux = q_aux.left
-                q, qm, qM = update_point(Left, q_aux)
-            #Caso 3
-            elif pcase == SUPPORT and qcase == CONCAVE:
-                #print "C3"
-                pm = p
-                q_aux = q_aux.right
-                q, qm, qM = update_point(Left, q_aux)
-            #Caso 4
-            elif pcase == REFLEX and qcase == SUPPORT:
-                #print "C4"
-                qM = q
-                p_aux = p_aux.right
-                p, pm, pM = update_point(Right, p_aux)
-            #Caso 5
-            elif pcase == CONCAVE and qcase == SUPPORT:
-                #print "C5"
-                qM = q
-                p_aux = p_aux.left
-                p, pm, pM = update_point(Right, p_aux)
-            #Caso 6
-            elif pcase == REFLEX and qcase == REFLEX:
-                #print "C6"
-                p_aux = p_aux.right
-                p, pm, pM = update_point(Right, p_aux)
-                q_aux = q_aux.left
-                q, qm, qM = update_point(Left, q_aux)
-            #caso 7
-            elif pcase == CONCAVE and qcase == REFLEX:
-                #print "C7"
-                q_aux = q_aux.left
-                q, qm, qM = update_point(Left, q_aux)
-            #Caso 8
-            elif pcase == REFLEX and qcase == CONCAVE:
-                #print "C8"
-                p_aux = p_aux.right
-                p, pm, pM = update_point(Right, p_aux)
-            #Caso 9
-            elif pcase == CONCAVE and qcase == CONCAVE:
-                #print "C9"
-                #We need the y coordinate of the intersection of tangents ppm and qqM
-                #Slope of line ppm
-                ap = p[1]-pm[1]
-                bp = p[0]-pm[0]
-                #Slope of line qqM
-                aq = q[1]-qM[1]
-                bq = q[0]-qM[0]
-#                if bp == 0 or bq == 0:
-#                    print "Recta vertical"
-#                if fractions.Fraction(ap, bq) == fractions.Fraction(aq,bq):
-#                    print "Misma pendiente"
-                #Each line equation looks like ax - by = ax_0 - by_0, we store the rhs of this equation on c
-                cp = ap*p[0]-bp*p[1]
-                cq = aq*q[0]-bq*q[1]
-#If we are calculating the right/left hulls we solve for y:
-#                #y = (ap*cq - cp*aq)/(-ap*bq + bp*aq)
-#                y_num = ap*cq - aq*cp
-#                y_den = aq*bp - ap*bq
-#If we are calculating the upper/lower hulls we solve for x
-                #x = (-cp*bq + cq*bp)/(-ap*bq + bp*aq)
-                x_num = cq*bp - cp*bq
-                x_den = aq*bp - ap*bq
-                
-                if x_den < 0:  # This is to avoid multiplying by a negative number in the next if, thus changing the inequality
-                    x_den *= -1
-                    x_num *= -1
-                
-                #Subcase 1:
-                if x_num <= (maxx * x_den):
-#                    print "se va q"
-                    if qm != q: #We can only eliminate the lower part of the hull
-                        qm = q
-                    else: # q is the first point of the chain, so we can move on to the upper part
-                        q_aux = q_aux.right
-                        q, qm, qM = update_point(Left, q_aux)
-                #Subcase 2
-                else:
-                    if pM != p: #We can only eliminate the upper part of the hull
-                        pM = p
-                    else: # q is the last point of the chain, so we can move on to the lower part
-                        p_aux = p_aux.left
-                        p, pm, pM = update_point(Right, p_aux)
-            
-            pcase, qcase = find_case()
-            
-#            print "Puntos"
-#            print pm, p, pM
-#            print qm, q, qM
-            
-        #p and q are the points that determine the bridge
-        J = q
-#        print "p y q", q, p
-        
-        Q1, q, Q2 = Left.split(q)
-        Q3, p, Q4 = Right.split(p)
+            raise StandardError("Inside bridge, split failed")
         
         Q1.insert_node(q)
         Q4.insert_node(p)

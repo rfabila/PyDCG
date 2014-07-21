@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from geometricbasics import turn, sort_around_point
-from fractions import Fraction as frac
 import copy
 import datastructures
 import random
@@ -404,8 +403,9 @@ def getRegionR(upper, lower): #TODO: Use the bridge function here, this runs in 
     popCollinear(L)
                 
     if len(U) == 0 or len(L) == 0:
-        popCollinear(U)
-        popCollinear(L)
+#        popCollinear(U)
+#        popCollinear(L)
+        L.reverse()
         return U, L
     
     #First bitangent    
@@ -500,26 +500,31 @@ def getRegionR(upper, lower): #TODO: Use the bridge function here, this runs in 
         L = L[:idxL+1]
         U = U[idxU:]
     
-    popCollinear(U)
-    popCollinear(L)
+#    popCollinear(U)
+#    popCollinear(L)
     L.reverse()
                 
     return U, L
     
-def randMove(upper, lower, indices, ordered, regionU, regionL): #TODO: A lot of repeated code here! rewrite
+def randMove(upper, lower, indices, ordered, regionU, regionL, last = None): #TODO: A lot of repeated code here! rewrite
     total = len(regionU) + len(regionL) - 1
-    edge = random.randint(0, total)
+    
     side = None
     n = (len(indices)-1)*2
-
-    if edge < len(regionU):
-        edge = regionU[edge][1]
-        side = UP        
-    else:
-        edge = regionL[total - edge][1]
-        side = DOWN
     
-    p1, p2 = edge.getPoints()
+    ready = False
+    
+    while not ready:
+        edge = random.randint(0, total)
+        if edge < len(regionU):
+            edge = regionU[edge][1]
+            side = UP        
+        else:
+            edge = regionL[total - edge][1]
+            side = DOWN
+        p1, p2 = edge.getPoints()
+        if last is None or sorted([p1,p2]) != last:
+            ready = True
     
     oldline = line(p1, p2)
     
@@ -651,7 +656,7 @@ def randMove(upper, lower, indices, ordered, regionU, regionL): #TODO: A lot of 
     U, L = getRegionR(upper, lower)
     regionU[:] = U
     regionL[:] = L
-    return
+    return sorted([p1, p2])
     
 def getSegments(upper, lower):
     if isinstance(upper, list):
@@ -798,7 +803,7 @@ def tester(pts):
         ordered, indices = orderAllPoints(p, pts)
         upper, lower, counters = getPointRegion(p, ordered, indices)
         lines1 = getLines(upper, lower)
-        cosa = getRegion(upper, lower)
+        cosa = getRegionR(upper, lower)
         lines2 = getLines(cosa[0], cosa[1])
         pol = getPolygon(cosa[0], cosa[1])
         aux = pointAndLines(p, lines1[0]+lines1[1], lines2[0]+lines2[1], getPolSegs(pol))        
@@ -847,7 +852,7 @@ def getPolygon(U, L):
         return upts
         
     if len(U) == 0:
-        print "lpts", lpts
+#        print "lpts", lpts
         p1 = lpts[0][:]
         p1[0] -= 1000000
         p1[1] = L[-1][1].evalx(p1[0])
@@ -867,18 +872,25 @@ def getPolygon(U, L):
     rm = U[0][1].intersection(L[0][1])
     
     if len(U) == 1 and len(L) == 1: #This means the region is just a wedge
-        print "WEDGE"
+#        print "WEDGE"
         #Let's see if we need the right or the left wedge
-        p = lm
-        auxU = U[0][1].evalx(p[0]+1)
-        auxL = L[0][1].evalx(p[0]+1)
-        if auxU > auxL: #Then we want the right wedge
-            p1 = [p[0]+1000000, U[0][1].evalx(p[0]+1000000)]
-            p2 = [p[0]+1000000, L[0][1].evalx(p[0]+1000000)]
-        else:
-            p1 = [p[0]-1000000, U[0][1].evalx(p[0]-1000000)]
-            p2 = [p[0]-1000000, L[0][1].evalx(p[0]-1000000)]
-            
+        p = lm   
+        p1 = [p[0]+1000000, U[0][1].evalx(p[0]+1000000)]
+        p2 = [p[0]+1000000, L[0][1].evalx(p[0]+1000000)]        
+        if turn(p1, p, p2) > 0:            
+            p1 = [p[0]-1000000, L[0][1].evalx(p[0]-1000000)]
+            p2 = [p[0]-1000000, U[0][1].evalx(p[0]-1000000)]
+#        else:
+#        return [p1, p, p2]
+#        auxU = U[0][1].evalx(p[0]+1)
+#        auxL = L[0][1].evalx(p[0]+1)
+#        if auxU > auxL: #Then we want the right wedge
+#            p1 = [p[0]+1000000, U[0][1].evalx(p[0]+1000000)]
+#            p2 = [p[0]+1000000, L[0][1].evalx(p[0]+1000000)]
+#        else:
+#            p1 = [p[0]-1000000, U[0][1].evalx(p[0]-1000000)]
+#            p2 = [p[0]-1000000, L[0][1].evalx(p[0]-1000000)]
+#            
         return [p1, p, p2]
         
     else:
@@ -949,10 +961,16 @@ def getPolSegs(polygon):
 def getRandomWalk(p, pts, steps = 10):
     ordered, indices = orderAllPoints(p, pts)
     upper, lower, counter = getPointRegion(p, ordered, indices)#TODO: USE COUNTER!!!
-    U, L = getRegion(upper, lower)
+    U, L = getRegionR(upper, lower)
     regions = [getPolygon(U, L)]
+    last = None
     for i in range(steps):
-        randMove(upper, lower, indices, ordered, U, L)
+        last = randMove(upper, lower, indices, ordered, U, L, last)
+#        pol = getPolygon(U, L)
+##        print "\ncheco pol", pol
+#        if not checkConvex(pol):
+#            print "Región  no convexa"
+#            return upper, lower
         regions.append(getPolygon(U, L))
     return regions
     
@@ -967,7 +985,7 @@ def getLineArray(p, pts):
 def segmentsInOrder(visualizer, segs):
     index = 0
     visualizer.segments = segs[0]
-    visualizer.moveCenter([0,0])
+    visualizer.draw()
     previous = ""
     inst = raw_input("Instruction: ")
     while inst != 'q':
@@ -992,6 +1010,17 @@ def segmentsInOrder(visualizer, segs):
             except ValueError:
                 print "Wrong instruction"
         visualizer.segments = segs[index]
+        visualizer.draw()
         previous = inst
         if ask:
             inst = raw_input("Instruction: ")
+            
+def checkConvex(pol):
+    n = len(pol)
+    for i in range(len(pol)):
+        if turn(pol[i%n], pol[(i+1)%n], pol[(i+2)%n]) > 0:
+            return False
+    return True
+    
+def rationalPointToFloat(pt):
+    return [float(pt[0]), float(pt[1])]
