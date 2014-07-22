@@ -720,24 +720,6 @@ def getLines(upper, lower=None, mode = 1):
     if lower is not None:
         return uplines, lowlines
     return uplines
-    
-class pointExplorer(object):
-    def __init__(self, points):
-        self.points = points
-    def randomWalk(self, q):
-        if q not in self.points:
-            return #TODO: Raise an appropiate exception
-        sortedpoints = []
-        aux = []
-        index = self.points.index(q)
-        for i in range(len(self.points)):
-            if i == index:
-                continue
-            aux = self.points[0:i]
-            aux.extend(self.points[i+1:])
-            sortedpoints.append([self.points[i], sort_around_point(self.points[i], aux)])
-        upper, lower, indices = getPointRegion(q, sortedpoints)
-        print lower, upper
         
 def orderAllPoints(q, points):
     orderedpoints = {}
@@ -974,6 +956,22 @@ def getRandomWalk(p, pts, steps = 10):
         regions.append(getPolygon(U, L))
     return regions
     
+def generateRandomWalk(p, pts, steps = 10):
+    ordered, indices = orderAllPoints(p, pts)
+    upper, lower, counter = getPointRegion(p, ordered, indices)#TODO: USE COUNTER!!!
+    U, L = getRegionR(upper, lower)
+#    regions = [getPolygon(U, L)]
+    last = None
+    for i in range(steps):
+        last = randMove(upper, lower, indices, ordered, U, L, last)
+#        pol = getPolygon(U, L)
+##        print "\ncheco pol", pol
+#        if not checkConvex(pol):
+#            print "Región  no convexa"
+#            return upper, lower
+        yield getPolygon(U, L)
+#    return regions
+    
 def getLineArray(p, pts):
     lines = []
     for i in xrange(len(pts)-1):
@@ -1024,3 +1022,29 @@ def checkConvex(pol):
     
 def rationalPointToFloat(pt):
     return [float(pt[0]), float(pt[1])]
+    
+def profile(n = 50, w = 1000, functions = None, fileName = "profiler_res"):
+    import line_profiler
+    prof = line_profiler.LineProfiler()
+    if functions is not None:
+        for f in functions:
+            prof.add_function(f)
+    else:        
+        prof.add_function(getRandomWalk)
+        prof.add_function(orderAllPoints)
+        prof.add_function(getPointRegion)
+        prof.add_function(getRegionR)
+        prof.add_function(getPolygon)
+        prof.add_function(randMove)
+#        prof.add_function(dynamic_half_hull.DOWN)
+        
+        
+    pts = [datastructures.randPoint(1000000) for i in xrange(n)]
+    p = random.choice(pts)
+            
+#    prof.runcall(aux, (ch,pts), {})
+    prof.runctx("getRandomWalk(p, pts, w)", {'p':p, 'pts':pts, 'w':w, 'getRandomWalk':getRandomWalk}, None)
+    f = open(fileName, "w")
+    prof.print_stats(f)
+    f.close()
+    print "Done. Stats saved in '%s'" % fileName
