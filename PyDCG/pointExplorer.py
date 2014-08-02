@@ -81,7 +81,7 @@ class rational(object):
         self.b /= aux
         
     def __lt__(self, other):
-        if isinstance(other, int):
+        if isinstance(other, int) or isinstance(other, long):
             return self.a < other*self.b
         return self.a*other.b < other.a*self.b
         
@@ -89,7 +89,7 @@ class rational(object):
         return not self < other
         
     def __le__(self, other):
-        if isinstance(other, int):
+        if isinstance(other, int) or isinstance(other, long):
             return self.a <= other*self.b
         return self.a*other.b <= other.a*self.b
         
@@ -98,7 +98,7 @@ class rational(object):
     
         
     def __eq__(self, other):
-        if isinstance(other, int):
+        if isinstance(other, int) or isinstance(other, long):
             return self.a == other*self.b
         return self.a*other.b == other.a*self.b
         
@@ -106,7 +106,7 @@ class rational(object):
         return not self == other
         
     def __add__(self, other):
-        if isinstance(other, int):
+        if isinstance(other, int) or isinstance(other, long):
             return rational(self.a + other*self.b, self.b)
         den = self.b * other.b
         num = self.a*other.b + other.a*self.b
@@ -116,7 +116,7 @@ class rational(object):
         return self + other
         
     def __sub__(self, other):
-        if isinstance(other, int):
+        if isinstance(other, int) or isinstance(other, long):
             return rational(self.a - other*self.b, self.b)
         den = self.b * other.b
         num = self.a*other.b - other.a*self.b
@@ -126,7 +126,7 @@ class rational(object):
         return self - other
         
     def __mul__(self, other):
-        if isinstance(other, int):
+        if isinstance(other, int) or isinstance(other, long):
             return rational(self.a * other, self.b)
         den = self.b * other.b
         num = self.a*other.a
@@ -136,7 +136,7 @@ class rational(object):
         return self * other
         
     def __div__(self, other):
-        if isinstance(other, int):
+        if isinstance(other, int) or isinstance(other, long):
             return rational(self.a*other, self.b)
         den = self.b * other.a
         num = self.a*other.b
@@ -924,9 +924,9 @@ def getCenter(polygon):
     for pt in polygon:
         res[0] += pt[0]
         res[1] += pt[1]
-    res[0] = float(res[0]) / float(n)
-    res[1] = float(res[1]) / float(n)
-    return res
+    res[0] = res[0] / n
+    res[1] = res[1] / n
+    return [res[0].a/res[0].b, res[1].a/res[1].b]
     
 def getPolSegs(polygon):
     colors = ["green", "red", "blue", "black", "orange", "brown", "cyan"]
