@@ -13,9 +13,6 @@ with open("options.cfg") as options_file:
 
 #download = None
 
-#while 'install' in sys.argv and download not in ['Y', 'N']:
-#    download = raw_input('Download point sets? (~600 Mb) Y/N ')
-
 if options['DOWNLOAD_POINT_SETS'] == 1 and 'install' in sys.argv:
     names = ['03.b08', '04.b08', '05.b08', '06.b08', '07.b08', '08.b08', '09.b16', '10.b16']
     route = os.path.join(os.path.dirname(__file__), "PyDCG/point_sets/otypes")
