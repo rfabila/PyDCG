@@ -226,7 +226,6 @@ def getPointRegion(q, sortedpoints, indices):
        a point `p` and the other points sorted around it."""
     upper = []
     lower = []
-#    indices = {}
     counters = {}
     
     for (p, pts) in sortedpoints.iteritems():

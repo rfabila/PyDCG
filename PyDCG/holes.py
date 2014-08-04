@@ -1,60 +1,11 @@
 from math import sqrt
-from combinatorics import binomial
-from geometricbasics import sort_around_point, turn, safe_point_set, safe_val
+from geometricbasics import sort_around_point, turn
 from collections import deque
-from functools import wraps
-import pickle, os
+import utilities
+from utilities import cppWrapper
 
-__config_file=open(os.path.join(os.path.dirname(__file__), "config/geometricbasics.config"), "r")
-__config=pickle.load(__config_file)
-__config_file.close()
-
-if not __config['PURE_PYTHON']:
+if not utilities.__config['PURE_PYTHON']:
     import holesCpp
-
-def accelerate(cfunc):
-    def bind_cfunc(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            speedup = False
-            if 'speedup' in kwargs:
-                speedup = kwargs['speedup']
-                del kwargs['speedup']
-                
-            if speedup == 'try':
-                speedup = safe_point_set(kwargs.get('points', args[0]))
-                
-            if not speedup:
-#                print "Funcion de Python"
-                return func(*args, **kwargs)
-            else:
-#                print "Funcion de C++"
-                return cfunc(*args, **kwargs)
-        return wrapper
-    return bind_cfunc
-    
-def accelerate_p(cfunc):
-    def bind_cfunc(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            speedup = False
-            if 'speedup' in kwargs:
-                speedup = kwargs['speedup']
-                del kwargs['speedup']
-                
-            if speedup == 'try':
-                speedup = safe_point_set(kwargs.get('points', args[1]))
-                p = kwargs.get('p', args[0])
-                speedup = speedup and safe_val(p[0]) and safe_val(p[1])
-                
-            if not speedup:
-                #print "Python"
-                return func(*args, **kwargs)
-            else:
-                #print "C++"
-                return cfunc(*args, **kwargs)
-        return wrapper
-    return bind_cfunc
 
 def count_four_islands(pts,colored=False):
     """Counts the number of four-islands in a point set."""
@@ -309,7 +260,7 @@ def countEmptyTriangsVertex(rpoints):
     return triangs
 
 #@accelerate(holesCpp.countEmptyTriangs)
-def countEmptyTriangs(points):
+def countEmptyTriangs_py(points):
     
     ordpoints=orderandsplit(points)
     triangs=0
@@ -318,10 +269,17 @@ def countEmptyTriangs(points):
         triangs=triangs+countEmptyTriangsVertex(ordpoints[i][1])
     
     return triangs
-############################## This used to be a decorator ###################
-if not __config['PURE_PYTHON']:
-    countEmptyTriangs = accelerate(holesCpp.countEmptyTriangs)(countEmptyTriangs)
-##############################################################################
+    
+def countEmptyTriangs(points, speedup=False):
+    name = 'countEmptyTriangs'
+    pyf = countEmptyTriangs_py    
+    if utilities.__config['PURE_PYTHON']:
+        cppf = None
+    else:
+        cppf = holesCpp.countEmptyTriangs
+        
+    return cppWrapper(name, pyf, cppf, speedup, points=points)
+
 
 def slow_count_empty_triangles_p(p,points):
     """Slow version of count_triangles_p."""
@@ -330,7 +288,7 @@ def slow_count_empty_triangles_p(p,points):
     return (A,B)
     
 #@accelerate_p(holesCpp.count_empty_triangles_p)    
-def count_empty_triangles_p(p,points):
+def count_empty_triangles_p_py(p,points):
     """Returns (A,B). Where A is the number of empty triangles.
         that contain p as a vertex and B the number of triangles
         that contain only contain p in their interior."""
@@ -356,14 +314,20 @@ def count_empty_triangles_p(p,points):
                         if I[i] in G[O[k]][1]:
                                 B=B+1
     B=B/3
-    return (A,B) 
-############################## This used to be a decorator ###################
-if not __config['PURE_PYTHON']:
-    count_empty_triangles_p = accelerate_p(holesCpp.count_empty_triangles_p)(count_empty_triangles_p)
-##############################################################################
+    return (A,B)
+    
+def count_empty_triangles_p(p, points, speedup=False):
+    name = 'count_empty_triangles_p'
+    pyf = count_empty_triangles_p_py    
+    if utilities.__config['PURE_PYTHON']:
+        cppf = None
+    else:
+        cppf = holesCpp.count_empty_triangles_p
+        
+    return cppWrapper(name, pyf, cppf, speedup, p =p, points=points)
     
 #@accelerate_p(holesCpp.report_empty_triangles_p)
-def report_empty_triangles_p(p,points):
+def report_empty_triangles_p_py(p,points):
     """Returns (A,B). Where A is a list with the empty triangles
         that have p as a vertex and B is a list with the triangles
         that contain only contain p in their interior."""
@@ -395,10 +359,16 @@ def report_empty_triangles_p(p,points):
         a,b,c = t
         B.append([sorted_points[a],sorted_points[b],sorted_points[c]])
     return (A,B)
-############################## This used to be a decorator ###################
-if not __config['PURE_PYTHON']:
-    report_empty_triangles_p = accelerate_p(holesCpp.report_empty_triangles_p)(report_empty_triangles_p)
-##############################################################################
+    
+def report_empty_triangles_p(p, points, speedup=False):
+    name = 'report_empty_triangles_p'
+    pyf = report_empty_triangles_p_py    
+    if utilities.__config['PURE_PYTHON']:
+        cppf = None
+    else:
+        cppf = holesCpp.report_empty_triangles_p
+        
+    return cppWrapper(name, pyf, cppf, speedup, p =p, points=points)
 
     
 def count_empty_triangles_pb(p,points):
@@ -695,7 +665,7 @@ def compute_visibility_graph(sorted_points):
     return G
 
 #@accelerate(holesCpp.count_convex_rholes)
-def count_convex_rholes(points,r,mono=False):
+def count_convex_rholes_py(points,r,mono=False):
     """Counts the number of rholes in points; as described
         in search for empty convex polygons"""
      
@@ -802,13 +772,19 @@ def count_convex_rholes(points,r,mono=False):
                         t=t+1
                             
     return total
-############################## This used to be a decorator ###################
-if not __config['PURE_PYTHON']:
-    count_convex_rholes = accelerate(holesCpp.count_convex_rholes)(count_convex_rholes)
-##############################################################################
+    
+def count_convex_rholes(points, r, mono=False, speedup=False):
+    name = 'count_convex_rholes'
+    pyf = count_convex_rholes_py    
+    if utilities.__config['PURE_PYTHON']:
+        cppf = None
+    else:
+        cppf = holesCpp.count_convex_rholes
+        
+    return cppWrapper(name, pyf, cppf, speedup, points=points, r=r, mono=mono)
 
 #@accelerate(holesCpp.report_empty_triangles)
-def report_empty_triangles(points):
+def report_empty_triangles_py(points):
     """Reports the number of empty triangles in the point set"""
     triangles=[]
     sorted_points=orderandsplit(points)
@@ -820,13 +796,18 @@ def report_empty_triangles(points):
             for r in G[p][q][0]:
                 triangles.append([points[p],right_points[r],right_points[q]])
     return triangles
-############################## This used to be a decorator ###################
-if not __config['PURE_PYTHON']:
-    report_empty_triangles = accelerate(holesCpp.report_empty_triangles)(report_empty_triangles)
-##############################################################################
-
-#@accelerate(holesCpp.report_convex_rholes)
-def report_convex_rholes(points,r,mono=False):
+    
+def report_empty_triangles(points, speedup=False):
+    name = 'report_empty_triangles'
+    pyf = report_empty_triangles_py    
+    if utilities.__config['PURE_PYTHON']:
+        cppf = None
+    else:
+        cppf = holesCpp.report_empty_triangles
+        
+    return cppWrapper(name, pyf, cppf, speedup, points=points)
+    
+def report_convex_rholes_py(points,r,mono=False):
     """Reports the number of rholes in points; as described
         in search for empty convex polygons"""
      
@@ -935,10 +916,16 @@ def report_convex_rholes(points,r,mono=False):
                                 C[(q,outgoing_by_W[t])].append(chprime)
                         t=t+1
     return list(report)
-############################## This used to be a decorator ###################
-if not __config['PURE_PYTHON']:
-    report_convex_rholes = accelerate(holesCpp.report_convex_rholes)(report_convex_rholes)
-##############################################################################
+    
+def report_convex_rholes(points, r, mono=False, speedup=False):
+    name = 'report_convex_rholes'
+    pyf = report_convex_rholes_py    
+    if utilities.__config['PURE_PYTHON']:
+        cppf = None
+    else:
+        cppf = holesCpp.report_convex_rholes
+        
+    return cppWrapper(name, pyf, cppf, speedup, points=points, r=r, mono=mono)
                 
                 
 def count_rholes_maker(r,mono=False):      
@@ -1017,26 +1004,26 @@ def countEmptyMonoTriangs(points):
 #Deberia mover esta funciona otro modulo
 #la he movido a pointsets la dejo porque
 #no recuerdo si otro modulo ya la usa.
-def HortonSet(k):
-    """construct the Horton set of 2^k vertices
-        we follow Pavel Valtr's construction (and thus Hortons)"""
-    
-    if k<=0:
-        return [[0,0]]
-    
-    if k==1:
-        return [[0,0],[1,0]]
-    
-    n=2**(k-1)
-    dn=(3**n)-1
-    previoushorton=HortonSet(k-1)
-    newhorton=[]
-    
-    for p in previoushorton:
-        newhorton.append([2*p[0],p[1]])
-        newhorton.append([2*p[0]+1,p[1]+dn])
-
-    return newhorton
+#def HortonSet(k):
+#    """construct the Horton set of 2^k vertices
+#        we follow Pavel Valtr's construction (and thus Hortons)"""
+#    
+#    if k<=0:
+#        return [[0,0]]
+#    
+#    if k==1:
+#        return [[0,0],[1,0]]
+#    
+#    n=2**(k-1)
+#    dn=(3**n)-1
+#    previoushorton=HortonSet(k-1)
+#    newhorton=[]
+#    
+#    for p in previoushorton:
+#        newhorton.append([2*p[0],p[1]])
+#        newhorton.append([2*p[0]+1,p[1]+dn])
+#
+#    return newhorton
                               
 
 def slow_count_monoquad(points):
@@ -1190,7 +1177,7 @@ def count_convex_rholes_difference(p,q,pts,r,colored=False):
 
 ############################################################################
 #@accelerate_p(holesCpp.count_convex_rholes_p)
-def count_convex_rholes_p(p, points, r, mono = False):
+def count_convex_rholes_p_py(p, points, r, mono = False):
     '''
     Returns (A,B). Where A is the number of empty r-holes that contain p as
     a vertex and B the number of r-holes that contain only contain p in 
@@ -1500,7 +1487,13 @@ def count_convex_rholes_p(p, points, r, mono = False):
                             ChainsA[v, Sop[t]].append(chp)
                     t+=1
     return resA, resB
-############################## This used to be a decorator ###################
-if not __config['PURE_PYTHON']:
-    count_convex_rholes_p = accelerate_p(holesCpp.count_convex_rholes_p)(count_convex_rholes_p)
-##############################################################################
+    
+def count_convex_rholes_p(points, r, mono=False, speedup=False):
+    name = 'count_convex_rholes_p'
+    pyf = count_convex_rholes_p_py    
+    if utilities.__config['PURE_PYTHON']:
+        cppf = None
+    else:
+        cppf = holesCpp.count_convex_rholes_p
+        
+    return cppWrapper(name, pyf, cppf, speedup, p=p, points=points, r=r, mono=mono)
