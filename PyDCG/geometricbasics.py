@@ -2,7 +2,6 @@
 """Implementation of the basic geometric primitives"""
 
 import random
-import warnings
 import utilities
 from utilities import cppWrapper
 

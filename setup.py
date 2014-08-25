@@ -8,8 +8,9 @@ options = {}
 
 with open("options.cfg") as options_file:    
     for opt in options_file:
-        k, v = opt.split()
-        options[k] = int(v)
+        if opt[0] != '#':
+            k, v = opt.split()
+            options[k] = int(v)
 
 #download = None
 
@@ -27,14 +28,14 @@ if options['DOWNLOAD_POINT_SETS'] == 1 and 'install' in sys.argv:
     print "Done."
 
 arch = "-DINT32"
-geometricbasics_config = {}
+config = {}
 sources_dir = "PyDCG/Cpp_sources/"
 
 if sys.maxsize > (2**31-1):
     arch = "-DINT64"
-    geometricbasics_config["MAX_INT"]=2**62
+    config["MAX_INT"]=2**62
 else:
-    geometricbasics_config["MAX_INT"]=2**30
+    config["MAX_INT"]=2**30
     
 geometricbasicsCpp = Extension('PyDCG.geometricbasicsCpp',
                     sources = [sources_dir+"geometricbasicsCpp_wrapper.cpp", sources_dir+"geometricbasicsCpp.cpp"])
@@ -52,13 +53,13 @@ modules = []
 
 if options['PURE_PYTHON'] == 0:
     modules = [crossingCpp, holesCpp, geometricbasicsCpp]
-    geometricbasics_config['PURE_PYTHON'] = False
+    config['PURE_PYTHON'] = False
 else:
-    geometricbasics_config['PURE_PYTHON'] = True
+    config['PURE_PYTHON'] = True
     
-geometricbasics_config_file=open("PyDCG/config/geometricbasics.config","w")
-pickle.dump(geometricbasics_config,geometricbasics_config_file)
-geometricbasics_config_file.close()
+configFile=open("PyDCG/config/config.cfg","w")
+pickle.dump(config,configFile)
+configFile.close()
 
 setup (name = 'PyDCG',
        author = 'author',
