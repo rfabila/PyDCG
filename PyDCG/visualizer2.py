@@ -222,15 +222,17 @@ class Vis:
     def drawSegments(self):
         self.destroysegments()
         for s in self.segments:
-            [x0,y0]=self.convert_to_screen_coords(self.points[s[0]])
-            [x1,y1]=self.convert_to_screen_coords(self.points[s[1]])
+            #[x0,y0]=self.convert_to_screen_coords(self.points[s[0]]) #TODO: restore this part
+            #[x1,y1]=self.convert_to_screen_coords(self.points[s[1]])
+            [x0,y0]=self.convert_to_screen_coords(s[0])
+            [x1,y1]=self.convert_to_screen_coords(s[1])
             if len(s)>2:    
                 self.drawnsegments.append(self.paper.create_line(x0+self.t/2,
                                                                  y0+self.t/2,
                                                                  x1+self.t/2,
                                                                  y1+self.t/2,
                                                                  fill=s[2],
-                                                                 width=s[3]))
+                                                                 width=3))#TODO: restore this part, it was width=s[3])
             else:
                 self.drawnsegments.append(self.paper.create_line(x0+self.t/2,
                                                                  y0+self.t/2,

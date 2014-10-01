@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python
 import random
-import line
+import line, fractions
 from geometricbasics import turn
 
 #TODO: cambiar bridge a miembro o sacarla de la clase (actualmente es miembro de clase)
@@ -71,6 +71,11 @@ class Treap(object):
        lower priority elements are at the top.
        Loosely based on the description in "Randomized Algorithms"
        by Motwani and Raghavan. All mistakes are mine"""
+       
+    def __str__(self):
+        if self.empty:
+            return "Empty Treap"
+        return str(self.root)
     
     def __init__(self,compare=lambda x,y:x-y,max_size=1000):
         
@@ -90,6 +95,7 @@ class Treap(object):
      #   self.free_nodes=self.nodes[:]
     
     def find(self,key):
+#        print "\nsearching", key, "in", self
         if self.empty:
             return None
         else:
@@ -97,8 +103,10 @@ class Treap(object):
             while(node!=None):
                 #if its smaller
                 if self.compare(key,node.key) < 0:
+#                    print key, "<", node.key
                     node=node.left
                 elif self.compare(key,node.key) > 0:
+#                    print key, ">", node.key
                     node=node.right
                 else:
                     return node
@@ -137,6 +145,7 @@ class Treap(object):
         return node            
     
     def insert(self,key,obj=None):
+#        print "inserting", key
         node=self.Node(key=key,obj=obj)
         self.insert_node(node)
     
@@ -357,7 +366,8 @@ class Treap(object):
         node=self.find(key)
         if node!=None:
             return self.split_at_node(node)
-        print "NONE"
+        print "\n", key, "not found", "in", self
+        print "Split returns NONE"
         return (self,None,None)
             
     
@@ -365,6 +375,7 @@ class Treap(object):
         """Returns a new treap conaining self, the node and the
            treap T2. The original treaps, self and T2 no longer
            satisfy the heap property."""
+#        print "pasting",self, node, T2
         treap=Treap(compare=self.compare)
         treap.empty=False
         treap.root=node
@@ -376,6 +387,9 @@ class Treap(object):
              treap.root.right.parent=treap.root
         treap.root.parent=None
         treap.restore_heap_downwards(treap.root)
+#        print "\nfinished pasting, verifying"
+#        verifyBinaryTree(treap)
+#        print "done"
         return treap
     
     def join(self,T2):
@@ -383,8 +397,10 @@ class Treap(object):
            the heap property of both in the proccess. It
            assumes T1<=T2"""
         if self.empty:
+#            print "self empty"
             return T2
         elif T2.empty:
+#            print "T2 empty"
             return self
         else:
             max_node=self.max()
@@ -458,7 +474,7 @@ class Treap(object):
                 sright="()"
             else:
                 sright=self.right.__str__()
-            snode="(key="+self.key.__str__()+",pr="+self.priority.car.__str__()+","+self.obj.__str__()+")"
+            snode="(key="+self.key.__str__()+")" #",pr="+self.priority.__str__()+","+self.obj.__str__()+")"
             s="("+snode+"("+sleft+","+sright+")"+")"
             return s
             
@@ -483,15 +499,33 @@ def treapToList(T):
     l = []
     def inOrder(node):
         if node.right == None and node.left == None:
-            l.append(node.key)
+            if node.obj is not None:
+                l.append([node.key, node.obj])
+            else:
+                l.append(node.key)
             return
+
         if node.left != None:
             inOrder(node.left)
-        l.append(node.key)
+
+        if node.obj is not None:
+            l.append([node.key, node.obj])
+        else:
+            l.append(node.key)
+#        l.append(node.key)
         if node.right != None:
             inOrder(node.right)
+            
+    if T.empty:
+        return l
+
     if not T.root.isLeaf():
         inOrder(T.root)
+    else:
+        if T.root.obj is not None:
+            l.append([T.root.key, T.root.obj])
+        else:
+            l.append(T.root.key)
     return l
     
 #Maintainers
@@ -1256,12 +1290,13 @@ class dynamic_half_hull(object):
             node.parent = rson
             rson.left = node
         
-    def insert(self, p):
-#        print "inserting", p
+    def insert(self, p, obj = None):
+#        print "inserting", p, "side", self.side, "(Upper is 3)"
+#        print "Data is", obj.getPoints()
         # v is the new node
-        v = self.Node(key = p)
+        v = self.Node(key = p, obj = obj)
         v.J = p
-        v.Q.insert(key = p)
+        v.Q.insert(key = p, obj = obj)
         
         if self.empty:
             self.root = v
@@ -1270,9 +1305,9 @@ class dynamic_half_hull(object):
         
 #        v.Q.insert(key = p)
         u = self.DOWN(self.root, v)
-#        print "DOWN gave", u, u.Ql.root
+#        print "DOWN gave", u
         
-        if u.key != v.key:
+        if u.key != v.key: #TODO: There's too much repeated code here, rewrite this part
             aux = self.Node()
             aux.priority[0] = random.random()
             parent = u.parent
@@ -1284,6 +1319,8 @@ class dynamic_half_hull(object):
                 v.parent = aux
 #                START!
                 if v.key[0] >= u.key[0]:
+                    if v.key[0] == u.key[0]:
+                        raise StandardError
                     aux.key = [u.key[0],0]
                     aux.left = u
                     aux.right = v
@@ -1300,6 +1337,8 @@ class dynamic_half_hull(object):
                 u.parent = aux
                 v.parent = aux
                 if v.key[0] >= u.key[0]:
+                    if v.key[0] == u.key[0]:
+                        raise StandardError
                     aux.key = [u.key[0],0]
                     aux.left = u
                     aux.right = v
@@ -1312,29 +1351,56 @@ class dynamic_half_hull(object):
             else:
                 parent.left = aux      # u is a left son
                 aux.parent = parent
-                aux.key = [v.key[0],0]
-                aux.left = v
-                aux.right = u
+                u.parent = aux
+                v.parent = aux
+                
+                if v.key[0] >= u.key[0]:
+                    if v.key[0] == u.key[0]:
+                        raise StandardError
+                    aux.key = [u.key[0],0]
+                    aux.left = u
+                    aux.right = v
+#                    aux.J = u.key
+                else:
+                    aux.key = [v.key[0],0]
+                    aux.left = v
+                    aux.right = u
+#                    aux.J = v.key                
+                
+#                aux.key = [v.key[0],0]
+#                aux.left = v
+#                aux.right = u
 #                aux.J = v.key
                 u.parent = aux
                 v.parent = aux
             
         else:
-            print "Point", p, "is already in the tree"
+#            print "Point", p, "is already in the tree"
             self.UP(u)
             return
             
 #        print "parent, right, left", aux.priority, aux.left.priority, aux.right.priority
         self.UP(v)
+#        print "DONE!"
+#        print "Currently we have:"
+#        aux = self.toList()
+#        for cosa in aux:
+#            print cosa[0], cosa[1].getPoints()
         
     def delete(self, p):
+#        print "deleting", p
         aux = self.Node(key=p)
         u = self.DOWN(self.root, aux)
 #        print "DOWN gave", u
 
         if u.key != p:
-#            print "Point not found"
+            print "Point not found"
             self.UP(u)
+            return
+            
+        if u.parent is None: #u is the only element in the tree
+            self.empty = True
+            self.root = None
             return
 
         sib = u.parent.right
@@ -1343,14 +1409,21 @@ class dynamic_half_hull(object):
             
         grandpa = u.parent.parent
         
-        if grandpa.left is u.parent:
-            grandpa.left = sib
-        else:
-            grandpa.right = sib
+        if grandpa is not None:
+            if grandpa.left is u.parent:
+                grandpa.left = sib
+            else:
+                grandpa.right = sib
+                
+            sib.parent = grandpa
             
-        sib.parent = grandpa
-        
-        self.UP(sib)
+            self.UP(sib)
+            return
+            
+        else: #This means that u's parent is the root, so we make sib the new root
+            self.root = sib
+            sib.parent = None
+            return
         
     def DOWN(self, v, p):
 #        print "DOWN checks", v
@@ -1359,6 +1432,8 @@ class dynamic_half_hull(object):
 #            print "splitting", v.Ql.root
 #            print "at key", v.J
             Q1, r, Q2 = v.Q.split(v.J)
+            if Q1 is None or Q2 is None:
+                raise StandardError("Inside DOWN, split failed")
             Q1.insert_node(r)
             if v.left != None:
                 v.left.Q = Q1.join(v.left.Q)
@@ -1375,6 +1450,15 @@ class dynamic_half_hull(object):
     def UP(self, v):
         if v != self.root:
             #First we check if a rotation is neccesary
+        
+#            print "before rotating"
+#            if v.parent.left is v:                
+#                verifyBinaryTree(v.Q)
+#                verifyBinaryTree(v.parent.right.Q)
+#            else:
+#                verifyBinaryTree(v.parent.left.Q)
+#                verifyBinaryTree(v.Q)
+                
             if v.parent != self.root:
                 parent = v.parent
                 grandpa = parent.parent
@@ -1403,34 +1487,81 @@ class dynamic_half_hull(object):
                     if sibbling.parent == grandpa:
                         v = sibbling
 #                    print "v is", v.key, v.priority
+            
+#            print "after rotating"
+#            if v.parent.left is v:                
+#                verifyBinaryTree(v.Q)
+#                verifyBinaryTree(v.parent.right.Q)
+#            else:
+#                verifyBinaryTree(v.parent.left.Q)
+#                verifyBinaryTree(v.Q)
                     
             Q1, Q2, Q3, Q4, J = None,None,None,None,None,
 #            print "UP Brigding", v.key#, "Ql:", treapToList(v.Ql)
 #            print "and        ",
-            if v.parent.left is v:                
-#                print v.parent.right.key, "Ql", treapToList(v.parent.right.Q), "this is a right son"
-                Q1, Q2, Q3, Q4, J = dynamic_half_hull.bridge(v.Q, v.parent.right.Q, self.side)
-            else:
-#                print v.parent.left.key, "Ql", treapToList(v.parent.left.Q), "this is a left son"
-                Q1, Q2, Q3, Q4, J = dynamic_half_hull.bridge(v.parent.left.Q, v.Q, self.side)
+#            if v.parent.left is v:                
+##                print v.parent.right.key, "Ql", treapToList(v.parent.right.Q), "this is a right son"
+#                Q1, Q2, Q3, Q4, J = dynamic_half_hull.bridge(v.Q, v.parent.right.Q, self.side)
+#            else:
+##                print v.parent.left.key, "Ql", treapToList(v.parent.left.Q), "this is a left son"
+#                Q1, Q2, Q3, Q4, J = dynamic_half_hull.bridge(v.parent.left.Q, v.Q, self.side)
+            
+#            print "\n\nBridging"
+            maxL = v.parent.left.Q.max() #TODO: Erase or rewrite to make it throw an appropiate exception
+            minR = v.parent.right.Q.min()
+            comp = v.parent.left.Q.compare
+            if comp(maxL.key, minR.key) > 0:
+                sidestr = "UPPER" if self.side == UPPER else "LOWER"
+                print "Bad treaps", sidestr
+                print maxL.key, minR.key
+                print v.parent.left.Q
+                print v.parent.right.Q
+                raise StandardError
+            Q1, Q2, Q3, Q4, J = dynamic_half_hull.bridge(v.parent.left.Q, v.parent.right.Q, self.side)
+            
+#            print "Done\n\n"
+#            print "verifying Q's"            
+#            verifyBinaryTree(Q1)
+#            verifyBinaryTree(Q2)
+#            verifyBinaryTree(Q3)
+#            verifyBinaryTree(Q4)
+#            print "done"
+            
             v.parent.left.Q = Q2
+#            print "verifying v.p.l"
+#            verifyBinaryTree(v.parent.left.Q)
             v.parent.right.Q = Q3
+#            print "verifying v.p.r"
+#            verifyBinaryTree(v.parent.right.Q)
+#            print "verifying v.p"
+#            print "it's the join of"
+#            print Q1
+#            print "and"
+#            print Q4
+            
             v.parent.Q = Q1.join(Q4)
+            
+#            verifyBinaryTree(v.parent.Q)
+#            print "Done"
             v.parent.J = J
             v.parent.key = [max(v.parent.key[0], v.parent.left.key[0]),0]
             self.UP(v.parent)
         return
         
     @classmethod
-    def bridge(cls, Left, Right, side = UPPER):           #The points in Lower should have smaller y coordinates than the ones in Upper        
+    def bridge(cls, Left, Right, side = UPPER):           #The points in Lower should have smaller y coordinates than the ones in Upper       
+#        print "\nEntering bridge. Checking left and right"
+#        verifyBinaryTree(Left)
+#        print "left", Left
+#        verifyBinaryTree(Right)
+#        print "Right", Right
+#        print "done\n"
         SUPPORT = 1
         CONCAVE = 2
         REFLEX = 3
-        
-        
-        
-#        print "UPPER    ", treapToList(Upper)
-#        print "LOWER    ", treapToList(Lower)
+#        print "Bridging"
+#        print "UPPER    ", treapToList(Left)
+#        print "LOWER    ", treapToList(Right)
         
         maxx = Left.max().key[0]
         
@@ -1450,7 +1581,7 @@ class dynamic_half_hull(object):
 #################### Treaps ######################
         p_aux = Right.root
         p, pm, pM = update_point(Right, p_aux)
-#################################################
+##################################################
 
 #        print "right", treapToList(Right)
 
@@ -1467,9 +1598,10 @@ class dynamic_half_hull(object):
 #        qm = q if len(Left)/2-1 < 0 else len(Left)/2-1
 #        qM = q if len(Left)/2+1 >= len(Left) else len(Left)/2+1
         
-        def find_case():
+        def find_case():            
             p_case = 0
             q_case = 0
+            
             if side == UPPER:
                 if turn(q, p, pm) >= 0 and turn(q, p, pM) >= 0:
                     p_case = SUPPORT
@@ -1562,10 +1694,10 @@ class dynamic_half_hull(object):
                 #Slope of line qqM
                 aq = q[1]-qM[1]
                 bq = q[0]-qM[0]
-#                if bp == 0 or bq == 0:
-#                    print "Recta vertical"
-#                if fractions.Fraction(ap, bq) == fractions.Fraction(aq,bq):
-#                    print "Misma pendiente"
+                if bp == 0 or bq == 0:
+                    print "Recta vertical"
+                if (ap/bq) == (aq/bq):
+                    print "Misma pendiente"
                 #Each line equation looks like ax - by = ax_0 - by_0, we store the rhs of this equation on c
                 cp = ap*p[0]-bp*p[1]
                 cq = aq*q[0]-bq*q[1]
@@ -1605,11 +1737,32 @@ class dynamic_half_hull(object):
 #            print qm, q, qM
             
         #p and q are the points that determine the bridge
+        #####################################COLINEAR CASES################################### TODO: Are these neccesary?
+#        while turn(q, qM, p) == 0 and q != qM:
+##            print "collinear!"
+#            q_aux = Left.successor(q_aux)
+#            q, qm, qM = update_point(Left, q_aux)
+#            
+#        while turn(p, pm, q) == 0 and p != pm:
+##            print "collinear!"
+#            p_aux = Right.predecessor(p_aux)
+#            p, pm, pM = update_point(Right, p_aux)
+            
+            
+        ############################################################33333333####################
         J = q
 #        print "p y q", q, p
         
+#        print "About to split, verifying again"
+#        verifyBinaryTree(Left)
+#        verifyBinaryTree(Right)
+#        print "Done\n"
+        
         Q1, q, Q2 = Left.split(q)
         Q3, p, Q4 = Right.split(p)
+        
+        if Q1 is None or Q2 is None or Q3 is None or Q4 is None:
+            raise StandardError("Inside bridge, split failed")
         
         Q1.insert_node(q)
         Q4.insert_node(p)
@@ -1624,6 +1777,8 @@ class dynamic_half_hull(object):
         return Q1, Q2, Q3, Q4, J
         
     def toList(self):
+        if self.root is None:
+            return []
         res = treapToList(self.root.Q)
         if self.side == LOWER:
             res.reverse()
@@ -1631,7 +1786,7 @@ class dynamic_half_hull(object):
         
     class Node(object):
         
-        def __init__(self,key = [0,0]):
+        def __init__(self,key = [0,0], obj = None):
         
             self.key = key          #A point is the node is a leaf, otherwise [0, maxy] where maxy is the biggest y coordinate in the left subtree
             self.Q = Treap(lambda p, q: p[0]-q[0])       #This part does not contribute to the lc-hull of parent
@@ -1639,6 +1794,7 @@ class dynamic_half_hull(object):
             self.parent = None
             self.right = None
             self.left = None
+            self.obj = obj
 #            self.priority = [random.random()]
             self.priority = [2]
             
@@ -1671,7 +1827,10 @@ def paint_hull(pts, hull, color_u = 0, color_l = 1, color_int = 2):
                 pts[pts.index(p)][2] = color
                 
     if isinstance(hull, dynamic_half_hull):
-        paint(hull.toList(), color_u)
+        if hull.side == UPPER:
+            paint(hull.toList(), color_u)
+        else:
+            paint(hull.toList(), color_l)
         
     elif isinstance(hull, dynamic_convex_hull):
         u = hull.upper.toList()
@@ -1796,3 +1955,31 @@ def profile(n = 1000, k = 1000000, functions = None, fileName = "profiler_res"):
     prof.print_stats(f)
     f.close()
     print "Done. Stats saved in '%s'" % fileName
+
+def verifyBinaryTree(T):
+#    import inspect
+    comp = T.compare
+#    print inspect.getsource(comp)
+    def check(node):
+        if node is None:
+            return True
+        if node.left is not None:
+            resL = comp(node.key,node.left.key) >= 0
+        else:
+            resL = True
+            
+        if node.right is not None:
+            resR = comp(node.key,node.right.key) <= 0
+        else:
+            resR = True
+            
+        if resL and resR:
+            return True and check(node.left) and check(node.right)
+        print "fail at node", node
+        return False
+    res = check(T.root)
+    if not res:
+        print "FAIL!", T
+        raise StandardError
+    else:
+        print "ALL GOOD"
