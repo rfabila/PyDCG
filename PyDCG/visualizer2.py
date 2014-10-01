@@ -63,7 +63,9 @@ class Vis:
         zoom=Fraction(1,1)
         h=h/2
         w=w/2
-        for x,y in self.points:
+        for p in self.points:
+            x=p[0]
+            y=p[1]
             x=max(abs(x-self.center[0]),1)
             y=max(abs(-(y-self.center[1])),1)
             z1=Fraction(w,2*x)
