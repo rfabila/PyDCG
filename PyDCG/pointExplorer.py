@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
-from .geometricbasics import turn, sort_around_point
+from geometricbasics import turn, sort_around_point
+import warnings
 import copy
-from . import datastructures
+import datastructures
+#from . import datastructures
 import random
-from .line import Line
+import sys
+import traceback
+from line import Line
 
 LEFT = -1
 RIGHT = 1
@@ -152,17 +156,19 @@ class rational(object):
         return "%d/%d" % (self.a, self.b)
 
     def __repr__(self):
-        # return "rational(%f)"%(float(self.a) / float(self.b)) #TODO: Remove
-        # this, it's only here for debugging purposes
         return "rational(%d,%d)" % (self.a, self.b)
 
     def __float__(self):
         return float(self.a) / float(self.b)
 
-    def __hash__(self):
+    #TODO: Check if this is necessary (I think so, since somehere I use rationals as keys but Iḿ not sure anymore)
+    def __hash__(self): 
         auxa = 2 * self.a if self.a > 0 else -2 * self.a - 1
         auxb = 2 * self.b if self.b > 0 else -2 * self.b - 1
         return ((auxa + auxb) * (auxa + auxb + 1) / 2) + auxb
+        
+    def copy(self):
+        return copy.deepcopy(self)
 
 
 class line(object):
@@ -175,27 +181,11 @@ class line(object):
     def __init__(self, p, q):
         if not isinstance(p, list) or not isinstance(q, list):
             raise Exception
-        self.__p = p
+        self.p = p
         self.q = q
         self.m = rational(self.p[1] - self.q[1], self.p[0] - self.q[0], True)
         self.b = self.m * (-self.p[0]) + self.p[1]
         self.b.simplify()
-
-    @property
-    def p(self):
-        return self.__p
-
-#    @property
-#    def m(self):
-#        """Value of the slope"""
-# return float(self.p[1] - self.q[1]) / float(self.p[0] - self.q[0])
-#        return rational(self.p[1] - self.q[1], self.p[0] - self.q[0])
-#    @property
-#    def b(self):
-#        """y-intersection"""
-# return float(self.p[1] - self.m * self.p[0])
-# return rational(self.m.b*self.p[1] - self.m.a * self.p[0], self.m.b)
-#        return self.m*(-self.p[0]) + self.p[1]
 
     def intersection_y_coord(self, l):
         """Returns the y coordinate of the point where self and l
@@ -208,9 +198,6 @@ class line(object):
         """Returns the x coordinate of the point where self and l
            intersect. If self and l are paralell returns None"""
         if self.m == l.m:
-            print "Warning, same slopes"
-            print self, l
-            print "endpoints", self.getPoints, l.getPoints
             return None
         return (self.b - l.b) / (l.m - self.m)
 
@@ -218,11 +205,9 @@ class line(object):
         return [self.intersection_x_coord(l), self.intersection_y_coord(l)]
 
     def __str__(self):
-        #        return "y = %f x %f"%(self.m, self.b)
         return "y = %d/%d x %d/%d" % (self.m.a, self.m.b, self.b.a, self.b.b)
 
     def __repr__(self):
-        #        return "y = %f x %f"%(self.m, self.b)
         return "y = %d/%d x %d/%d" % (self.m.a, self.m.b, self.b.a, self.b.b)
 
     def getPoints(self):
@@ -234,9 +219,10 @@ class line(object):
 
 def dualize(obj):
     if isinstance(obj, line):
-        return [obj.m, obj.b * -1]  # XXX: deben estar simplificados no?
-    elif isinstance(obj, list) and len(obj) == 2 and isinstance(obj[0], rational) and isinstance(obj[1], rational):
-        return
+        return [obj.m, obj.b * -1]
+#    elif isinstance(obj, list):
+    raise Exception("Not implemented yet!")
+#        return #TODO: write this!
 
 
 def getPointRegion(q, sortedpoints, indices):
@@ -248,11 +234,10 @@ def getPointRegion(q, sortedpoints, indices):
 
     for (p, pts) in sortedpoints.iteritems():
         pred, succ = indices[tuple(p)][0]
-#        pred, succ = pts[pred], pts[succ]
         predline = line(list(p), pts[pred])
         succline = line(list(p), pts[succ])
 
-        intersection = predline.evalx(q[0])  # .m * q[0] + predline.b
+        intersection = predline.evalx(q[0])
 
         if intersection > q[1]:
             upper.append(predline)
@@ -262,7 +247,7 @@ def getPointRegion(q, sortedpoints, indices):
         else:
             raise CollinearPoints(q, p, pts[pred])
 
-        intersection = succline.evalx(q[0])  # m * q[0] + succline.b
+        intersection = succline.evalx(q[0])
         if intersection > q[1]:
             upper.append(succline)
         elif intersection < q[1]:
@@ -290,130 +275,7 @@ def getPointRegion(q, sortedpoints, indices):
 
     return upperHull, lowerHull, counters
 
-# TODO: It appears that both getRegion and getRegionR work... I don't remember why I wrote two, check which one should
-# stay and erase the other one
 
-
-# TODO: Use the bridge function here, this runs in linear time and bridge
-# is log(n)
-def getRegion(upper, lower):
-    # TODO: erase extra calls for popCollinear, rewrite repeated code
-    # TODO: Make dynamic_haf_hull.toList() return a deque, since many
-    # functions pop from the front
-    U = upper.toList()
-    L = lower.toList()
-
-    # TODO: eliminar los casos colineales de abajo, ya no son necesarios
-    def popCollinear(env):
-        index = 0
-        while index <= len(env) - 3:
-            #            print "   found one!"
-            int1 = env[index][1].intersection(env[index + 1][1])
-            int2 = env[index + 1][1].intersection(env[index + 2][1])
-            if int1 == int2:
-                env.pop(index + 1)
-            else:
-                index += 1
-
-    if len(U) == 0 or len(L) == 0:
-        popCollinear(U)
-        popCollinear(L)
-        return U, L
-
-    # We start popping from the begining of U and L
-    l = [L[0][0], U[0][0]]
-    doneL, doneU = False, False
-    while not (doneL and doneU):
-        popU, popL = 0, 0
-        if len(L) > 1:
-            if turn(l[0], l[1], L[1][0]) > 0:
-                doneL = True
-            elif turn(l[0], l[1], L[1][0]) == 0:
-                if (l[0][0] < L[1][0][0] < l[1][0]) or (
-                        l[0][0] > L[1][0][0] > l[1][0]):
-                    popL = 0
-                else:
-                    popL = 1
-                doneL = False
-            else:
-                doneL = False
-        else:
-            doneL = True
-
-        if len(U) > 1:
-            if turn(l[0], l[1], U[1][0]) < 0:
-                doneU = True
-            elif turn(l[0], l[1], U[1][0]) == 0:
-                if (l[0][0] < U[1][0][0] < l[1][0]) or (
-                        l[0][0] > U[1][0][0] > l[1][0]):
-                    popU = 0
-                else:
-                    popU = 1
-                doneU = False
-            else:
-                doneU = False
-        else:
-            doneU = True
-
-        if not doneL:
-            L.pop(popL)
-            l[0] = L[0][0]
-
-        if not doneU:
-            U.pop(popU)
-            l[1] = U[0][0]
-
-    # And now we pop from the end of U and L
-    l = [L[-1][0], U[-1][0]]
-    doneL, doneU = False, False
-    while not (doneU and doneL):
-        popU, popL = -1, -1
-        if len(L) > 1:
-            if turn(l[0], l[1], L[-2][0]) < 0:
-                doneL = True
-            elif turn(l[0], l[1], L[-2][0]) == 0:
-                if (l[0][0] < L[-
-                                2][0][0] < l[1][0]) or (l[0][0] > L[-
-                                                                    2][0][0] > l[1][0]):
-                    popL = -1
-                else:
-                    popL = -2
-            else:
-                doneL = False
-        else:
-            doneL = True
-
-        if len(U) > 1:
-            if turn(l[0], l[1], U[-2][0]) > 0:
-                doneU = True
-            elif turn(l[0], l[1], U[-2][0]) == 0:
-                if (l[0][0] < U[-
-                                2][0][0] < l[1][0]) or (l[0][0] > U[-
-                                                                    2][0][0] > l[1][0]):
-                    popU = -1
-                else:
-                    popU = -2
-            else:
-                doneU = False
-        else:
-            doneU = True
-
-        if not doneL:
-            L.pop(popL)
-            l[0] = L[-1][0]
-
-        if not doneU:
-            U.pop(popU)
-            l[1] = U[-1][0]
-
-    popCollinear(U)
-    popCollinear(L)
-
-    return U, L
-
-
-# TODO: Use the bridge function here, this runs in linear time and bridge
-# is log(n)
 def getRegionR(upper, lower):
     # TODO: erase extra calls to popColiinear, rewrite repeated code
     # TODO: Make dynamic_haf_hull.toList() return a deque, since many
@@ -421,23 +283,25 @@ def getRegionR(upper, lower):
     U = upper.toList()
     L = lower.toList()
     L.reverse()
-
+            
     def popCollinear(env):
-        index = 0
-        while index <= len(env) - 3:
-            int1 = env[index][1].intersection(env[index + 1][1])
-            int2 = env[index + 1][1].intersection(env[index + 2][1])
-            if int1 == int2:
-                env.pop(index + 1)
-            else:
-                index += 1
-
-    popCollinear(U)
-    popCollinear(L)
+#        print "ENV", env
+        if len(env) == 0:
+            return []
+        aux = [env[0]]
+        for i in xrange(1, len(env)):
+            if i < len(env)-1:
+                int1 = aux[-1][1].intersection(env[i][1])
+                int2 = env[i][1].intersection(env[i + 1][1])
+                if int1 == int2:
+                    continue
+            aux.append(env[i])
+        return aux
+        
+    U = popCollinear(U)
+    L = popCollinear(L)
 
     if len(U) == 0 or len(L) == 0:
-        #        popCollinear(U)
-        #        popCollinear(L)
         L.reverse()
         return U, L
 
@@ -486,7 +350,8 @@ def getRegionR(upper, lower):
         #        print "Borro principio de U y final de L"
         L = L[:idxL + 1]
         U = U[idxU:]
-
+        
+    # Second bitangent
     idxL, idxU = len(L) - 1, 0
     l = sorted([L[idxL][0], U[idxU][0]])
     doneL, doneU = False, False
@@ -531,171 +396,155 @@ def getRegionR(upper, lower):
         L = L[:idxL + 1]
         U = U[idxU:]
 
-#    popCollinear(U)
-#    popCollinear(L)
     L.reverse()
 
     return U, L
+    
+def crossEdge(n, p1, p2, side, upper, lower, indices, ordered):
+#    p1, p2 = edge.getPoints()
+    oldline = line(p1, p2)
+    ant1, suc1 = indices[tuple(p1)][0]
+    ant2, suc2 = indices[tuple(p2)][0]
+    
+
+    def update(p, q, ant, suc):
+        antipodal = False
+        if ordered[tuple(p)][ant] == q:
+            indices[tuple(p)][0] = [(ant - 1) % n, ant]
+            newpoint = ordered[tuple(p)][(ant - 1) % n]
+            if ant in indices[tuple(p)][1]:
+                antipodal = True
+        else:
+            indices[tuple(p)][0] = [suc, (suc + 1) % n]
+            newpoint = ordered[tuple(p)][(suc + 1) % n]
+            if suc in indices[tuple(p)][1]:
+                antipodal = True
+
+        newline = line(p, newpoint)
+        aux = [p[0], p[1] + 1]
+        
+        # TODO: Explain why this works
+        sameTurn = turn(p, q, newpoint) == turn(p, aux, newpoint)
+        if sameTurn == antipodal:
+            upper.insert(dualize(newline), newline)
+            return dualize(newline), UP
+        else:
+            lower.insert(dualize(newline), newline)
+            return dualize(newline), DOWN
+        
+#            if turn(p, q, newpoint) == turn(p, aux, newpoint):  
+#                if antipodal:
+#                    upper.insert(dualize(newline), newline)
+#                    return dualize(newline), UP
+#                else:
+#                    lower.insert(dualize(newline), newline)
+#                    return dualize(newline), DOWN
+#            else:
+#                if antipodal:
+#                    lower.insert(dualize(newline), newline)
+#                    return dualize(newline), DOWN
+#                else:
+#                    upper.insert(dualize(newline), newline)
+#                    return dualize(newline), UP
+
+    if side == UP:
+        upper.delete(dualize(oldline))
+        lower.insert(dualize(oldline), oldline)
+
+    elif side == DOWN:
+        lower.delete(dualize(oldline))
+        upper.insert(dualize(oldline), oldline)
+        
+    # We update ant and suc for p1 and insert the new line in 
+    # the appropiate envelope
+    line1 = update(p1, p2, ant1, suc1)
+    # We do the same for p2       
+    line2 = update(p2, p1, ant2, suc2)
+
+    U, L = getRegionR(upper, lower)
+#        print U, L
+    return line1, line2, U, L
+#    poly = getPolygon(U,L)
+    
+def getPolygonKey(pol):
+    key = []
+    for i in xrange(3):
+        x, y = pol[i][0].copy(), pol[i][1].copy()
+        x.simplify()
+        y.simplify()
+        key.append(x)
+        key.append(y)
+    return tuple(key)
 
 
-# TODO: A lot of repeated code here! rewrite
-def randMove(upper, lower, indices, ordered, regionU, regionL, last=None):
+def randMove(upper, lower, indices, ordered, regionU, regionL, visitedPolygons, lastLine=None):
     total = len(regionU) + len(regionL) - 1
+    avoidLines = set()
 
     side = None
     n = (len(indices) - 1) * 2
+    polygonFound = False
+#    U, L = None, None
+#    p1, p2 = None, None
 
-    ready = False
-
-    while not ready:
-        edge = random.randint(0, total)
-        if edge < len(regionU):
-            edge = regionU[edge][1]
-            side = UP
-        else:
-            edge = regionL[total - edge][1]
-            side = DOWN
-        p1, p2 = edge.getPoints()
-        if last is None or sorted([p1, p2]) != last:
-            ready = True
-
-    oldline = line(p1, p2)
-
-    if side == UP:
-
-        upper.delete(dualize(oldline))
-        lower.insert(dualize(oldline), oldline)
-        antipodal = False
-        ant, suc = indices[tuple(p1)][0]
-
-        if ordered[tuple(p1)][ant] == p2:
-            indices[tuple(p1)][0] = [(ant - 1) % n, ant]
-            newpoint = ordered[tuple(p1)][(ant - 1) % n]
-            if ant in indices[tuple(p1)][1]:
-                antipodal = True
-        else:
-            indices[tuple(p1)][0] = [suc, (suc + 1) % n]
-            newpoint = ordered[tuple(p1)][(suc + 1) % n]
-            if suc in indices[tuple(p1)][1]:
-                antipodal = True
-
-        newline = line(p1, newpoint)
-        aux = [p1[0], p1[1] + 1]
-
-        if turn(
-                p1,
-                p2,
-                newpoint) == turn(
-                p1,
-                aux,
-                newpoint):  # TODO: Explain why this works
-            if antipodal:
-                upper.insert(dualize(newline), newline)
+    while not polygonFound:
+        
+        lineChosen = False
+        edge = -1
+    
+        while not lineChosen:
+            edge = random.randint(0, total)
+            while edge in avoidLines:
+                edge = random.randint(0, total)
+            if edge < len(regionU):
+                edge = regionU[edge][1]
+                side = UP
             else:
-                lower.insert(dualize(newline), newline)
-        else:
-            if antipodal:
-                lower.insert(dualize(newline), newline)
+                edge = regionL[total - edge][1]
+                side = DOWN
+            p1, p2 = edge.getPoints()
+            if lastLine is None or sorted([p1, p2]) != lastLine:
+                lineChosen = True
+                
+        oldline = line(p1, p2)
+        ant1, suc1 = indices[tuple(p1)][0]
+        ant2, suc2 = indices[tuple(p2)][0]
+                
+        line1, line2, U, L = crossEdge(n, p1, p2, side, upper, lower, indices, ordered)
+        poly = getPolygon(U, L)
+    
+        
+        triang = getPolygonKey(poly)
+        
+        if triang in visitedPolygons:
+            print "dup"
+            avoidLines.add(edge)
+            indices[tuple(p1)][0] = [ant1, suc1]
+            indices[tuple(p2)][0] = [ant2, suc2]
+            
+            if line1[1] == UP:
+                upper.delete(line1[0])
             else:
-                upper.insert(dualize(newline), newline)
-
-         ######################################################################
-        # Now for p2
-        antipodal = False
-        ant, suc = indices[tuple(p2)][0]
-        if ordered[tuple(p2)][ant] == p1:
-            indices[tuple(p2)][0] = [(ant - 1) % n, ant]
-            newpoint = ordered[tuple(p2)][(ant - 1) % n]
-            if ant in indices[tuple(p2)][1]:
-                antipodal = True
-        else:
-            indices[tuple(p2)][0] = [suc, (suc + 1) % n]
-            newpoint = ordered[tuple(p2)][(suc + 1) % n]
-            if suc in indices[tuple(p2)][1]:
-                antipodal = True
-
-        newline = line(p2, newpoint)
-        aux = [p2[0], p2[1] + 1]
-
-        if turn(p2, p1, newpoint) == turn(p2, aux, newpoint):
-            if antipodal:
-                upper.insert(dualize(newline), newline)
+                lower.delete(line1[0])                
+            if line2[1] == UP:
+                upper.delete(line2[0])
             else:
-                lower.insert(dualize(newline), newline)
-        else:
-            if antipodal:
-                lower.insert(dualize(newline), newline)
+                lower.delete(line2[0])
+                
+            if side == UP:
+                lower.delete(dualize(oldline))
+                upper.insert(dualize(oldline), oldline)
             else:
-                upper.insert(dualize(newline), newline)
-
-            ###################################################################
-    elif side == DOWN:
-        antipodal = False
-        lower.delete(dualize(oldline))
-        upper.insert(dualize(oldline), oldline)
-
-        # First for p1
-        ant, suc = indices[tuple(p1)][0]
-        if ordered[tuple(p1)][ant] == p2:
-            indices[tuple(p1)][0] = [(ant - 1) % n, ant]
-            newpoint = ordered[tuple(p1)][(ant - 1) % n]
-            if ant in indices[tuple(p1)][1]:
-                antipodal = True
-
+                upper.delete(dualize(oldline))
+                lower.insert(dualize(oldline), oldline)
         else:
-            indices[tuple(p1)][0] = [suc, (suc + 1) % n]
-            newpoint = ordered[tuple(p1)][(suc + 1) % n]
-            if suc in indices[tuple(p1)][1]:
-                antipodal = True
-
-        newline = line(p1, newpoint)
-        aux = [p1[0], p1[1] + 1]
-
-        if turn(p1, p2, newpoint) == turn(p1, aux, newpoint):
-            if antipodal:
-                upper.insert(dualize(newline), newline)
-            else:
-                lower.insert(dualize(newline), newline)
-        else:
-            if antipodal:
-                lower.insert(dualize(newline), newline)
-            else:
-                upper.insert(dualize(newline), newline)
-
-        antipodal = False
-
-        # Now for p2
-        ant, suc = indices[tuple(p2)][0]
-        if ordered[tuple(p2)][ant] == p1:
-            indices[tuple(p2)][0] = [(ant - 1) % n, ant]
-            newpoint = ordered[tuple(p2)][(ant - 1) % n]
-            if ant in indices[tuple(p2)][1]:
-                antipodal = True
-        else:
-            indices[tuple(p2)][0] = [suc, (suc + 1) % n]
-            newpoint = ordered[tuple(p2)][(suc + 1) % n]
-            if suc in indices[tuple(p2)][1]:
-                antipodal = True
-
-        newline = line(p2, newpoint)
-        aux = [p2[0], p2[1] + 1]
-
-        if turn(p2, p1, newpoint) == turn(p2, aux, newpoint):
-            if antipodal:
-                upper.insert(dualize(newline), newline)
-            else:
-                lower.insert(dualize(newline), newline)
-        else:
-            if antipodal:
-                lower.insert(dualize(newline), newline)
-            else:
-                upper.insert(dualize(newline), newline)
-
-    U, L = getRegionR(upper, lower)
+            visitedPolygons.add(triang)
+            polygonFound = True
+        
     regionU[:] = U
     regionL[:] = L
-    return sorted([p1, p2])
-
+    return sorted([p1, p2]), poly
+    
 
 def getSegments(upper, lower):
     if isinstance(upper, list):
@@ -790,7 +639,7 @@ def orderAllPoints(q, points):
             revert[tuple(anti)] = pt
 
         pts.extend(antipodals)
-        ordered = sort_around_point(p, pts, checkConcave=True)
+        ordered = sort_around_point(p, pts)
 
         for i in xrange(len(ordered)):  # TODO: Another binary search
             if turn(
@@ -798,7 +647,7 @@ def orderAllPoints(q, points):
                 p, ordered[
                     (i + 1) %
                     len(ordered)], q) == RIGHT:
-                indices[tuple(p)][0] = [i, (i + 1) % len(ordered)]
+                indices[tuple(p)][0] = [i, (i + 1) % len(ordered)] #TODO: Rewrite this, there's no point in having an antipodal list. Just mark the points directly
                 break
 
         for i in xrange(len(ordered)):
@@ -865,16 +714,15 @@ def updateVis(vis, pts, res, indexp, indexLines, pol=False):
 
 def getPolygon(U, L):
     if len(U) == 0 and len(L) == 0:
-        print "Both U and L are empty!"
+        raise Exception("Can't form a polygon from empty chains")
         return
-
-#    print "TAMAÑOS", len(U), len(L)
 
     upts, lpts = [], []
     for i in xrange(len(U) - 1):
         upts.append(U[i][1].intersection(U[i + 1][1]))
     for i in xrange(len(L) - 1):
-        lpts.insert(0, L[i][1].intersection(L[i + 1][1]))
+        lpts.append(L[i][1].intersection(L[i + 1][1]))
+    lpts.reverse()
 
     if len(L) == 0:
         p1 = upts[0][:]
@@ -911,7 +759,6 @@ def getPolygon(U, L):
     rm = U[0][1].intersection(L[0][1])
 
     if len(U) == 1 and len(L) == 1:  # This means the region is just a wedge
-        #        print "WEDGE"
         # Let's see if we need the right or the left wedge
         p = lm
         p1 = [p[0] + 1000000, U[0][1].evalx(p[0] + 1000000)]
@@ -919,16 +766,6 @@ def getPolygon(U, L):
         if turn(p1, p, p2) > 0:
             p1 = [p[0] - 1000000, L[0][1].evalx(p[0] - 1000000)]
             p2 = [p[0] - 1000000, U[0][1].evalx(p[0] - 1000000)]
-#        else:
-#        return [p1, p, p2]
-#        auxU = U[0][1].evalx(p[0]+1)
-#        auxL = L[0][1].evalx(p[0]+1)
-# if auxU > auxL: #Then we want the right wedge
-#            p1 = [p[0]+1000000, U[0][1].evalx(p[0]+1000000)]
-#            p2 = [p[0]+1000000, L[0][1].evalx(p[0]+1000000)]
-#        else:
-#            p1 = [p[0]-1000000, U[0][1].evalx(p[0]-1000000)]
-#            p2 = [p[0]-1000000, L[0][1].evalx(p[0]-1000000)]
 #
         return [p1, p, p2]
 
@@ -1007,10 +844,11 @@ def getRandomWalk(p, pts, steps=10):
     U, L = getRegionR(upper, lower)
     regions = [getPolygon(U, L)]
     last = None
+    visitedPolygons = set()
     for i in range(steps):
-        last = randMove(upper, lower, indices, ordered, U, L, last)
-        regions.append(getPolygon(U, L))
-    return regions
+        last, polygon = randMove(upper, lower, indices, ordered, U, L, visitedPolygons, last)
+        regions.append(polygon)
+    return regions, visitedPolygons
 
 
 def generateRandomWalk(p, pts, steps=10):
@@ -1103,3 +941,175 @@ def profile(n=50, w=1000, functions=None, fileName="profiler_res"):
     prof.print_stats(f)
     f.close()
     print "Done. Stats saved in '%s'" % fileName
+
+
+def getRandomWalkDFS(p, pts, length=10, maxDepth=2000):
+    ordered, indices = orderAllPoints(p, pts)
+    upper, lower, counters = getPointRegion(p, ordered, indices)
+    U, L = getRegionR(upper, lower)
+    n = (len(indices) - 1) * 2
+    
+    start = getPolygon(U, L)
+    regions = [start]
+    visitedPolygons = set()
+    visitedPolygons.add(getPolygonKey(start))
+    depth = [0]
+    
+    def DFS(lastEdge=None):
+        print "level",depth[0]
+        if len(regions) >= length:
+            return
+        regionU, regionL = getRegionR(upper, lower)      
+        total = len(regionU) + len(regionL)
+    
+        side = None
+        
+        edgeIndex = random.randint(0, total-1)
+                
+        for i in xrange(total):
+            if len(regions) >= length:
+                return
+            edgeIndex += 1
+            edgeIndex %= total
+            if edgeIndex < len(regionU):
+                crossingEdge = regionU[edgeIndex][1]
+                side = UP
+            else:                
+                crossingEdge = regionL[edgeIndex - len(regionU)][1]
+                side = DOWN
+            p1, p2 = crossingEdge.getPoints()
+            if sorted([p1, p2]) == lastEdge:
+                continue
+        
+            ant1, suc1 = indices[tuple(p1)][0]            
+            ant2, suc2 = indices[tuple(p2)][0]
+        
+            def update(p, q, ant, suc):
+                antipodal = False
+                if ordered[tuple(p)][ant] == q:
+                    oldline = line(p, ordered[tuple(p)][suc])
+                    indices[tuple(p)][0] = [(ant - 1) % n, ant]
+                    newpoint = ordered[tuple(p)][(ant - 1) % n]
+                    if ant in indices[tuple(p)][1]:
+                        antipodal = True
+                else:
+                    oldline = line(p, ordered[tuple(p)][ant])
+                    indices[tuple(p)][0] = [suc, (suc + 1) % n]
+                    newpoint = ordered[tuple(p)][(suc + 1) % n]
+                    if suc in indices[tuple(p)][1]:
+                        antipodal = True
+        
+                newline = line(p, newpoint)
+                aux = [p[0], p[1] + 1]
+                
+                # TODO: Explain why this works
+                sameTurn = turn(p, q, newpoint) == turn(p, aux, newpoint)
+                
+                keyold = tuple(dualize(oldline))
+                counters[keyold] -= 1
+                oldSide = None
+                
+                if counters[keyold] == 0:
+                    try:
+                        upper.delete(dualize(oldline))
+                        oldSide = UP
+                    except:
+                        lower.delete(dualize(oldline)) #TODO: Should know whether it's inside upper or lower
+                        oldSide = DOWN
+                
+                keynew = tuple(dualize(newline))
+                counters.setdefault(keynew, 0)
+                counters[keynew] += 1
+                
+                if sameTurn == antipodal:#TODO: check this part
+                    if counters[keynew] == 1:
+                        upper.insert(dualize(newline), newline)
+                    return newline, UP, oldline, oldSide #new goes to up, old was in oldside
+                else:
+                    if counters[keynew] == 1:
+                        lower.insert(dualize(newline), newline)
+                    return newline, DOWN, oldline, oldSide
+    
+            if side == UP:
+                upper.delete(dualize(crossingEdge))
+                lower.insert(dualize(crossingEdge), crossingEdge)
+        
+            elif side == DOWN:
+                lower.delete(dualize(crossingEdge))
+                upper.insert(dualize(crossingEdge), crossingEdge)
+            
+            # We update ant and suc for p1 and insert the new line in 
+            # the appropiate envelope
+            lines1 = update(p1, p2, ant1, suc1)
+            # We do the same for p2       
+            lines2 = update(p2, p1, ant2, suc2)
+        
+            U, L = getRegionR(upper, lower) #TODO: write a composing function
+            poly = getPolygon(U,L)
+            
+            triang = getPolygonKey(poly)
+            
+            if triang not in visitedPolygons:
+                visitedPolygons.add(triang)
+                print "                       van", len(regions)
+                regions.append(poly)
+                if depth[0] < maxDepth:
+                    depth[0] += 1
+                    DFS(sorted([p1,p2]))
+                    depth[0]-=1
+                    
+            indices[tuple(p1)][0] = [ant1, suc1]
+            indices[tuple(p2)][0] = [ant2, suc2]
+            
+            newkey = tuple(dualize(lines1[0])) #TODO: Do a restore function instead of this!
+            counters[newkey] -= 1
+            if counters[newkey] == 0:
+                if lines1[1] == UP:
+                    upper.delete(dualize(lines1[0]))
+                else:
+                    lower.delete(dualize(lines1[0]))
+                    
+            oldkey = tuple(dualize(lines1[2]))
+            counters[oldkey] += 1
+            if counters[oldkey] == 1:
+                if lines1[3] == UP:
+                    upper.insert(dualize(lines1[2]),lines1[2])
+                else:
+                    lower.insert(dualize(lines1[2]),lines1[2])
+            
+            newkey = tuple(dualize(lines2[0]))
+            counters[newkey] -= 1
+            if counters[newkey] == 0:
+                if lines2[1] == UP:
+                    upper.delete(dualize(lines2[0]))
+                elif lines2[1] == DOWN:
+                    lower.delete(dualize(lines2[0]))
+                    
+            oldkey = tuple(dualize(lines2[2]))
+            counters[oldkey] += 1
+            if counters[oldkey] == 1:
+                if lines2[3] == UP:
+                    upper.insert(dualize(lines2[2]),lines2[2])
+                elif lines2[3] == DOWN:
+                    lower.insert(dualize(lines2[2]),lines2[2])
+                
+            if side == UP:
+                lower.delete(dualize(crossingEdge))
+                upper.insert(dualize(crossingEdge), crossingEdge) #TODO: should be able to dualize the point instead of adding the line as an object, right?
+            else:
+                upper.delete(dualize(crossingEdge))
+                lower.insert(dualize(crossingEdge), crossingEdge)
+    try:
+        DFS()
+    except Exception as e:
+        print str(e)
+        print traceback.format_exc()
+        print "fail!"
+        return regions, visitedPolygons
+        
+    return regions, visitedPolygons
+    
+
+#pts = [[8172, -9003], [7480, -1467], [-9326, -111], [1880, 4958], [9628, 7411]]
+#p = [-9326, -111]
+#walk, visited = getRandomWalkDFS(p, pts, 17)

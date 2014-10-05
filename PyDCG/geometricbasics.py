@@ -36,66 +36,41 @@ def sorted(p, pts):
 
 def sort_around_point_py(p, points, join=True, checkConcave=True):
     """Python version of sort_around_point"""
-    l = 0
-    r = 0
     p1 = [p[0], p[1] + 1]
-
+    r=[]
+    l=[]
+    
     for q in points:
         if turn(p, p1, q) == RIGHT:
-            r += 1
+            r.append(q[:])
+        elif turn(p, p1, q) == LEFT:
+            l.append(q[:])
         else:
-            if turn(p, p1, q) == LEFT:
-                l += 1
+            if p[1] >= q[1]:
+                l.append(q[:])
             else:
-                if p[1] >= q[1]:
-                    l += 1
-                else:
-                    r += 1
-
-    r = [[0, 0] for i in range(r)]
-    l = [[0, 0] for i in range(l)]
-    ir = 0
-    il = 0
-
-    for q in points:
-        if turn(p, p1, q) == RIGHT:
-            r[ir] = q[:]
-            ir += 1
-        else:
-            if turn(p, p1, q) == LEFT:
-                l[il] = q[:]
-                il += 1
-            else:
-                if p[1] >= 1[1]:
-                    l[il] = q[:]
-                    il += 1
-                else:
-                    r[ir] = q[:]
-                    ir += 1
+                r.append(q[:])
 
     l.sort(lambda v1, v2: turn(p, v1, v2))
     r.sort(lambda v1, v2: turn(p, v1, v2))
 
     if join:
-        tpts = [[0, 0] for i in range(len(points))]
-        for i in range(len(r)):
-            tpts[i] = r[i][:]
-        for j in range(len(l)):
-            tpts[len(r) + j] = l[j][:]
+        r.extend(l)
 
         if not checkConcave:
-            return tpts
+            return r
 
         concave = False
-        for i in range(len(tpts)):
-            if turn(tpts[i], p, tpts[(i + 1) % len(tpts)]) < 0:
+        i = 0
+        for i in range(len(r)):
+            if turn(r[i], p, r[(i + 1) % len(r)]) < 0:
                 concave = True
                 break
         if concave:
-            start = (i + 1) % len(tpts)
-            tpts = [tpts[(start + i) % len(tpts)][:] for i in range(len(tpts))]
+            start = (i + 1) % len(r)
+            r = [r[(start + i) % len(r)][:] for i in range(len(r))]
 
-        return tpts
+        return r
     else:
         return (r, l)
 
@@ -112,7 +87,7 @@ def sort_around_point(p, points, join=True, speedup=False):
     return cppWrapper(name, pyf, cppf, speedup, p=p, points=points, join=join)
 
 
-def __test_sort_around_point_versions(n=100, k=10000000):
+def __test_sort_around_point_versions(n=100, k=10000000): #TODO: check in ubuntu if the functions work, if so, delete this
     """Tests whether the two sort_around_point functions match"""
     pts = [[random.randint(-k, k), random.randint(-k, k)] for i in range(n)]
     p = [random.randint(-k, k), random.randint(-k, k)]
@@ -121,8 +96,8 @@ def __test_sort_around_point_versions(n=100, k=10000000):
     pts_1 = sort_around_point(p, pts)
     pts_2 = sort_around_point(p, pts, speedup=True)
     j = 1
-    print(j)
-    while(pts_1 == pts_2):
+    print j
+    while pts_1 == pts_2:
         pts = [[random.randint(-k, k), random.randint(-k, k)]
                for i in range(n)]
         # p=[0,0]
@@ -130,7 +105,7 @@ def __test_sort_around_point_versions(n=100, k=10000000):
 #        pts_1=sort_around_point_python(p,pts)
         pts_1 = sort_around_point(p, pts)
         pts_2 = sort_around_point(p, pts, speedup=True)
-        j = j + 1
+        j += 1
         print j
     return (p, pts)
 
@@ -140,23 +115,21 @@ def iterate_over_points(pts, f):
        It applies f(p,pts-p) for every point p in pts"""
     res = []
     tmp = [x[:] for x in pts[1:]]
-    for i in xrange(len(pts)):
-        for j in xrange(i):
-            tmp[j] = pts[j][:]
-        for j in xrange(i + 1, len(pts)):
-            tmp[j - 1] = pts[j][:]
-        res.append(f(pts[i], tmp))
+    newVal = [pts[0][:]]
+    for i in xrange(len(tmp)):
+        res.append(f(newVal, tmp))
+        newVal, tmp[i] = tmp[i][:], newVal[:]        
     return res
 
 
-def general_position(pts, report=False):  # XXX: Isn't this O(n^3 logn) ?
+def general_position(pts, report=False):
     """Tests whether the point set is in general position or not.
        If report is set to True it return all triples of points not in general position"""
     def f(p, pts):
         triples = []
         tmp_pts = sort_around_point(p, pts)
         for i in xrange(len(tmp_pts) - 1):
-            if turn(p, tmp_pts[i], tmp_pts[i + 1]) == 0:
+            if turn(p, tmp_pts[i], tmp_pts[i + 1]) == COLLINEAR:
                 if report:
                     triples.append((p, tmp_pts[i], tmp_pts[i + 1]))
                 else:

@@ -57,7 +57,7 @@ if options['PURE_PYTHON'] == 0:
 else:
     config['PURE_PYTHON'] = True
     
-configFile=open("PyDCG/config/config.cfg","w")
+configFile=open("PyDCG/config/config.cfg","wb")
 pickle.dump(config,configFile)
 configFile.close()
 
