@@ -62,13 +62,13 @@ def sort_around_point_py(p, points, join=True, checkConcave=True):
 
         concave = False
         i = 0
-        for i in range(len(r)):
+        for i in xrange(len(r)):
             if turn(r[i], p, r[(i + 1) % len(r)]) < 0:
                 concave = True
                 break
         if concave:
             start = (i + 1) % len(r)
-            r = [r[(start + i) % len(r)][:] for i in range(len(r))]
+            r = [r[(start + i) % len(r)][:] for i in xrange(len(r))]
 
         return r
     else:
@@ -115,10 +115,11 @@ def iterate_over_points(pts, f):
        It applies f(p,pts-p) for every point p in pts"""
     res = []
     tmp = [x[:] for x in pts[1:]]
-    newVal = [pts[0][:]]
+    newVal = pts[0][:]
     for i in xrange(len(tmp)):
         res.append(f(newVal, tmp))
         newVal, tmp[i] = tmp[i][:], newVal[:]        
+    res.append(f(newVal, tmp))
     return res
 
 
