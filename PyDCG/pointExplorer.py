@@ -8,6 +8,7 @@ import random
 import sys
 import traceback
 from line import Line
+from collections import deque
 
 LEFT = -1
 RIGHT = 1
@@ -943,7 +944,7 @@ def profile(n=50, w=1000, functions=None, fileName="profiler_res"):
     print "Done. Stats saved in '%s'" % fileName
 
 
-def getRandomWalkDFS(p, pts, length=10, maxDepth=2000):
+def getRandomWalkDFS2(p, pts, length=10, maxDepth=2000):
     ordered, indices = orderAllPoints(p, pts)
     upper, lower, counters = getPointRegion(p, ordered, indices)
     U, L = getRegionR(upper, lower)
@@ -1051,8 +1052,8 @@ def getRandomWalkDFS(p, pts, length=10, maxDepth=2000):
             
             if triang not in visitedPolygons:
                 visitedPolygons.add(triang)
-                print "                       van", len(regions)
                 regions.append(poly)
+                print "                       van", len(regions)
                 if depth[0] < maxDepth:
                     depth[0] += 1
                     DFS(sorted([p1,p2]))
@@ -1061,37 +1062,25 @@ def getRandomWalkDFS(p, pts, length=10, maxDepth=2000):
             indices[tuple(p1)][0] = [ant1, suc1]
             indices[tuple(p2)][0] = [ant2, suc2]
             
-            newkey = tuple(dualize(lines1[0])) #TODO: Do a restore function instead of this!
-            counters[newkey] -= 1
-            if counters[newkey] == 0:
-                if lines1[1] == UP:
-                    upper.delete(dualize(lines1[0]))
-                else:
-                    lower.delete(dualize(lines1[0]))
-                    
-            oldkey = tuple(dualize(lines1[2]))
-            counters[oldkey] += 1
-            if counters[oldkey] == 1:
-                if lines1[3] == UP:
-                    upper.insert(dualize(lines1[2]),lines1[2])
-                else:
-                    lower.insert(dualize(lines1[2]),lines1[2])
-            
-            newkey = tuple(dualize(lines2[0]))
-            counters[newkey] -= 1
-            if counters[newkey] == 0:
-                if lines2[1] == UP:
-                    upper.delete(dualize(lines2[0]))
-                elif lines2[1] == DOWN:
-                    lower.delete(dualize(lines2[0]))
-                    
-            oldkey = tuple(dualize(lines2[2]))
-            counters[oldkey] += 1
-            if counters[oldkey] == 1:
-                if lines2[3] == UP:
-                    upper.insert(dualize(lines2[2]),lines2[2])
-                elif lines2[3] == DOWN:
-                    lower.insert(dualize(lines2[2]),lines2[2])
+            def restore(lines):
+                newkey = tuple(dualize(lines[0])) 
+                counters[newkey] -= 1
+                if counters[newkey] == 0:
+                    if lines[1] == UP:
+                        upper.delete(dualize(lines[0]))
+                    else:
+                        lower.delete(dualize(lines[0]))
+                        
+                oldkey = tuple(dualize(lines[2]))
+                counters[oldkey] += 1
+                if counters[oldkey] == 1:
+                    if lines[3] == UP:
+                        upper.insert(dualize(lines[2]),lines[2])
+                    else:
+                        lower.insert(dualize(lines[2]),lines[2])
+                        
+            restore(lines1)
+            restore(lines2)
                 
             if side == UP:
                 lower.delete(dualize(crossingEdge))
@@ -1109,7 +1098,208 @@ def getRandomWalkDFS(p, pts, length=10, maxDepth=2000):
         
     return regions, visitedPolygons
     
+def getRandomWalkDFS(p, pts, length=10):
+    ordered, indices = orderAllPoints(p, pts)
+    upper, lower, counters = getPointRegion(p, ordered, indices)
+    U, L = getRegionR(upper, lower)
+    n = (len(indices) - 1) * 2
+    
+    start = getPolygon(U, L)
+    regions = [start]
+    visitedPolygons = set()
+    visitedPolygons.add(getPolygonKey(start))
+    
+    class region(object):
+        def __init__(self, regionU, regionL, lastEdge = None, side = None, neighbors1=None, neighbors2=None, lines1=None, lines2=None):
+            self.regionU = regionU
+            self.regionL = regionL
+            self.total = len(regionU) + len(regionL)
+            self.edgeIndex = random.randint(0, self.total-1)
+            self.i = 0
+            self.lastEdge = lastEdge
+            self.side = side
+            self.neighbors1 = neighbors1
+            self.neighbors2 = neighbors2
+            self.lines1 = lines1
+            self.lines2 = lines2
+    
+    def update(p, q, ant, suc):
+        antipodal = False
+        if ordered[tuple(p)][ant] == q:
+            oldline = line(p, ordered[tuple(p)][suc])
+            indices[tuple(p)][0] = [(ant - 1) % n, ant]
+            newpoint = ordered[tuple(p)][(ant - 1) % n]
+            if ant in indices[tuple(p)][1]:
+                antipodal = True
+        else:
+            oldline = line(p, ordered[tuple(p)][ant])
+            indices[tuple(p)][0] = [suc, (suc + 1) % n]
+            newpoint = ordered[tuple(p)][(suc + 1) % n]
+            if suc in indices[tuple(p)][1]:
+                antipodal = True
+
+        newline = line(p, newpoint)
+        aux = [p[0], p[1] + 1]
+        
+        # TODO: Explain why this works
+        sameTurn = turn(p, q, newpoint) == turn(p, aux, newpoint)
+        
+        keyold = tuple(dualize(oldline))
+        counters[keyold] -= 1
+        oldSide = None
+        
+        if counters[keyold] == 0:
+            try:
+                upper.delete(dualize(oldline))
+                oldSide = UP
+            except:
+                lower.delete(dualize(oldline)) #TODO: Should know whether it's inside upper or lower
+                oldSide = DOWN
+        
+        keynew = tuple(dualize(newline))
+        counters.setdefault(keynew, 0)
+        counters[keynew] += 1
+        
+        if sameTurn == antipodal:#TODO: check this part
+            if counters[keynew] == 1:
+                upper.insert(dualize(newline), newline)
+            return newline, UP, oldline, oldSide #new goes to up, old was in oldside
+        else:
+            if counters[keynew] == 1:
+                lower.insert(dualize(newline), newline)
+            return newline, DOWN, oldline, oldSide
+    
+    def restore(lines):
+        newkey = tuple(dualize(lines[0])) 
+        counters[newkey] -= 1
+        if counters[newkey] == 0:
+            if lines[1] == UP:
+                upper.delete(dualize(lines[0]))
+            else:
+                lower.delete(dualize(lines[0]))
+                
+        oldkey = tuple(dualize(lines[2]))
+        counters[oldkey] += 1
+        if counters[oldkey] == 1:
+            if lines[3] == UP:
+                upper.insert(dualize(lines[2]),lines[2])
+            else:
+                lower.insert(dualize(lines[2]),lines[2])
+                
+    S = deque()
+    S.append(region(U, L))
+    
+    while len(S) > 0:
+        
+        current = S[-1]
+        regionU, regionL = current.regionU, current.regionL
+        
+        if current.i < current.total:
+            current.i += 1
+            current.edgeIndex = (current.edgeIndex + 1) % current.total
+#            print " "*len(S), "Will use", current.edgeIndex, " of" , current.total
+            if current.edgeIndex < len(regionU):
+                crossingEdge = regionU[current.edgeIndex][1]
+                side = UP
+            else:                
+                crossingEdge = regionL[current.edgeIndex - len(regionU)][1]
+                side = DOWN
+            p1, p2 = crossingEdge.getPoints()
+            if p1 > p2:
+                p1, p2 = p2, p1
+            if [p1, p2] == current.lastEdge:
+#                print " "*len(S), "points", p1, p2, [p1, p2]
+#                print " "*len(S), "lastedge!"
+                continue
+#            print "next line"
+        
+            ant1, suc1 = indices[tuple(p1)][0]            
+            ant2, suc2 = indices[tuple(p2)][0]
+    
+            if side == UP:
+                upper.delete(dualize(crossingEdge))
+                lower.insert(dualize(crossingEdge), crossingEdge)
+        
+            elif side == DOWN:
+                lower.delete(dualize(crossingEdge))
+                upper.insert(dualize(crossingEdge), crossingEdge)
+            
+            # We update ant and suc for p1 and insert the new line in 
+            # the appropiate envelope
+            lines1 = update(p1, p2, ant1, suc1)
+            # We do the same for p2       
+            lines2 = update(p2, p1, ant2, suc2)
+        
+            U, L = getRegionR(upper, lower) #TODO: write a composing function
+            poly = getPolygon(U,L)
+            triang = getPolygonKey(poly)
+            
+            if triang not in visitedPolygons:
+                visitedPolygons.add(triang)
+                yield poly
+                regions.append(poly)
+                print "                               van", len(regions)
+#                print " "*len(S), "push!, I crossed", crossingEdge
+                S.append( region( U, L, [p1,p2], side, (ant1, suc1), (ant2, suc2), lines1, lines2 ) )
+                print "level", len(S)
+                if len(regions) >= length:
+                    print "found enough regions"
+                    break
+            else:
+#                print " "*len(S), "already visited"
+                indices[tuple(p1)][0] = [ant1, suc1]
+                indices[tuple(p2)][0] = [ant2, suc2]
+                            
+                restore(lines1)
+                restore(lines2)
+                
+                if side == UP:   
+                    lower.delete(dualize(crossingEdge))
+                    upper.insert(dualize(crossingEdge), crossingEdge) #TODO: should be able to dualize the point instead of adding the line as an object, right?
+                else:
+                    upper.delete(dualize(crossingEdge))
+                    lower.insert(dualize(crossingEdge), crossingEdge)
+        else:
+#            print " "*len(S), "done"
+            if len(S) > 1:
+                p1 = current.lastEdge[0]
+                p2 = current.lastEdge[1]
+                indices[tuple(p1)][0] = [current.neighbors1[0], current.neighbors1[1]]
+                indices[tuple(p2)][0] = [current.neighbors2[0], current.neighbors2[1]]
+                            
+                restore(current.lines1)
+                restore(current.lines2)
+                    
+                edge = line(p1, p2)   
+#                print " "*len(S), "returning via", edge
+                
+                if current.side == UP:                    
+                    lower.delete(dualize(edge))
+                    upper.insert(dualize(edge), edge) #TODO: should be able to dualize the point instead of adding the line as an object, right?
+                else:
+                    upper.delete(dualize(edge))
+                    lower.insert(dualize(edge), edge)
+#            print " "*len(S), "pop!"
+            S.pop()
+            
+#    return regions, visitedPolygons
+    
 
 #pts = [[8172, -9003], [7480, -1467], [-9326, -111], [1880, 4958], [9628, 7411]]
 #p = [-9326, -111]
 #walk, visited = getRandomWalkDFS(p, pts, 17)
+
+def factorial(n):
+    res = 1
+    for i in xrange(1, n+1):
+        res *= i
+    return res
+    
+def choose(n, k):
+    return factorial(n)/(factorial(n-k)*factorial(k))
+
+def cellsNumber(n):
+    if n == 2:
+        return 2
+    return cellsNumber(n-1) + (n-1)*(choose(n-1, 2)-n+5)-1
+    
