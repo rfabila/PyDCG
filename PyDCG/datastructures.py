@@ -1,1404 +1,559 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python
 import random
-import line, fractions
+import warnings
 from geometricbasics import turn
 
-#TODO: cambiar bridge a miembro o sacarla de la clase (actualmente es miembro de clase)
+# TODO: cambiar bridge a miembro o sacarla de la clase (actualmente es
+# miembro de clase)
 
 LEFT = 0
 RIGHT = 1
 UPPER = 3
 LOWER = 4
 
-objs=[]
 """Module implementing various data structures"""
 
-def count_list_elements(list):
-    """O(n) function to count the
-       number of elements of a list"""
-    total=0
-    while not list.empty:
-        total=total+1
-        list=list.cdr
-    return total
-           
-#rewrite it as a class function as so
-#so that it works directly with print
-def print_list_elements(list):
-    """O(n) function to print the elements of a list"""
-    while not list.empty:
-        print list.car
-        list=list.cdr
-
-class List:
-    """linked list. Be careful when using the lenght
-       field it does not get updated automatically.
-       Its current use is for a queue for example."""
-    
-    #A la scheme
-    def __init__(self,car=None):
-        self.car=car
-        if self.car==None:
-            self.empty=True
-            self.length=0
-            self.cdr=None
-        else:
-            self.empty=False
-            self.cdr=List()
-            self.length=1
-    
-    def to_front(self,elem):
-        tmplist=List(car=self.car)
-        tmplist.cdr=self.cdr
-        tmplist.length=self.length
-        
-        self.car=elem
-        self.cdr=tmplist
-        self.length=tmplist.length+1
-        self.empty=False
-    
-    
-
-#I feel the class slow. It is not clear
-#whether the complexity is wrong or is just
-#the overhead of constructing the Node objects.
-#Or I am just a bad programmer.
-#This could be a source for big improvement in the future.
-#Seems to be working ok though.
+# I feel the class slow. It is not clear
+# whether the complexity is wrong or is just
+# the overhead of constructing the Node objects.
+# Or I am just a bad programmer.
+# This could be a source for big improvement in the future.
+# Seems to be working ok though.
 class Treap(object):
+
     """An implementation of a treap. Note that
        lower priority elements are at the top.
        Loosely based on the description in "Randomized Algorithms"
        by Motwani and Raghavan. All mistakes are mine"""
-       
+
     def __str__(self):
         if self.empty:
             return "Empty Treap"
         return str(self.root)
-    
-    def __init__(self,compare=lambda x,y:x-y,max_size=1000):
-        
-        self.compare=compare
-        self.root=None
-        self.empty=True
-        
-        #self.max_size=max_size
-        #self.free_nodes=[self.Node() for i in range(self.max_size)]
-        #self.start_node=0
-        #self.end_node=max_size-1
-        #self.nodes=self.free_nodes[:]
-    
-    #def clear(self):
+
+    def __init__(self, compare=lambda x, y: x - y, max_size=1000):
+
+        self.compare = compare
+        self.root = None
+        self.empty = True
+
+    # def clear(self):
      #   self.root=None
      #   self.empty=True
      #   self.free_nodes=self.nodes[:]
-    
-    def find(self,key):
-#        print "\nsearching", key, "in", self
+
+    def find(self, key):
         if self.empty:
             return None
         else:
-            node=self.root
-            while(node!=None):
-                #if its smaller
-                if self.compare(key,node.key) < 0:
-#                    print key, "<", node.key
-                    node=node.left
-                elif self.compare(key,node.key) > 0:
-#                    print key, ">", node.key
-                    node=node.right
+            node = self.root
+            while(node is not None):
+                # if its smaller
+                if self.compare(key, node.key) < 0:
+                    node = node.left
+                elif self.compare(key, node.key) > 0:
+                    node = node.right
                 else:
                     return node
             return node
-    
-    def delete(self,key):
-        node=self.find(key)
+
+    def delete(self, key):
+        node = self.find(key)
         self.delete_node(node)
         return node
-               
-    def delete_node(self,node):
-        if node==None:
+
+    def delete_node(self, node):
+        if node is None:
             return None
-        while node.left!=None or node.right!=None:
-            if node.left==None or node.right==None:
-                if node.left==None:
-                    self.rotate_left(node)
-                else:
-                    self.rotate_right(node)   
-            else:
-                if self.compare_priorities(node.left,node.right) > 0:
+        while node.left is not None or node.right is not None:
+            if node.left is None or node.right is None:
+                if node.left is None:
                     self.rotate_left(node)
                 else:
                     self.rotate_right(node)
-                
-        if  node.parent!=None:        
-            if node.parent.left==node:
-                node.parent.left=None
             else:
-               node.parent.right=None
-        else:
-            self.root=None
-            self.empty=True
-        
-        
-        return node            
-    
-    def insert(self,key,obj=None):
-#        print "inserting", key
-        node=self.Node(key=key,obj=obj)
-        self.insert_node(node)
-    
-    def insert_node(self,node):  
-        if self.empty:
-            self.root=node
-            self.empty=False
-        else:
-            leaf=self.root
-            parent=self.root
-            while(leaf!=None):
-                #if its smaller
-                parent=leaf
-                if self.compare(node.key,leaf.key) < 0:
-                   leaf=leaf.left
+                if self.compare_priorities(node.left, node.right) > 0:
+                    self.rotate_left(node)
                 else:
-                    leaf=leaf.right
-            node.parent=parent
-            if self.compare(node.key,parent.key) < 0:
-                parent.left=node
+                    self.rotate_right(node)
+
+        if node.parent is not None:
+            if node.parent.left == node:
+                node.parent.left = None
             else:
-                parent.right=node
+                node.parent.right = None
+        else:
+            self.root = None
+            self.empty = True
+
+        return node
+
+    def insert(self, key, obj=None):
+        node = self.Node(key=key, obj=obj)
+        self.insert_node(node)
+
+    def insert_node(self, node):
+        if self.empty:
+            self.root = node
+            self.empty = False
+        else:
+            leaf = self.root
+            parent = self.root
+            while(leaf is not None):
+                # if its smaller
+                parent = leaf
+                if self.compare(node.key, leaf.key) < 0:
+                    leaf = leaf.left
+                else:
+                    leaf = leaf.right
+            node.parent = parent
+            if self.compare(node.key, parent.key) < 0:
+                parent.left = node
+            else:
+                parent.right = node
             self.restore_heap(node)
 
-    
-    def restore_heap(self,node):
+    def restore_heap(self, node):
         """Restores the heap property by
            rotating the node upwards if necessary"""
-        if node.parent==None:
+        if node.parent is None:
             return False
-        
-        while self.compare_priorities(node.parent,node)>0:
-            if node==node.parent.left:
+
+        while self.compare_priorities(node.parent, node) > 0:
+            if node == node.parent.left:
                 self.rotate_right(node.parent)
             else:
                 self.rotate_left(node.parent)
-            if node.parent==None:
+            if node.parent is None:
                 break
-            
-    def restore_heap_downwards(self,node):
+
+    def restore_heap_downwards(self, node):
         """Restores the heap property by rotating
            the node downwards if necessary."""
-        while(self.compare_priorities(node,node.left))>=1 or (self.compare_priorities(node,node.right)) >=1:
-            if self.compare_priorities(node.left,node.right)>=1 or node.left==None:
-                #right must go above
+        while(self.compare_priorities(node, node.left)) >= 1 or (self.compare_priorities(node, node.right)) >= 1:
+            if self.compare_priorities(
+                    node.left,
+                    node.right) >= 1 or node.left is None:
+                # right must go above
                 self.rotate_left(node)
             else:
-                #left must go above
+                # left must go above
                 self.rotate_right(node)
-            
-        
+
     def show(self):
         print self.root.__str__()
 
-#    def compare_priorities(self,x,y):
-#        if x==y or x==None or y==None:
-#            return 0
-#        prx=x.priority
-#        pry=y.priority
-#        while prx.car==pry.car:
-#            if prx.cdr.empty:
-#                prx.cdr=List(car=random.random())
-#            prx=prx.cdr
-#            if pry.cdr.empty:
-#                pry.cdr=List(car=random.random())
-#            pry=pry.cdr
-#                
-#        if prx.car < pry.car:
-#            return -1
-#        else:
-#            return 1
-
-    def compare_priorities(self,x,y):
-        if x==y or x==None or y==None:
+    def compare_priorities(self, x, y):
+        if x == y or x is None or y is None:
             return 0
         while x.priority == y.priority:
             x.priority.append(random.random())
             y.priority.append(random.random())
-                    
+
         if x.priority < y.priority:
             return -1
         else:
             return 1
-    
+
     def min(self):
         return self.min_tree(self.root)
-        
-    def min_tree(self,node):
+
+    def min_tree(self, node):
         """Returns the minimum value
            at the tree hanging from node
            as a root"""
-        if node==None:
+        if node is None:
             return None
-        return_node=node
-        while return_node.left!=None:
-            return_node=return_node.left
+        return_node = node
+        while return_node.left is not None:
+            return_node = return_node.left
         return return_node
-    
+
     def max(self):
         return self.max_tree(self.root)
-        
-    def max_tree(self,node):
+
+    def max_tree(self, node):
         """Returns the maximum value
            at the tree hanging from node
            as a root"""
-        if node==None:
+        if node is None:
             return None
-        return_node=node
-        while return_node.right!=None:
-            return_node=return_node.right
+        return_node = node
+        while return_node.right is not None:
+            return_node = return_node.right
         return return_node
-    
-    def rotate_left(self,node):
-        if node.right!=None:
-            grandpa=node.parent
-            nnode=node.right
-            nnode.parent=grandpa
-            node.parent=nnode
-            
-            if grandpa!=None:
-                if grandpa.left==node:
-                    grandpa.left=nnode
+
+    def rotate_left(self, node):
+        if node.right is not None:
+            grandpa = node.parent
+            nnode = node.right
+            nnode.parent = grandpa
+            node.parent = nnode
+
+            if grandpa is not None:
+                if grandpa.left == node:
+                    grandpa.left = nnode
                 else:
-                    grandpa.right=nnode
+                    grandpa.right = nnode
             else:
-                self.root=nnode
-                
-            node.right=nnode.left
-            nnode.left=node
-            
-            if node.right!=None:
-              node.right.parent=node
-            
-    
-    def rotate_right(self,node):
-        if node.left!=None:
-            grandpa=node.parent
-            nnode=node.left
-            nnode.parent=grandpa
-            node.parent=nnode
-            
-            if grandpa!=None:
-                if grandpa.left==node:
-                    grandpa.left=nnode
+                self.root = nnode
+
+            node.right = nnode.left
+            nnode.left = node
+
+            if node.right is not None:
+                node.right.parent = node
+
+    def rotate_right(self, node):
+        if node.left is not None:
+            grandpa = node.parent
+            nnode = node.left
+            nnode.parent = grandpa
+            node.parent = nnode
+
+            if grandpa is not None:
+                if grandpa.left == node:
+                    grandpa.left = nnode
                 else:
-                    grandpa.right=nnode
+                    grandpa.right = nnode
             else:
-                self.root=nnode
-            
-            node.left=nnode.right
-            nnode.right=node
-            
-            if node.left!=None:
-              node.left.parent=node
-                        
-                                        
-    
-    def check_priority(self,node):
-        if node==None:
+                self.root = nnode
+
+            node.left = nnode.right
+            nnode.right = node
+
+            if node.left is not None:
+                node.left.parent = node
+
+    def check_priority(self, node):
+        if node is None:
             return True
-        if (not self.check_priority(node.left)) or (not self.check_priority(node.right)):
+        if (not self.check_priority(node.left)) or (
+                not self.check_priority(node.right)):
             return False
-        if node.left!=None or node.right!=None:
-            if node.left!=None:
-                if self.compare_priorities(node,node.left) > 0:
+        if node.left is not None or node.right is not None:
+            if node.left is not None:
+                if self.compare_priorities(node, node.left) > 0:
                     return False
-            if node.right!=None:    
-                if self.compare_priorities(node,node.right) > 0:
+            if node.right is not None:
+                if self.compare_priorities(node, node.right) > 0:
                     return False
         return True
-    
-    def count_elements(self,node=0):
-        if node==0:
-            node=self.root
-            
-        if node==None:
+
+    def count_elements(self, node=0):
+        if node == 0:
+            node = self.root
+
+        if node is None:
             return 0
         else:
-            num=self.count_elements(node.left)+self.count_elements(node.right)+1
+            num = self.count_elements(
+                node.left) + self.count_elements(node.right) + 1
             return num
-    
-    def move_node_to_root(self,node):
+
+    def move_node_to_root(self, node):
         """Moves the node to the root, but
            breaks the heap property in the proccess.
            Afterwards a splitting a this vertex is trivial"""
-        parent=node.parent
-        while parent!=None:
-            if parent.left==node:
+        parent = node.parent
+        while parent is not None:
+            if parent.left == node:
                 self.rotate_right(parent)
             else:
                 self.rotate_left(parent)
-            parent=node.parent
-    
-    def split_at_node(self,node):
+            parent = node.parent
+
+    def split_at_node(self, node):
         """Splits the treap a the given node."""
         self.move_node_to_root(node)
-        left_treap=Treap(compare=self.compare)
-        right_treap=Treap(compare=self.compare)
-        root=self.root
-        if root.left!=None:
-            left_treap.empty=False
-            left_treap.root=root.left
-            left_treap.root.parent=None
-        if root.right!=None:
-            right_treap.empty=False
-            right_treap.root=root.right
-            right_treap.root.parent=None
-        root.left=None
-        root.right=None
-        return (left_treap,root,right_treap)
-    
-    def split(self,key):
+        left_treap = Treap(compare=self.compare)
+        right_treap = Treap(compare=self.compare)
+        root = self.root
+        if root.left is not None:
+            left_treap.empty = False
+            left_treap.root = root.left
+            left_treap.root.parent = None
+        if root.right is not None:
+            right_treap.empty = False
+            right_treap.root = root.right
+            right_treap.root.parent = None
+        root.left = None
+        root.right = None
+        return (left_treap, root, right_treap)
+
+    def split(self, key):
         """Splits the treap at the given key
            value. Note that the old treap no longer
            satisfies the heap property; should
            be destroyed but it is difficult and
            undesirable to do so in Python."""
-        node=self.find(key)
-        if node!=None:
+        node = self.find(key)
+        if node is not None:
             return self.split_at_node(node)
         print "\n", key, "not found", "in", self
         print "Split returns NONE"
-        return (self,None,None)
-            
-    
-    def paste(self,node,T2):
+        return (self, None, None)
+
+    def paste(self, node, T2):
         """Returns a new treap conaining self, the node and the
            treap T2. The original treaps, self and T2 no longer
            satisfy the heap property."""
 #        print "pasting",self, node, T2
-        treap=Treap(compare=self.compare)
-        treap.empty=False
-        treap.root=node
-        treap.root.left=self.root
-        treap.root.right=T2.root
-        if treap.root.left!=None:
-             treap.root.left.parent=treap.root
-        if treap.root.right!=None:
-             treap.root.right.parent=treap.root
-        treap.root.parent=None
+        treap = Treap(compare=self.compare)
+        treap.empty = False
+        treap.root = node
+        treap.root.left = self.root
+        treap.root.right = T2.root
+        if treap.root.left is not None:
+            treap.root.left.parent = treap.root
+        if treap.root.right is not None:
+            treap.root.right.parent = treap.root
+        treap.root.parent = None
         treap.restore_heap_downwards(treap.root)
-#        print "\nfinished pasting, verifying"
-#        verifyBinaryTree(treap)
-#        print "done"
         return treap
-    
-    def join(self,T2):
+
+    def join(self, T2):
         """Returns the join of self and T2, destroys
            the heap property of both in the proccess. It
            assumes T1<=T2"""
         if self.empty:
-#            print "self empty"
             return T2
         elif T2.empty:
-#            print "T2 empty"
             return self
         else:
-            max_node=self.max()
+            max_node = self.max()
             self.delete_node(max_node)
-            return self.paste(max_node,T2)
-        
-    def compute_height(self,node):
-        if node==None:
-            return 0
-        left=self.compute_height(node.left)
-        right=self.compute_height(node.right)
-        h=max(left,right)
-        return h+1
-    
-    def successor(self,node):
-        """Returns the succesor of node"""
-        if node.right!=None:
-            return self.min_tree(node.right)
-        elif node.parent!=None:
-            parent_node=node.parent
-            son_node=node
-            while parent_node.parent!=None and parent_node.left!=son_node:
-                son_node=parent_node
-                parent_node=parent_node.parent
-            if parent_node.left!=son_node:
-                return None
-            else:
-                return parent_node
-        else:
-            return None
-        
-    def predecessor(self,node):
-        """Returns the predecessor of a node"""
-        if node.left!=None:
-            return self.max_tree(node.left)
-        elif node.parent!=None:
-            parent_node=node.parent
-            son_node=node
-            while parent_node.parent!=None and parent_node.right!=son_node:
-                son_node=parent_node
-                parent_node=parent_node.parent
-            if parent_node.right!=son_node:
-                return None
-            else:
-                return parent_node
-        else:
-            return None
-        
-   
-    class Node(object):
-        
-        def __init__(self,key=0,obj=None):
-        
-            self.key=key
-            self.obj=obj
-            self.priority = []#List(car=random.random())
-            self.parent=None
-            self.right=None
-            self.left=None
+            return self.paste(max_node, T2)
 
-        
-        #for debugging purposes
+    def compute_height(self, node):
+        if node is None:
+            return 0
+        left = self.compute_height(node.left)
+        right = self.compute_height(node.right)
+        h = max(left, right)
+        return h + 1
+
+    def successor(self, node):
+        """Returns the succesor of node"""
+        if node.right is not None:
+            return self.min_tree(node.right)
+        elif node.parent is not None:
+            parent_node = node.parent
+            son_node = node
+            while parent_node.parent is not None and parent_node.left != son_node:
+                son_node = parent_node
+                parent_node = parent_node.parent
+            if parent_node.left != son_node:
+                return None
+            else:
+                return parent_node
+        else:
+            return None
+
+    def predecessor(self, node):
+        """Returns the predecessor of a node"""
+        if node.left is not None:
+            return self.max_tree(node.left)
+        elif node.parent is not None:
+            parent_node = node.parent
+            son_node = node
+            while parent_node.parent is not None and parent_node.right != son_node:
+                son_node = parent_node
+                parent_node = parent_node.parent
+            if parent_node.right != son_node:
+                return None
+            else:
+                return parent_node
+        else:
+            return None
+
+    class Node(object):
+
+        def __init__(self, key=0, obj=None):
+            self.key = key
+            self.obj = obj
+            self.priority = []
+            self.parent = None
+            self.right = None
+            self.left = None
+
+        # for debugging purposes
         def __str__(self):
-            
-            if self.left==None:
-                sleft="()"
+
+            if self.left is None:
+                sleft = "()"
             else:
-                sleft=self.left.__str__()
-                
-            if self.right==None:
-                sright="()"
+                sleft = self.left.__str__()
+
+            if self.right is None:
+                sright = "()"
             else:
-                sright=self.right.__str__()
-            snode="(key="+self.key.__str__()+")" #",pr="+self.priority.__str__()+","+self.obj.__str__()+")"
-            s="("+snode+"("+sleft+","+sright+")"+")"
+                sright = self.right.__str__()
+            # ",pr="+self.priority.__str__()+","+self.obj.__str__()+")"
+            snode = "(key=" + self.key.__str__() + ")"
+            s = "(" + snode + "(" + sleft + "," + sright + ")" + ")"
             return s
-            
+
         def isLeaf(self):
             return self.right is None and self.left is None
-                
-                
 
-#Test functions
-def treap_sort(s,t=100):
-    treap=Treap(max_size=s)
-    for i in range(t):
-#        print "sort",i
-        for j in range(s):
-            treap.insert(random.randint(0,2*s))
+
+# Test functions
+def treap_sort(s, t=100):
+    treap = Treap(max_size=s)
+    for i in xrange(t):
+        #        print "sort",i
+        for j in xrange(s):
+            treap.insert(random.randint(0, 2 * s))
         while not treap.empty:
-            node=treap.min()
+            node = treap.min()
 #            print node.key
             treap.delete(node.key)
-            
+
+
 def treapToList(T):
     l = []
-    def inOrder(node):
-        if node.right == None and node.left == None:
-            if node.obj is not None:
-                l.append([node.key, node.obj])
-            else:
-                l.append(node.key)
-            return
 
-        if node.left != None:
+    def inOrder(node):
+        if node.left is not None:
             inOrder(node.left)
 
         if node.obj is not None:
             l.append([node.key, node.obj])
         else:
             l.append(node.key)
-#        l.append(node.key)
-        if node.right != None:
+
+        if node.right is not None:
             inOrder(node.right)
-            
+
     if T.empty:
         return l
-
-    if not T.root.isLeaf():
-        inOrder(T.root)
-    else:
-        if T.root.obj is not None:
-            l.append([T.root.key, T.root.obj])
-        else:
-            l.append(T.root.key)
+        
+    inOrder(T.root)
+    
     return l
-    
-#Maintainers
 
-#This is an implementation of an Algorithm"
-#in "Maintenance of Configurations in the Plane
-#by Overmars and Leeuwen
-#I am assuming that all lines have a defines slope
-class Envelope_Mantainer(Treap):
-    """Mantains the Lower or Upper envelope of a set of lines"""
-    
-    @staticmethod
-    def compare_lines(l1,l2):
-                if l1.m<l2.m:
-                    return -1
-                elif l1.m>l2.m:
-                    return 1
-                return 0
-    
-    @staticmethod
-    def point_of_intersection(T1,T2):
-            """Given two convex treaps of lines T1 and T2,
-               such that all the lines of T1 have
-               smaller  slope that those of T2, it returns
-               their point of intersection."""
-            
-            #Quick check for especial cases
-            if T1.empty or T2.empty:
-                return (T1.max(),T2.min())
-                
-            def get_point(T,node1):
-                node2=T.predecessor(node1)
-                if node2==None:
-                    node2=T.successor(node1)
-                p=node1.obj.line_intersection(node2.obj)
-                if p==None:
-                    print "Error en get_point"
-                    print "m1=",node1.obj.m,"b1=",node1.obj.b
-                    print "m2=",node2.obj.m,"b2=",node2.obj.b              
-                return p
-            
-            def found_node(node):
-                if node.left==None and node.right==None:
-                    return True
-                return False
-            
-            #Following Overmars and Leeuwen
-            #Check special cases!!
-            def get_case(l,m,q):
-                side_l=l.point_in_line(q)
-                side_m=m.point_in_line(q)
-                
-                #print "get case"
-                #print side_m
-                #print side_l
-                
-                if side_m<=0:
-                    if side_l<=0:
-                        return "C2"
-                    else:
-                        return "A2"
-                else:
-                    if side_l<=0:
-                        return "A1"
-                    else:
-                        return "C1"
-                    
-            #check wheter this is the proposed intersection
-            def check_int(l1_node,l2_node):
-                p=l1_node.obj.line_intersection(l2_node.obj)
-                suc1=T1.successor(l1_node)
-                pre1=T1.predecessor(l1_node)
-                suc2=T2.successor(l2_node)
-                pre2=T2.predecessor(l2_node)
-                
-                if suc1!=None:
-                    #print "suc1"
-                    #print suc1.obj.m
-                    if suc1.obj.point_in_line(p)>0:
-                        return False
-                if suc2!=None:
-                    #print "suc2"
-                    #print suc2.obj.m
-                    if suc2.obj.point_in_line(p)>0:
-                        return False
-                if pre1!=None:
-                    #print "pre1"
-                    #print pre1.obj.m
-                    if pre1.obj.point_in_line(p)>0:
-                        return False
-                if pre2!=None:
-                    #print "pre2"
-                    #print pre2.obj.m
-                    if pre2.obj.point_in_line(p)>0:
-                        return False
-                    
-                return True
-            
-            #An ugly workaoround
-            def fix_int(l1_node,l2_node):
-                #print "fixing"
-                l2_nodes=[l2_node]
-                
-                suc2=T2.successor(l2_node)
-                pre2=T2.predecessor(l2_node)
-                
-                if suc2!=None:
-                    l2_nodes.append(suc2)
-                if pre2!=None:
-                    l2_nodes.append(pre2)
-                for n2 in l2_nodes:
-                    if check_int(l1_node,n2):
-                        return (l1_node,n2)
-                return (None,None)    
-                               
-            def print_intervals():
-                print "intervals"
-                print l1_min,l1_max
-                print l2_min,l2_max
-            
-            foundT1=found_node(T1.root)
-            foundT2=found_node(T2.root)
-            
-            l1_node=T1.root
-            l2_node=T2.root
-            
-            l1_min=None
-            l2_min=None
-            l1_max=None
-            l2_max=None
-            
-            while (not foundT1) or (not foundT2):
-                
-                if check_int(l1_node,l2_node):
-                    return (l1_node,l2_node)
-                
-                #print "not foundT1 or not found T2"
-                #print l1_node.obj.m
-                #print l2_node.obj.m
-                
-                while foundT1 and (not foundT2):
-                    #print "foundT1 but not T2"
-                    #print l1_node.obj.m
-                    #print l2_node.obj.m
-                    #print_intervals()
-                    l1_nodes=[l1_node]
-                    suc1=T1.successor(l1_node)
-                    pre1=T1.predecessor(l1_node)
-                    if suc1!=None:
-                        l1_nodes.append(suc1)
-                    if pre1!=None:
-                        l1_nodes.append(pre1)
-                    
-                    start_n2=l2_node
-                    for l1_node in l1_nodes:
-                        l2_node=start_n2
-                        foundT2=False
-                        while not foundT2:
-                            #print l2_node.obj.m
-                            #print l1_node.obj.m
-                            #print_intervals()
-                            p=get_point(T2,l2_node)
-                            side=l1_node.obj.point_in_line(p)
-                            #below
-                            if side==1:
-                                #print "below"
-                                if l2_node.right!=None:
-                                    l2_min=l2_node.obj.m
-                                    l2_node=l2_node.right
-                                    foundT2=found_node(l2_node)
-                                else:
-                                    foundT2=True
-                        
-                                #on the line
-                            if side==0:
-                                #print "on the line"
-                                foundT2=True
-                        
-                            #above the line 
-                            if side==-1:
-                                #print "above"
-                                if l2_node.left!=None:
-                                    l2_max=l2_node.obj.m
-                                    l2_node=l2_node.left
-                                    foundT2=found_node(l2_node)
-                                else:
-                                    foundT2=True
-                        (n1,n2)=fix_int(l1_node,l2_node)
-                        if n1!=None:
-                            return (n1,n2)
-                    #print "ERROR found T1"
-                
-                while foundT2 and (not foundT1):
-                    #print "found T2 but not T1"
-                                
-                    l2_nodes=[l2_node]
-                    suc2=T2.successor(l2_node)
-                    pre2=T2.predecessor(l2_node)
-                    if suc2!=None:
-                        l2_nodes.append(suc2)
-                    if pre2!=None:
-                        l2_nodes.append(pre2)
-                    
-                    start_n1=l1_node
-                    for l2_node in l2_nodes:
-                        l1_node=start_n1
-                        foundT1=False
-                        while not foundT1:
-                            q=get_point(T1,l1_node)
-                            side=l2_node.obj.point_in_line(q)
-                            #print_intervals()
-                            #print l2_node.obj.m
-                            #print l1_node.obj.m
-                            #below
-                            if side==1:
-                                #print "below"
-                                if l1_node.left!=None:
-                                    l1_max=l1_node.obj.m
-                                    l1_node=l1_node.left
-                                    foundT1=found_node(l1_node)
-                                else:
-                                    foundT1=True
-                            #on the line
-                            if side==0:
-                                #print "in the line"
-                                foundT1=True
-                            #above the line
-                            if side==-1:
-                                #print "above"
-                                if l1_node.right!=None:
-                                    l1_min=l1_node.obj.m
-                                    l1_node=l1_node.right
-                                    foundT1=found_node(l1_node)
-                                else:
-                                    foundT1=True
-                        (n2,n1)=fix_int(l2_node,l1_node)
-                        if n1!=None:
-                            return (n1,n2)
-                    #print "ERROR found T2"
-                                    
-                if (not foundT1) and (not foundT2):
-                    #print "found none"
-                    #print_intervals()
-                    #print l1_node.obj.m
-                    #print l2_node.obj.m
-                    
-                    #was l1_node and l2_node resp
-                    maxT1=T1.max_tree(T1.root)
-                    minT2=T2.min_tree(T2.root)
-                    midslope=(minT2.obj.m+maxT1.obj.m)/2
-                    p=get_point(T2,l2_node)
-                    q=get_point(T1,l1_node)
-                    b=p[1]-midslope*p[0]
-                    mid_line=line.Line(p=p,q=[p[0]+1,midslope*p[0]+midslope+b])
-                    vertical_line=line.Line(p=p,q=[p[0],p[1]+1])
-                    side=get_case(mid_line,vertical_line,q)
-                    
-                    #print "p and q"
-                    #print p
-                    #print q
-                    
-                    if side=="A1":
-                        if l2_node.right!=None:
-                            #print side
-                            #print "Delete the part of T2 below p"
-                            l2_min=l2_node.obj.m
-                            l2_node=l2_node.right
-                            foundT2=found_node(l2_node)
-                        else:
-                            l2_min=l2_node.obj.m
-                            foundT2=True
-                            
-                    if side=="C1":
-                        #print side
-                        #print "Delete the part of T1 above q"
-                        if l1_node.left!=None:
-                            l1_max=l1_node.obj.m
-                            l1_node=l1_node.left
-                            foundT1=found_node(l1_node)
-                        else:
-                            l1_max=l1_node.obj.m
-                            foundT1=True
-                            
-                    if side=="A2":
-                        #print side
-                        #print "Delete the part of T2 above p"
-                        if l2_node.left!=None:
-                            l2_max=l2_node.obj.m
-                            l2_node=l2_node.left
-                            foundT2=found_node(l2_node)
-                        else:
-                            l2_max=l2_node.obj.m
-                            foundT2=True
-                            
-                    if side=="C2":
-                        #print side
-                        #print "Delete the part of T1 below q"
-                        if l1_node.right!=None:
-                            l1_min=l1_node.obj.m
-                            l1_node=l1_node.right
-                            foundT1=found_node(l1_node)
-                        else:
-                            l1_min=l1_node.obj.m
-                            foundT1=True
-        
-            return (l1_node,l2_node)
-    
-   
-    def __init__(self,lower=False):
-        Treap.__init__(self)
-        self.lower=lower
-    
-    def print_local_envs(self,node):
-        if node.__class__==self.Env_Node:
-            print node.key
-            node.local_env.show()
-            self.print_local_envs(node.left)
-            self.print_local_envs(node.right)
-            
-    def rotate_right(self,node):
-        #Case 1
-        if node.right==None:
-            #I am assuming that since node.right is None, node.left
-            #has an empty local_env. I am reusing it so to avoid
-            #the extra cost of creating a new empty local_env.
-            temp_env=node.left.local_env
-            node.left.local_env=node.local_env
-            node.local_env=temp_env
-        #Case 2
-        elif node.bridge_left.m<=node.left.bridge_left.m:
-            Env=node.local_env
-            Env_right=node.right.local_env
-            Env_left=node.left.local_env
-            Env_left.insert(node.bridge_left)
-            Env_right.insert(node.bridge_right)
-            (Env_left_left,n,Env_left_right)=Env_left.split(node.left.bridge_left.m)
-            Env_left_left.insert_node(n)
-            Env_left_right=node.left.right.local_env.join(Env_left_right)
-            Env_left_left=Env_left_left.join(node.left.left.local_env)
-            #updating node.right info
-            (rleft,rright)=Envelope_Mantainer.point_of_intersection(Env_left_right,Env_right)
-            (node.right.local_env,n,Env_right)=Env_right.split(rright.key)
-            Env_right.insert_node(n)
-            #updating node.left.right info
-            (Env_left_right,n,node.left.right.local_env)=Env_left_right.split(rleft.key)
-            Env_left_right.insert_node(n)
-            Env_right=Env_left_right.join(Env_right)
-            #updating node.left.left info remove bridge
-            Env_left_left.delete(node.bridge_left.m)
-            node.left.left.local_env=Env_left_left
-            #updating node.left info
-            node.left.local_env=Env
-            node.left.bridge_right=node.bridge_right
-            node.left.bridge_left=node.bridge_left
-            #updating node info
-            Env_right.delete(node.bridge_right.m)
-            node.local_env=Env_right
-            if self.lower:
-                nrright=line.Line()
-                nrright.m=rright.obj.m
-                nrright.b=-rright.obj.b
-                
-                nrleft=line.Line()
-                nrleft.m=rleft.obj.m
-                nrleft.b=-rleft.obj.b
-            else:
-                nrright=rright.obj
-                nrleft=rleft.obj    
-            node.bridge_right=nrright
-            node.bridge_left=nrleft
-        #Case 3 Check HERE and below!
-        else:
-            temp_env=node.local_env
-            node.local_env=node.left.right.local_env
-            node.left.right.local_env=node.left.local_env
-            node.left.local_env=temp_env
-
-        #rotate right!
-        Treap.rotate_right(self,node)
-    
-    def rotate_left(self,node):
-        #Case 1
-        if node.right.right==None:
-            #I am assuming that since node.right.right is None, node.right
-            #has an empty local_env. I am reusing it so to avoid
-            #the extra cost of creating a new empty local_env.
-            temp_env=node.right.local_env
-            node.right.local_env=node.local_env
-            node.local_env=temp_env
-        #Case 2
-        elif node.bridge_right.m>node.right.bridge_left.m:
-            #######
-            Env=node.local_env
-            Env_left=node.left.local_env
-            Env_right=node.right.local_env
-            Env_right.insert(node.bridge_right)
-            Env_left.insert(node.bridge_left)
-            (Env_right_left,n,Env_right_right)=Env_right.split(node.right.bridge_left.m)
-            Env_right_left.insert_node(n)
-            Env_right_left=Env_right_left.join(node.right.left.local_env)
-            Env_right_right=node.right.right.local_env.join(Env_right_right)
-            #updating node.left info
-            (rleft,rright)=Envelope_Mantainer.point_of_intersection(Env_left,Env_right_left)
-            (Env_left,n,node.left.local_env)=Env_left.split(rleft.key)
-            Env_left.insert_node(n)
-            #updating node.right.left info
-            (node.right.left.local_env,n,Env_right_left)=Env_right_left.split(rright.key)
-            Env_right_left.insert_node(n)
-            Env_left=Env_left.join(Env_right_left)
-            #updating node.right.right info remove bridge
-            Env_right_right.delete(node.bridge_right.m)
-            node.right.right.local_env=Env_right_right
-            #updating node.right info
-            node.right.local_env=Env
-            node.right.bridge_left=node.bridge_left
-            node.right.bridge_right=node.bridge_right
-            #updating node info
-            Env_left.delete(node.bridge_left.m)
-            node.local_env=Env_left
-            if self.lower:
-                nrright=line.Line()
-                nrright.m=rright.obj.m
-                nrright.b=-rright.obj.b
-                
-                nrleft=line.Line()
-                nrleft.m=rleft.obj.m
-                nrleft.b=-rleft.obj.b
-            else:
-                nrright=rright.obj
-                nrleft=rleft.obj    
-            node.bridge_right=nrright
-            node.bridge_left=nrleft
-        #Case 3
-        else:
-            temp_env=node.local_env
-            node.local_env=node.right.left.local_env
-            node.right.left.local_env=node.right.local_env
-            node.right.local_env=temp_env
-
-        #rotate left!
-        Treap.rotate_left(self,node)
-        
-    def insert(self,l,debug=False):
-        node=self.DOWN(l.m)
-        enode=self.Env_Node(obj=l,lower=self.lower)
-        lnode=self.Line_Node(obj=l,lower=self.lower)
-        enode.left=lnode
-        lnode.parent=enode
-        if node==None:
-            self.root=enode
-            self.empty=False
-        elif node.__class__==self.Env_Node:
-            #must be a right child
-            enode.parent=node
-            node.right=enode            
-        elif node.__class__==self.Line_Node:
-            if self.compare(node.key,l.m)==0:
-                node.insert(l,lower=self.lower)
-                enode=node.parent
-            else:
-                if node.parent.left==node:
-                    node.parent.left=enode
-                else:
-                    node.parent.right=enode
-                enode.parent=node.parent
-                node.parent=enode
-                enode.right=node
-        #Quitar  
-        if debug:
-            return enode
-        self.UP(enode)
-        #self.restore_heap(enode)
-        #return enode
-        
-   
-    def DOWN(self,key):
-        if self.empty:
-            return None
-        
-        node=self.root
-        
-        while node.__class__==self.Env_Node:
-            parent=node
-            if node.right==None: 
-               node.left.local_env=node.local_env
-            else:  
-                (Tl,n,Tr)=node.local_env.split(node.bridge_left.m)
-                Tl.insert_node(n)
-                node.left.local_env=Tl.join(node.left.local_env)
-                node.right.local_env=node.right.local_env.join(Tr)
-                    
-            if self.compare(node.key,key)<0:
-                node=node.right
-            elif self.compare(node.key,key)>=0:
-                node=node.left
-        
-        if node==None:
-            node=parent
-            
-        return node
-    
-    def UP(self,node):
-        """Repairs what DOWN did."""
-        while node!=None:
-            #print "hola"
-            if node.__class__==self.Line_Node:
-                node=node.parent
-            elif node.right==None:
-                node.local_env=node.left.local_env
-                node.bridge_left=None
-                node.bridge_right=None
-                node.left.local_env=None
-                node=node.parent
-            else:
-                (lleft,lright)=Envelope_Mantainer.point_of_intersection(node.left.local_env,node.right.local_env)
-                (Env_left,n,node.left.local_env)=node.left.local_env.split(lleft.key)
-                Env_left.insert_node(n)
-                (node.right.local_env,n,Env_right)=node.right.local_env.split(lright.key)
-                Env_right.insert_node(n)
-                node.local_env=Env_left.join(Env_right)
-                if self.lower:
-                    nlleft=line.Line()
-                    nlleft.m=lleft.obj.m
-                    nlleft.b=-lleft.obj.b
-                    nlright=line.Line()
-                    nlright.m=lright.obj.m
-                    nlright.b=-lright.obj.b
-                else:
-                    nlleft=lleft.obj
-                    nlright=lright.obj
-                node.bridge_left=nlleft
-                node.bridge_right=nlright
-                node=node.parent
-                
-    def print_env(self):
-        self.root.local_env.print_env()
-    
-    def delete_node(self,node):
-        if node==None:
-            return None
-        while node.left.__class__!=self.Line_Node or node.right.__class__==self.Env_Node:
-            if node.left.__class__==self.Line_Node or node.right.__class__==self.Env_Node:
-                if node.left.__class__==None:
-                    self.rotate_left(node)
-                else:
-                    self.rotate_right(node)   
-            else:
-                if self.compare_priorities(node.left,node.right) > 0:
-                    self.rotate_left(node)
-                else:
-                    self.rotate_right(node)
-        #We have moved the node to be deleted to the bottom!        
-        if  node.parent!=None:        
-            if node.parent.left==node:
-                node.parent.left=None
-            else:
-               node.parent.right=None
-        else:
-            self.root=None
-            self.empty=True
-        
-        
-        return node
-    
-    class Env_Node(Treap.Node):
-        
-        def __init__(self,obj=line.Line(),lower=False):
-                Treap.Node.__init__(self,key=obj.m)
-                #$Q_alpha$ in the "Mantainance of Configurations"
-                self.local_env=Envelope_Mantainer.Treap_Line(lower=lower)
-                #self.local_env.insert(obj)
-                self.bridge_left=obj
-                self.bridge_right=None
-                
-    class Line_Node(Treap.Node):
-        """It stores all lines with a same slope."""
-        
-        def __init__(self,obj=line.Line(),lower=False):
-            Treap.Node.__init__(self,key=obj.m)
-            self.local_env=Envelope_Mantainer.Treap_Line(lower=lower)
-            self.local_env.insert(obj)
-            self.lines=[obj]
-            self.obj=obj
-            self.empty=False
-            
-        def min_line(self):
-            min=0
-            for i in range(len(self.lines)):
-                if self.lines[i].b<self.lines[min].b:
-                    min=i
-            return min
-        
-        def max_line(self):
-            max=0
-            for i in range(len(self.lines)):
-                if self.lines[i].b>self.lines[max].b:
-                    max=i
-            return max
-        
-        def insert(self,line,lower=False):
-            self.lines.append(line)
-            if lower:
-                min=self.min_line()
-                self.obj=self.lines[min]
-            else:
-                max=self.max_line()
-                self.obj=self.lines[max]
-            self.local_env=Envelope_Mantainer.Treap_Line(lower=lower)
-            self.local_env.insert(self.obj)
-        
-        def delete(self,lower):
-            if lower:
-                min=self.min_line()
-                self.lines.pop(min)
-                if len(self.lines)==0:
-                    self.empty=True
-                    self.obj=None
-                    self.key=None
-                else:
-                    min=self.min_line()
-                    self.obj=self.lines[min]
-            else:
-                max=self.max_line()
-                self.lines.pop(max)
-                if len(self.lines)==0:
-                    self.empty=True
-                    self.obj=None
-                    self.key=None
-                else:
-                    max.self.max_line()
-                    self.obj=self.lines[max]
-
-    #I will assume for the time being that
-    #there are no vertical lines and not two lines have the same slope
-    class Treap_Line(Treap):
-        """Treap representing the envelopes"""
-        
-        def __init__(self,lower=False):
-            self.lower=lower
-            Treap.__init__(self)        
-        
-        def insert(self,l):
-            obj=l
-            if self.lower:
-                obj=line.Line()
-                obj.m=l.m
-                obj.b=-l.b
-            Treap.insert(self,key=obj.m,obj=obj)
-            
-        def split_at_node(self,node):
-            """Splits the treap a the given node."""
-            self.move_node_to_root(node)
-            left_treap=Envelope_Mantainer.Treap_Line(lower=self.lower)
-            right_treap=Envelope_Mantainer.Treap_Line(lower=self.lower)
-            root=self.root
-            if root.left!=None:
-                left_treap.empty=False
-                left_treap.root=root.left
-                left_treap.root.parent=None
-            if root.right!=None:
-                right_treap.empty=False
-                right_treap.root=root.right
-                right_treap.root.parent=None
-            root.left=None
-            root.right=None
-            return (left_treap,root,right_treap)
-    
-        def paste(self,node,T2):
-            """Returns a new treap conaining self, the node and the
-               treap T2. The original treaps, self and T2 no longer
-               satisfy the heap property."""
-            treap=Envelope_Mantainer.Treap_Line(lower=self.lower)
-            treap.empty=False
-            treap.root=node
-            treap.root.left=self.root
-            treap.root.right=T2.root
-            if treap.root.left!=None:
-                 treap.root.left.parent=treap.root
-            if treap.root.right!=None:
-                 treap.root.right.parent=treap.root
-            treap.root.parent=None
-            treap.restore_heap_downwards(treap.root)
-            return treap
-        
-        def get_env(self):
-            (head,tail)=self.get_env_rec(self.root)
-            return head
-        
-        def print_env(self):
-            lnode=self.get_env()
-            str="["
-            while not lnode.empty:
-                str=str+"["+lnode.car[0].__str__()+","+lnode.car[1].__str__()+"],"
-                lnode=lnode.cdr
-            str=str[:len(str)-1]+"]"
-            print str
-        
-        def get_env_rec(self,node):
-            if self.lower:
-                b=-node.obj.b
-            else:
-                b=node.obj.b
-            lst=List(car=(node.obj.m,b))
-            if node.left!=None:
-                (head,ltail)=self.get_env_rec(node.left)
-                ltail.cdr=lst
-            else:
-                head=lst
-            if node.right!=None:
-                (rhead,tail)=self.get_env_rec(node.right)
-                lst.cdr=rhead
-            else:
-                tail=lst
-            return (head,tail)            
 
 class dynamic_half_hull(object):
-    
-    def __init__(self, side = UPPER):
-        self.root=None
+
+    def __init__(self, side=UPPER):
+        self.root = None
         self.empty = True
         self.side = side
-        
+
     def right_rotation(self, node):
-        if node.left != None:
+        if node.left is not None:
             parent = node.parent
             lson = node.left
-            
+
             lson.parent = parent
-            if parent != None:
+            if parent is not None:
                 if parent.right == node:
                     parent.right = lson
                 else:
                     parent.left = lson
             else:
                 self.root = lson
-                    
+
             node.left = lson.right
             if node.left is not None:
                 node.left.parent = node
-                
+
             node.parent = lson
             lson.right = node
-    
+
     def left_rotation(self, node):
-        if node.right != None:
+        if node.right is not None:
             parent = node.parent
             rson = node.right
-            
-            rson.parent = parent            
-            if parent != None:
+
+            rson.parent = parent
+            if parent is not None:
                 if parent.right == node:
                     parent.right = rson
                 else:
                     parent.left = rson
             else:
                 self.root = rson
-                    
+
             node.right = rson.left
             if node.right is not None:
                 node.right.parent = node
-                
+
             node.parent = rson
             rson.left = node
-        
-    def insert(self, p, obj = None):
-#        print "inserting", p, "side", self.side, "(Upper is 3)"
-#        print "Data is", obj.getPoints()
+
+    def insert(self, p, obj=None):
         # v is the new node
-        v = self.Node(key = p, obj = obj)
+        v = self.Node(key=p, obj=obj)
         v.J = p
-        v.Q.insert(key = p, obj = obj)
-        
+        v.Q.insert(key=p, obj=obj)
+
         if self.empty:
             self.root = v
             self.empty = False
             return
-        
-#        v.Q.insert(key = p)
+            
         u = self.DOWN(self.root, v)
-#        print "DOWN gave", u
-        
-        if u.key != v.key: #TODO: There's too much repeated code here, rewrite this part
+                
+        if u.key != v.key:
             aux = self.Node()
             aux.priority[0] = random.random()
             parent = u.parent
+            
             if parent is None:                       # u is currently the root
-#                u.Q.insert(u.key)
-#                print "root"
                 self.root = aux
-                u.parent = aux
-                v.parent = aux
-#                START!
-                if v.key[0] >= u.key[0]:
-                    if v.key[0] == u.key[0]:
-                        raise StandardError
-                    aux.key = [u.key[0],0]
-                    aux.left = u
-                    aux.right = v
-#                    aux.J = u.key
-                else:
-                    aux.key = [v.key[0],0]
-                    aux.left = v
-                    aux.right = u
-#                    aux.J = v.key
-                    
             elif parent.right is u:     # u is a right son
                 parent.right = aux
                 aux.parent = parent
-                u.parent = aux
-                v.parent = aux
-                if v.key[0] >= u.key[0]:
-                    if v.key[0] == u.key[0]:
-                        raise StandardError
-                    aux.key = [u.key[0],0]
-                    aux.left = u
-                    aux.right = v
-#                    aux.J = u.key
-                else:
-                    aux.key = [v.key[0],0]
-                    aux.left = v
-                    aux.right = u
-#                    aux.J = v.key
             else:
                 parent.left = aux      # u is a left son
                 aux.parent = parent
-                u.parent = aux
-                v.parent = aux
                 
-                if v.key[0] >= u.key[0]:
-                    if v.key[0] == u.key[0]:
-                        raise StandardError
-                    aux.key = [u.key[0],0]
-                    aux.left = u
-                    aux.right = v
-#                    aux.J = u.key
-                else:
-                    aux.key = [v.key[0],0]
-                    aux.left = v
-                    aux.right = u
-#                    aux.J = v.key                
-                
-#                aux.key = [v.key[0],0]
-#                aux.left = v
-#                aux.right = u
-#                aux.J = v.key
-                u.parent = aux
-                v.parent = aux
-            
+            u.parent = aux
+            v.parent = aux
+            if v.key[0] >= u.key[0]:
+                if v.key[0] == u.key[0]:
+                    raise Exception #TODO: This means that there are points with the same x-coordinate. 
+                                    #Make a descriptive exception or find a way to handle this case
+                aux.key = [u.key[0], 0]
+                aux.left = u
+                aux.right = v
+            else:
+                aux.key = [v.key[0], 0]
+                aux.left = v
+                aux.right = u
+
         else:
-#            print "Point", p, "is already in the tree"
+            #            print "Point", p, "is already in the tree"
             self.UP(u)
             return
             
-#        print "parent, right, left", aux.priority, aux.left.priority, aux.right.priority
         self.UP(v)
 #        print "DONE!"
 #        print "Currently we have:"
 #        aux = self.toList()
 #        for cosa in aux:
 #            print cosa[0], cosa[1].getPoints()
-        
+
     def delete(self, p):
-#        print "deleting", p
+        #        print "deleting", p
         aux = self.Node(key=p)
+        if self.root is None:#TODO: borrar
+            print "FAIL! Empty treap"
+            print self.toList()
+            raise Exception()
         u = self.DOWN(self.root, aux)
 #        print "DOWN gave", u
 
         if u.key != p:
-            print "Point not found"
+#            warnings.warn("Point" + str(p) + "not found.", stacklevel=3)
             self.UP(u)
+            raise Exception("Point" + str(p) + "not found.") #TODO: Check this exception
             return
-            
-        if u.parent is None: #u is the only element in the tree
+
+        if u.parent is None:  # u is the only element in the tree
             self.empty = True
             self.root = None
             return
@@ -1406,38 +561,35 @@ class dynamic_half_hull(object):
         sib = u.parent.right
         if sib is u:
             sib = u.parent.left
-            
+
         grandpa = u.parent.parent
-        
+
         if grandpa is not None:
             if grandpa.left is u.parent:
                 grandpa.left = sib
             else:
                 grandpa.right = sib
-                
+
             sib.parent = grandpa
-            
+
             self.UP(sib)
             return
-            
-        else: #This means that u's parent is the root, so we make sib the new root
+
+        # This means that u's parent is the root, so we make sib the new root
+        else:
             self.root = sib
             sib.parent = None
             return
-        
+
     def DOWN(self, v, p):
-#        print "DOWN checks", v
         if not v.isLeaf():
-#            print "        ... not a leaf"
-#            print "splitting", v.Ql.root
-#            print "at key", v.J
             Q1, r, Q2 = v.Q.split(v.J)
             if Q1 is None or Q2 is None:
-                raise StandardError("Inside DOWN, split failed")
+                raise Exception("Inside DOWN, split failed") #TODO: This shouldn't happen anymore, right?
             Q1.insert_node(r)
-            if v.left != None:
+            if v.left is not None:
                 v.left.Q = Q1.join(v.left.Q)
-            if v.right != None:
+            if v.right is not None:
                 v.right.Q = v.right.Q.join(Q2)
             if p.key[0] <= v.key[0]:
                 v = v.left
@@ -1446,129 +598,49 @@ class dynamic_half_hull(object):
             return self.DOWN(v, p)
         else:
             return v
-            
+
     def UP(self, v):
         if v != self.root:
-            #First we check if a rotation is neccesary
-        
-#            print "before rotating"
-#            if v.parent.left is v:                
-#                verifyBinaryTree(v.Q)
-#                verifyBinaryTree(v.parent.right.Q)
-#            else:
-#                verifyBinaryTree(v.parent.left.Q)
-#                verifyBinaryTree(v.Q)
-                
+            # First we check if a rotation is neccesary
             if v.parent != self.root:
                 parent = v.parent
                 grandpa = parent.parent
+                
                 while parent.priority == grandpa.priority:
                     parent.priority.append(random.random())
                     grandpa.priority.append(random.random())
-                    
+
                 if parent.priority <= grandpa.priority:
-#                    print self.root
-#                    print treapToList(self)
-#                    print "v is", v.key, v.priority
-#                    print "parent is", parent.key, parent.priority
-#                    print "grandpa is", grandpa.key, grandpa.priority
-                    #print "Rotating ",
-                    sibbling = parent.left if parent.right is v else parent.right
-                    if grandpa.right == parent:           # We will continue UP at v or its sibbling new position
-#                        print "left"                      #depending on who gets a lower position
-                        self.left_rotation(grandpa)
-#                        v = v.left                     #v's parent became v's rson
+                    sibling = parent.left if parent.right is v else parent.right
+                # We will continue UP at v or its sibling new position
+                # depending on who gets a lower position after rotating
+                    if grandpa.right == parent:
+                        self.left_rotation(grandpa)   #v's parent became v's rson
                     else:
-#                        print "right"
-                        self.right_rotation(grandpa)
-#                        v = v.right                    #v's parent became v's lson
-#                    print self.root
-#                    print treapToList(self)
-                    if sibbling.parent == grandpa:
-                        v = sibbling
-#                    print "v is", v.key, v.priority
-            
-#            print "after rotating"
-#            if v.parent.left is v:                
-#                verifyBinaryTree(v.Q)
-#                verifyBinaryTree(v.parent.right.Q)
-#            else:
-#                verifyBinaryTree(v.parent.left.Q)
-#                verifyBinaryTree(v.Q)
-                    
-            Q1, Q2, Q3, Q4, J = None,None,None,None,None,
-#            print "UP Brigding", v.key#, "Ql:", treapToList(v.Ql)
-#            print "and        ",
-#            if v.parent.left is v:                
-##                print v.parent.right.key, "Ql", treapToList(v.parent.right.Q), "this is a right son"
-#                Q1, Q2, Q3, Q4, J = dynamic_half_hull.bridge(v.Q, v.parent.right.Q, self.side)
-#            else:
-##                print v.parent.left.key, "Ql", treapToList(v.parent.left.Q), "this is a left son"
-#                Q1, Q2, Q3, Q4, J = dynamic_half_hull.bridge(v.parent.left.Q, v.Q, self.side)
-            
-#            print "\n\nBridging"
-            maxL = v.parent.left.Q.max() #TODO: Erase or rewrite to make it throw an appropiate exception
-            minR = v.parent.right.Q.min()
-            comp = v.parent.left.Q.compare
-            if comp(maxL.key, minR.key) > 0:
-                sidestr = "UPPER" if self.side == UPPER else "LOWER"
-                print "Bad treaps", sidestr
-                print maxL.key, minR.key
-                print v.parent.left.Q
-                print v.parent.right.Q
-                raise StandardError
-            Q1, Q2, Q3, Q4, J = dynamic_half_hull.bridge(v.parent.left.Q, v.parent.right.Q, self.side)
-            
-#            print "Done\n\n"
-#            print "verifying Q's"            
-#            verifyBinaryTree(Q1)
-#            verifyBinaryTree(Q2)
-#            verifyBinaryTree(Q3)
-#            verifyBinaryTree(Q4)
-#            print "done"
-            
+                        self.right_rotation(grandpa)  #v's parent became v's lson
+                    if sibling.parent == grandpa:
+                        v = sibling
+
+            Q1, Q2, Q3, Q4, J = dynamic_half_hull.bridge(
+                v.parent.left.Q, v.parent.right.Q, self.side)
+
             v.parent.left.Q = Q2
-#            print "verifying v.p.l"
-#            verifyBinaryTree(v.parent.left.Q)
             v.parent.right.Q = Q3
-#            print "verifying v.p.r"
-#            verifyBinaryTree(v.parent.right.Q)
-#            print "verifying v.p"
-#            print "it's the join of"
-#            print Q1
-#            print "and"
-#            print Q4
-            
             v.parent.Q = Q1.join(Q4)
-            
-#            verifyBinaryTree(v.parent.Q)
-#            print "Done"
             v.parent.J = J
-            v.parent.key = [max(v.parent.key[0], v.parent.left.key[0]),0]
+            v.parent.key = [max(v.parent.key[0], v.parent.left.key[0]), 0]
             self.UP(v.parent)
         return
-        
+
     @classmethod
-    def bridge(cls, Left, Right, side = UPPER):           #The points in Lower should have smaller y coordinates than the ones in Upper       
-#        print "\nEntering bridge. Checking left and right"
-#        verifyBinaryTree(Left)
-#        print "left", Left
-#        verifyBinaryTree(Right)
-#        print "Right", Right
-#        print "done\n"
+    # The points in Lower should have smaller y coordinates than the ones in
+    # Upper
+    def bridge(cls, Left, Right, side=UPPER):
         SUPPORT = 1
         CONCAVE = 2
         REFLEX = 3
-#        print "Bridging"
-#        print "UPPER    ", treapToList(Left)
-#        print "LOWER    ", treapToList(Right)
-        
+
         maxx = Left.max().key[0]
-        
-        ############   Using lists instead of treaps  ################
-#        Left = treapToList(Left)
-#        Right = treapToList(Right)
-        ##############################################################
 
         def update_point(treap, t_aux):
             t = t_aux.key
@@ -1577,31 +649,17 @@ class dynamic_half_hull(object):
             tM = treap.successor(t_aux)
             tM = t if tM is None else tM.key
             return t, tm, tM
-            
-#################### Treaps ######################
+
         p_aux = Right.root
         p, pm, pM = update_point(Right, p_aux)
-##################################################
 
-#        print "right", treapToList(Right)
-
-#################### Lists ##################################################
-#        p = len(Right)/2
-#        pm = p if len(Right)/2-1 < 0 else len(Right)/2-1
-#        pM = p if len(Right)/2+1 >= len(Right) else len(Right)/2+1
-#############################################################################        
-        
         q_aux = Left.root
-#        q = len(Left)/2
-#        print "left", treapToList(Left)
         q, qm, qM = update_point(Left, q_aux)
-#        qm = q if len(Left)/2-1 < 0 else len(Left)/2-1
-#        qM = q if len(Left)/2+1 >= len(Left) else len(Left)/2+1
-        
-        def find_case():            
+
+        def find_case():
             p_case = 0
             q_case = 0
-            
+
             if side == UPPER:
                 if turn(q, p, pm) >= 0 and turn(q, p, pM) >= 0:
                     p_case = SUPPORT
@@ -1609,14 +667,14 @@ class dynamic_half_hull(object):
                     p_case = CONCAVE
                 else:
                     p_case = REFLEX
-                    
+
                 if turn(q, p, qm) >= 0 and turn(q, p, qM) >= 0:
                     q_case = SUPPORT
                 elif turn(q, p, qm) >= 0 and turn(q, p, qM) < 0:
                     q_case = CONCAVE
                 else:
                     q_case = REFLEX
-                    
+
             elif side == LOWER:
                 if turn(q, p, pm) <= 0 and turn(q, p, pM) <= 0:
                     p_case = SUPPORT
@@ -1624,158 +682,134 @@ class dynamic_half_hull(object):
                     p_case = CONCAVE
                 else:
                     p_case = REFLEX
-                    
+
                 if turn(q, p, qm) <= 0 and turn(q, p, qM) <= 0:
                     q_case = SUPPORT
                 elif turn(q, p, qm) <= 0 and turn(q, p, qM) > 0:
                     q_case = CONCAVE
                 else:
                     q_case = REFLEX
-                    
+
             return p_case, q_case
-            
+
         pcase, qcase = find_case()
-        
-#        print "Puntos"
-#        print pm, p, pM
-#        print qm, q, qM
-        
+
         while pcase != SUPPORT or qcase != SUPPORT:
-            
-#            print "IN BRIDGE"
-            #Caso 2
+            # Caso 2
             if pcase == SUPPORT and qcase == REFLEX:
-                #print "C2"
                 pm = p
                 q_aux = q_aux.left
                 q, qm, qM = update_point(Left, q_aux)
-            #Caso 3
+            # Caso 3
             elif pcase == SUPPORT and qcase == CONCAVE:
-                #print "C3"
                 pm = p
                 q_aux = q_aux.right
                 q, qm, qM = update_point(Left, q_aux)
-            #Caso 4
+            # Caso 4
             elif pcase == REFLEX and qcase == SUPPORT:
-                #print "C4"
                 qM = q
                 p_aux = p_aux.right
                 p, pm, pM = update_point(Right, p_aux)
-            #Caso 5
+            # Caso 5
             elif pcase == CONCAVE and qcase == SUPPORT:
-                #print "C5"
                 qM = q
                 p_aux = p_aux.left
                 p, pm, pM = update_point(Right, p_aux)
-            #Caso 6
+            # Caso 6
             elif pcase == REFLEX and qcase == REFLEX:
-                #print "C6"
                 p_aux = p_aux.right
                 p, pm, pM = update_point(Right, p_aux)
                 q_aux = q_aux.left
                 q, qm, qM = update_point(Left, q_aux)
-            #caso 7
+            # caso 7
             elif pcase == CONCAVE and qcase == REFLEX:
-                #print "C7"
                 q_aux = q_aux.left
                 q, qm, qM = update_point(Left, q_aux)
-            #Caso 8
+            # Caso 8
             elif pcase == REFLEX and qcase == CONCAVE:
-                #print "C8"
                 p_aux = p_aux.right
                 p, pm, pM = update_point(Right, p_aux)
-            #Caso 9
+            # Caso 9
             elif pcase == CONCAVE and qcase == CONCAVE:
-                #print "C9"
-                #We need the y coordinate of the intersection of tangents ppm and qqM
-                #Slope of line ppm
-                ap = p[1]-pm[1]
-                bp = p[0]-pm[0]
-                #Slope of line qqM
-                aq = q[1]-qM[1]
-                bq = q[0]-qM[0]
+                # We need the y coordinate of the intersection of tangents ppm and qqM
+                # Slope of line ppm
+                ap = p[1] - pm[1]
+                bp = p[0] - pm[0]
+                # Slope of line qqM
+                aq = q[1] - qM[1]
+                bq = q[0] - qM[0]
                 if bp == 0 or bq == 0:
                     print "Recta vertical"
-                if (ap/bq) == (aq/bq):
-                    print "Misma pendiente"
-                #Each line equation looks like ax - by = ax_0 - by_0, we store the rhs of this equation on c
-                cp = ap*p[0]-bp*p[1]
-                cq = aq*q[0]-bq*q[1]
-#If we are calculating the right/left hulls we solve for y:
-#                #y = (ap*cq - cp*aq)/(-ap*bq + bp*aq)
+                if (ap / bq) == (aq / bq):
+                    warnings.warn("Misma pendiente")
+                # Each line equation looks like ax - by = ax_0 - by_0, we store
+                # the rhs of this equation on c
+                cp = ap * p[0] - bp * p[1]
+                cq = aq * q[0] - bq * q[1]
+# If we are calculating the right/left hulls we solve for y:
+# y = (ap*cq - cp*aq)/(-ap*bq + bp*aq)
 #                y_num = ap*cq - aq*cp
 #                y_den = aq*bp - ap*bq
-#If we are calculating the upper/lower hulls we solve for x
+# If we are calculating the upper/lower hulls we solve for x
                 #x = (-cp*bq + cq*bp)/(-ap*bq + bp*aq)
-                x_num = cq*bp - cp*bq
-                x_den = aq*bp - ap*bq
-                
-                if x_den < 0:  # This is to avoid multiplying by a negative number in the next if, thus changing the inequality
+                x_num = cq * bp - cp * bq
+                x_den = aq * bp - ap * bq
+
+                # This is to avoid multiplying by a negative number in the next
+                # if, thus changing the inequality
+                if x_den < 0:
                     x_den *= -1
                     x_num *= -1
-                
-                #Subcase 1:
+
+                # Subcase 1:
                 if x_num <= (maxx * x_den):
-#                    print "se va q"
-                    if qm != q: #We can only eliminate the lower part of the hull
+                    # We can only eliminate the lower part of the hull
+                    if qm != q:
                         qm = q
-                    else: # q is the first point of the chain, so we can move on to the upper part
+                    # q is the first point of the chain, so we can move on to
+                    # the upper part
+                    else:
                         q_aux = q_aux.right
                         q, qm, qM = update_point(Left, q_aux)
-                #Subcase 2
+                # Subcase 2
                 else:
-                    if pM != p: #We can only eliminate the upper part of the hull
+                    # We can only eliminate the upper part of the hull
+                    if pM != p:
                         pM = p
-                    else: # q is the last point of the chain, so we can move on to the lower part
+                    # q is the last point of the chain, so we can move on to
+                    # the lower part
+                    else:
                         p_aux = p_aux.left
                         p, pm, pM = update_point(Right, p_aux)
-            
+
             pcase, qcase = find_case()
-            
-#            print "Puntos"
-#            print pm, p, pM
-#            print qm, q, qM
-            
-        #p and q are the points that determine the bridge
-        #####################################COLINEAR CASES################################### TODO: Are these neccesary?
+
+        # p and q are the points that determine the bridge
+        # COLINEAR CASES################################### TODO: Are these neccesary?
 #        while turn(q, qM, p) == 0 and q != qM:
-##            print "collinear!"
+# print "collinear!"
 #            q_aux = Left.successor(q_aux)
 #            q, qm, qM = update_point(Left, q_aux)
-#            
+#
 #        while turn(p, pm, q) == 0 and p != pm:
-##            print "collinear!"
+# print "collinear!"
 #            p_aux = Right.predecessor(p_aux)
 #            p, pm, pM = update_point(Right, p_aux)
-            
-            
-        ############################################################33333333####################
+
+        ###############################################################
         J = q
-#        print "p y q", q, p
-        
-#        print "About to split, verifying again"
-#        verifyBinaryTree(Left)
-#        verifyBinaryTree(Right)
-#        print "Done\n"
-        
+
         Q1, q, Q2 = Left.split(q)
         Q3, p, Q4 = Right.split(p)
-        
-        if Q1 is None or Q2 is None or Q3 is None or Q4 is None:
-            raise StandardError("Inside bridge, split failed")
-        
+
+        if Q1 is None or Q2 is None or Q3 is None or Q4 is None: #TODO: This shouldn't happen anymore either
+            raise Exception("Inside bridge, split failed")
+
         Q1.insert_node(q)
         Q4.insert_node(p)
-#        print
-#        print "DONE!"# the queues are:"
-#        print "Q1", treapToList(Q1)
-#        print "Q2", treapToList(Q2)
-#        print "Q3", treapToList(Q3)
-#        print "Q4", treapToList(Q4)
-#        print "J", J
-#        print
-        return Q1, Q2, Q3, Q4, J
         
+        return Q1, Q2, Q3, Q4, J
+
     def toList(self):
         if self.root is None:
             return []
@@ -1783,80 +817,84 @@ class dynamic_half_hull(object):
         if self.side == LOWER:
             res.reverse()
         return res
-        
+
     class Node(object):
-        
-        def __init__(self,key = [0,0], obj = None):
-        
-            self.key = key          #A point is the node is a leaf, otherwise [0, maxy] where maxy is the biggest y coordinate in the left subtree
-            self.Q = Treap(lambda p, q: p[0]-q[0])       #This part does not contribute to the lc-hull of parent
-            self.J = key           #The position of the support point in parent's lc-hull
+
+        def __init__(self, key=[0, 0], obj=None):
+
+            # A point is the node is a leaf, otherwise [0, maxy] where maxy is
+            # the biggest y coordinate in the left subtree
+            self.key = key
+            # Q is the part does not contribute to the lc-hull of parent
+            self.Q = Treap(lambda p, q: p[0] - q[0])  
+            # J is the position of the support point in parent's lc-hull
+            self.J = key
             self.parent = None
             self.right = None
             self.left = None
             self.obj = obj
-#            self.priority = [random.random()]
             self.priority = [2]
-            
+
         def isLeaf(self):
             return self.right is None and self.left is None
 
-        #for debugging purposes
+        # for debugging purposes
         def __str__(self):
-            
-            if self.left == None:
+
+            if self.left is None:
                 sleft = "()"
             else:
                 sleft = str(self.left)
-                
-            if self.right == None:
-                sright="()"
+
+            if self.right is None:
+                sright = "()"
             else:
                 sright = str(self.right)
-                
+
             snode = "(key = " + str(self.key) + ")"
             s = "(%s(%s,%s))" % (snode, sleft, sright)
             return s
-            
-def paint_hull(pts, hull, color_u = 0, color_l = 1, color_int = 2):
+
+
+def paint_hull(pts, hull, color_u=0, color_l=1, color_int=2):
     def paint(pts_prime, color):
         for p in pts_prime:
             if len(p) < 3:
                 pts[pts.index(p)].append(color)
             else:
                 pts[pts.index(p)][2] = color
-                
+
     if isinstance(hull, dynamic_half_hull):
         if hull.side == UPPER:
             paint(hull.toList(), color_u)
         else:
             paint(hull.toList(), color_l)
-        
+
     elif isinstance(hull, dynamic_convex_hull):
         u = hull.upper.toList()
         l = hull.lower.toList()
-        intersection_points  = [l.pop(), u.pop()]
+        intersection_points = [l.pop(), u.pop()]
         l.pop(0)
         u.pop(0)
         paint(u, color_u)
         paint(l, color_l)
         paint(intersection_points, color_int)
-        
-            
+
+
 class dynamic_convex_hull(object):
-    
+
     def __init__(self):
         self.upper = dynamic_half_hull(UPPER)
         self.lower = dynamic_half_hull(LOWER)
-        
+
     def insert(self, p):
         self.upper.insert(p)
         self.lower.insert(p)
-        
+
     def delete(self, p):
         self.upper.delete(p)
         self.lower.delete(p)
-        
+
     def toList(self):
         u = self.upper.toList()
         if len(u) > 0:
@@ -1866,65 +904,70 @@ class dynamic_convex_hull(object):
         if len(u) > 0:
             u.pop()
         return u
-        
+
     def __str__(self):
-        print self.toList()        
-        
+        print self.toList()
+
+
 def compute_height(node):
-    if node == None:
+    if node is None:
         return 0
     left = compute_height(node.left)
     right = compute_height(node.right)
-    h = max(left,right)
+    h = max(left, right)
     return h + 1
-    
+
+
 def in_order_priorities(node):
-    if node.right == None and node.left == None:
+    if node.right is None and node.left is None:
         print node.priority
         return
-    if node.left != None:
+    if node.left is not None:
         in_order_priorities(node.left)
     print node.priority
-    if node.right != None:
+    if node.right is not None:
         in_order_priorities(node.right)
-        
+
 ######################### TESTS #####################################
 
-def randPoint(k = 1000000):
-    return [random.randint(-k,k), random.randint(-k,k)]
 
-def time_test(n = 100, k = 100000, skip = 1, fileName = "tests.txt"):
-    import convexhull, time, copy
+def randPoint(k=1000000):
+    return [random.randint(-k, k), random.randint(-k, k)]
+
+
+def time_test(n=100, k=100000, skip=1, fileName="tests.txt"):
+    from . import convexhull
+    import time
+    import copy
     f = open(fileName, "w")
     pts = []
     cont = 0
     ch = dynamic_convex_hull()
     for i in xrange(n):
-#        f.close()
-#        f = open(fileName, "a")
-        if not i%skip:
+        if not i % skip:
             print cont,
-            f.write( "%d," % (cont) )
+            f.write("%d," % (cont))
             cont += 1
         p = randPoint(k)
         pts.append(p)
         t0 = time.time()
         ch.insert(p)
         t1 = time.time()
-        if not i%skip:
-            print t1-t0,
-            f.write( "%.10f," % (t1-t0) )
-        
+        if not i % skip:
+            print t1 - t0,
+            f.write("%.10f," % (t1 - t0))
+
         s = copy.deepcopy(pts)
         t0 = time.time()
-        U,L = convexhull.hulls(s)
+        U, L = convexhull.hulls(s)
         t1 = time.time()
-        if not i%skip:
-            print t1-t0
-            f.write("%.10f\n" % (t1-t0) )
+        if not i % skip:
+            print t1 - t0
+            f.write("%.10f\n" % (t1 - t0))
     f.close()
-        
-def profile(n = 1000, k = 1000000, functions = None, fileName = "profiler_res"):
+
+
+def profile(n=1000, k=1000000, functions=None, fileName="profiler_res"):
     import line_profiler
     prof = line_profiler.LineProfiler()
     if functions is not None:
@@ -1935,44 +978,45 @@ def profile(n = 1000, k = 1000000, functions = None, fileName = "profiler_res"):
         prof.add_function(dynamic_half_hull.UP)
         prof.add_function(dynamic_half_hull.bridge)
 #        prof.add_function(dynamic_half_hull.DOWN)
-        
+
     ch = dynamic_convex_hull()
     pts = [randPoint(k) for i in xrange(n)]
-    
 
     for i in xrange(len(pts)):
-        for j in xrange(i+1, len(pts)):
+        for j in xrange(i + 1, len(pts)):
             if pts[i][0] == pts[j][0]:
                 print "Misma coordenada x:", pts[i], pts[j]
-    
+
     def aux(ch, pts):
         for p in pts:
             ch.insert(p)
-            
+
 #    prof.runcall(aux, (ch,pts), {})
-    prof.runctx("aux(ch, pts)", {'ch':ch, 'pts':pts, 'aux':aux}, None)
+    prof.runctx("aux(ch, pts)", {'ch': ch, 'pts': pts, 'aux': aux}, None)
     f = open(fileName, "w")
     prof.print_stats(f)
     f.close()
     print "Done. Stats saved in '%s'" % fileName
 
+
 def verifyBinaryTree(T):
-#    import inspect
+    #    import inspect
     comp = T.compare
 #    print inspect.getsource(comp)
+
     def check(node):
         if node is None:
             return True
         if node.left is not None:
-            resL = comp(node.key,node.left.key) >= 0
+            resL = comp(node.key, node.left.key) >= 0
         else:
             resL = True
-            
+
         if node.right is not None:
-            resR = comp(node.key,node.right.key) <= 0
+            resR = comp(node.key, node.right.key) <= 0
         else:
             resR = True
-            
+
         if resL and resR:
             return True and check(node.left) and check(node.right)
         print "fail at node", node
@@ -1980,6 +1024,6 @@ def verifyBinaryTree(T):
     res = check(T.root)
     if not res:
         print "FAIL!", T
-        raise StandardError
+        raise Exception
     else:
         print "ALL GOOD"

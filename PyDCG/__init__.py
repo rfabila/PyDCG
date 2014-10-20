@@ -13,14 +13,9 @@ import holes
 import heuristics
 import convexhull
 import pointExplorer
+import utilities
 
-import pickle, os
-__config_file=open(os.path.join(os.path.dirname(__file__), "config/geometricbasics.config"), "r")
-__config=pickle.load(__config_file)
-__config_file.close()
-#print "CONFIG", __config
-
-if not __config['PURE_PYTHON']:
+if not utilities.__config['PURE_PYTHON']:
     import holesCpp
     import geometricbasicsCpp
     import crossingCpp
