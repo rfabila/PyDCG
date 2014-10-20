@@ -14,6 +14,7 @@ import heuristics
 import convexhull
 import pointExplorer
 import utilities
+import extendSet
 
 if not utilities.__config['PURE_PYTHON']:
     import holesCpp
