@@ -9,6 +9,7 @@ import sys
 import traceback
 from line import Line
 from collections import deque
+from math import ceil, floor
 
 LEFT = -1
 RIGHT = 1
@@ -813,17 +814,40 @@ def getPolygon(U, L):
 
     return upts
 
+def pointInPolygon(p, pol):
+    t = turn(pol[0],pol[1],p)
+    for i in xrange(len(pol)):
+        aux = turn(pol[i],pol[(i+1)%len(pol)],p)
+        if t != aux:
+            return False
+    return True
+        
 
 def getCenter(polygon):
-    n = len(polygon)
+    n = float(len(polygon))
     res = [0, 0]
     for pt in polygon:
         res[0] += pt[0]
         res[1] += pt[1]
-    res[0] = res[0] / n
-    res[1] = res[1] / n
-    return [res[0].a / res[0].b, res[1].a / res[1].b]
-
+        
+    res[0]=float(res[0])
+    res[1]=float(res[1])
+    
+    def mceil(n):
+        return int(ceil(n))
+    def mfloor(n):
+        return int(floor(n))
+    
+    if pointInPolygon([mceil(res[0]/n),mceil(res[1]/n)], polygon):
+        return [int(mceil(res[0]/n)),int(mceil(res[1]/n))]
+    elif pointInPolygon([mceil(res[0]/n),mfloor(res[1]/n)], polygon):
+        return [int(mceil(res[0]/n)),int(mfloor(res[1]/n))]
+    elif pointInPolygon([mfloor(res[0]/n),mceil(res[1]/n)], polygon):
+        return [int(mfloor(res[0]/n)),int(mceil(res[1]/n))]
+    elif pointInPolygon([mfloor(res[0]/n),mfloor(res[1]/n)], polygon):
+        return [int(mfloor(res[0]/n)),int(mfloor(res[1]/n))]
+    
+    return None
 
 def getPolSegs(polygon):
     colors = ["green", "red", "blue", "black", "orange", "brown", "cyan"]
@@ -1238,10 +1262,10 @@ def getRandomWalkDFS(p, pts, length=10):
                 visitedPolygons.add(triang)
                 yield poly
                 regions.append(poly)
-                print "                               van", len(regions)
+#                print "                               van", len(regions)
 #                print " "*len(S), "push!, I crossed", crossingEdge
                 S.append( region( U, L, [p1,p2], side, (ant1, suc1), (ant2, suc2), lines1, lines2 ) )
-                print "level", len(S)
+#                print "level", len(S)
                 if len(regions) >= length:
                     print "found enough regions"
                     break

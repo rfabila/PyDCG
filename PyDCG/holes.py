@@ -1488,7 +1488,7 @@ def count_convex_rholes_p_py(p, points, r, mono = False):
                     t+=1
     return resA, resB
     
-def count_convex_rholes_p(points, r, mono=False, speedup=False):
+def count_convex_rholes_p(p, points, r, mono=False, speedup=False):
     name = 'count_convex_rholes_p'
     pyf = count_convex_rholes_p_py    
     if utilities.__config['PURE_PYTHON']:
