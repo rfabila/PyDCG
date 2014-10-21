@@ -830,6 +830,8 @@ def getCenter(polygon):
         res[0] += pt[0]
         res[1] += pt[1]
         
+    res[0].simplify()
+    res[1].simplify()
     res[0]=float(res[0])
     res[1]=float(res[1])
     
