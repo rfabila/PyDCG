@@ -283,12 +283,12 @@ void print_pts(long pts[][2], int n)
     int i;
     for (i = 0; i < n; i++)
     {
-        printf("[%d,%d]\n", pts[i][0], pts[i][1]);
+        printf("[%ld,%ld]\n", pts[i][0], pts[i][1]);
     }
 }
 void sort_around_point(long p[2], long pts[][2], int n)
 {
-    int i, concave_val;
+    int concave_val;
     pivote[0] = p[0];
     pivote[1] = p[1];
     qsort(pts, n, 2 * sizeof(long), cmp_points);

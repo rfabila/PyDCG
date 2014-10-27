@@ -13,11 +13,12 @@ struct candidato
     }
 };
 
+//Is this just a wrapper to qsort? Doesn't seem to do anything else.
 void sort_points(long p[2], void *pts, int length) {
-	long pivote[2]; //Moví este arreglo aquí porque causaba conflictos con un arreglo
+	//long pivote[2]; //Moví este arreglo aquí porque causaba conflictos con un arreglo
 					//con el mismo nombre en geometricbasics. - Carlos
-	pivote[0] = p[0];
-	pivote[1] = p[1];
+	//pivote[0] = p[0]; // What's the purpose of pivote? I'm commenting these lines.
+	//pivote[1] = p[1];
 	qsort(pts, length, 2 * sizeof(long), cmp_points);
 }
 
@@ -34,7 +35,7 @@ long crossing(long pts[][2], int n) {
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 long range_crossing(long pts[][2], int n, int range_begin, int range_end) {
-	int i, j, k, start, end, total;
+	int i, j, k, start, end;//, total; this variable doesn't appear anywhere in the function.
 	long cr = 0;
 	long temp_pts[n - 1][2];
 //imprimepts(pts,n);//////////////////////////////////////////
@@ -106,16 +107,16 @@ long range_crossing(long pts[][2], int n, int range_begin, int range_end) {
 void imprime_piv_pts(long pi[], long pts[][2], int n) {
 
 	int i;
-	printf("\npivote= (%d , %d)\n", pi[0], pi[1]);
+	printf("\npivote= (%ld , %ld)\n", pi[0], pi[1]);
 	for (i = 0; i < n; i++)
-		printf("pts[%d]= (%d , %d)\n", i, pts[i][0] - pi[0], pts[i][1] - pi[1]);
+		printf("pts[%d]= (%ld , %ld)\n", i, pts[i][0] - pi[0], pts[i][1] - pi[1]);
 }
 
 void imprimepts(long pts[][2], int n) {
 	int i;
 	printf("la lista original de puntos es:\n");
 	for (i = 0; i < n; i++)
-		printf("p(%d)=(%d,%d)\n", i, pts[i][0], pts[i][1]);
+		printf("p(%d)=(%ld,%ld)\n", i, pts[i][0], pts[i][1]);
 }
 
 int signo(long num) {
@@ -199,7 +200,7 @@ vector<candidato> sort_around_point(punto p, const vector<candidato>& points)
 vector<int> count_crossings_candidate_list(int point_index, vector<punto> &candidate_list, vector<punto> &puntos)
 {
     punto p(0,0);
-    int pos_point_in_tp;
+    int pos_point_in_tp = 0;
     int num_cand = candidate_list.size();
     int num_pts = puntos.size();
     vector<candidato> candidates(num_cand);
@@ -222,7 +223,7 @@ vector<int> count_crossings_candidate_list(int point_index, vector<punto> &candi
     }
 
     vector<candidato> temp_pts(num_pts-1);
-    int centro=0;
+    //int centro=0; unused variable
     vector<candidato> united_points(2*num_pts-3+num_cand);
 
     for(int centro = 0; centro<num_pts; centro++)

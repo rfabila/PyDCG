@@ -18,12 +18,16 @@ __config_file.close()
 def safe_val(n):
     """True if the it is safe to speed up with the given integer."""
     return __config["MAX_INT"] >= abs(n)
+    
+def safe_point(p):
+    """True if the it is safe to speed up with the given integer."""
+    return __config["MAX_INT"] >= abs(p[0]) and __config["MAX_INT"] >= abs(p[1])
 
 
 def safe_point_set(pts):
     """True if it's safe to speed up with the given point set."""
     for p in pts:
-        if (not safe_val(p[0])) or (not safe_val(p[1])):
+        if not safe_point(p):
             return False
     return True
 
@@ -42,7 +46,7 @@ def cppWrapper(name, pyf, cppf, speedup, **kwargs):
 
     if speedup == 'try':
         safepts = safe_point_set(kwargs['points'])
-        safep = True if 'p' not in kwargs else safe_val(kwargs['p'])
+        safep = True if 'p' not in kwargs else safe_point(kwargs['p'])
         if safepts and safep:
             return cppf(**kwargs)
         else:
@@ -52,3 +56,14 @@ def cppWrapper(name, pyf, cppf, speedup, **kwargs):
         return cppf(**kwargs)
 
     raise ValueError("Invalid value for parameter 'speedup':" + str(speedup))
+
+def loadData(filename):
+    f = open(filename, "rb")
+    data = pickle.load(f)
+    f.close()
+    return data
+    
+def saveData(filename, data):
+    f = open(filename, "wb")
+    pickle.dump(data, f)
+    f.close()
