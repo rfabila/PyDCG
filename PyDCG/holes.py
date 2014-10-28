@@ -270,7 +270,7 @@ def countEmptyTriangs_py(points):
     
     return triangs
     
-def countEmptyTriangs(points, speedup=False):
+def countEmptyTriangs(points, speedup="try"):
     name = 'countEmptyTriangs'
     pyf = countEmptyTriangs_py    
     if utilities.__config['PURE_PYTHON']:
@@ -316,7 +316,7 @@ def count_empty_triangles_p_py(p,points):
     B=B/3
     return (A,B)
     
-def count_empty_triangles_p(p, points, speedup=False):
+def count_empty_triangles_p(p, points, speedup="try"):
     name = 'count_empty_triangles_p'
     pyf = count_empty_triangles_p_py    
     if utilities.__config['PURE_PYTHON']:
@@ -324,7 +324,7 @@ def count_empty_triangles_p(p, points, speedup=False):
     else:
         cppf = holesCpp.count_empty_triangles_p
         
-    return cppWrapper(name, pyf, cppf, speedup, p =p, points=points)
+    return cppWrapper(name, pyf, cppf, speedup, p=p, points=points)
     
 #@accelerate_p(holesCpp.report_empty_triangles_p)
 def report_empty_triangles_p_py(p,points):
@@ -360,7 +360,7 @@ def report_empty_triangles_p_py(p,points):
         B.append([sorted_points[a],sorted_points[b],sorted_points[c]])
     return (A,B)
     
-def report_empty_triangles_p(p, points, speedup=False):
+def report_empty_triangles_p(p, points, speedup="try"):
     name = 'report_empty_triangles_p'
     pyf = report_empty_triangles_p_py    
     if utilities.__config['PURE_PYTHON']:
@@ -773,7 +773,7 @@ def count_convex_rholes_py(points,r,mono=False):
                             
     return total
     
-def count_convex_rholes(points, r, mono=False, speedup=False):
+def count_convex_rholes(points, r, mono=False, speedup="try"):
     name = 'count_convex_rholes'
     pyf = count_convex_rholes_py    
     if utilities.__config['PURE_PYTHON']:
@@ -797,7 +797,7 @@ def report_empty_triangles_py(points):
                 triangles.append([points[p],right_points[r],right_points[q]])
     return triangles
     
-def report_empty_triangles(points, speedup=False):
+def report_empty_triangles(points, speedup="try"):
     name = 'report_empty_triangles'
     pyf = report_empty_triangles_py    
     if utilities.__config['PURE_PYTHON']:
@@ -917,7 +917,7 @@ def report_convex_rholes_py(points,r,mono=False):
                         t=t+1
     return list(report)
     
-def report_convex_rholes(points, r, mono=False, speedup=False):
+def report_convex_rholes(points, r, mono=False, speedup="try"):
     name = 'report_convex_rholes'
     pyf = report_convex_rholes_py    
     if utilities.__config['PURE_PYTHON']:
@@ -1488,7 +1488,7 @@ def count_convex_rholes_p_py(p, points, r, mono = False):
                     t+=1
     return resA, resB
     
-def count_convex_rholes_p(p, points, r, mono=False, speedup=False):
+def count_convex_rholes_p(p, points, r, mono=False, speedup="try"):
     name = 'count_convex_rholes_p'
     pyf = count_convex_rholes_p_py    
     if utilities.__config['PURE_PYTHON']:

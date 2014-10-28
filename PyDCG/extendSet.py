@@ -120,7 +120,7 @@ def hill_climbing(pts = None, tries = 1000, start=10, t=1000000, run_time=300, d
                     break
         pts.append(p)
         if minH == 0:
-            return pts
+           # return pts
             Id = str(int(time.time()))+"_%d_pts_%d_h"%(len(pts), minH)
             f = open(Id, "w")
             pickle.dump(pts, f)

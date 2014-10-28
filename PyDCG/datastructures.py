@@ -515,7 +515,10 @@ class dynamic_half_hull(object):
             v.parent = aux
             if v.key[0] >= u.key[0]:
                 if v.key[0] == u.key[0]:
-                    raise Exception #TODO: This means that there are points with the same x-coordinate. 
+                    print "Same Coordinate"
+                    print "v:J", v.J, "v.data", v.obj, "v.points", v.obj.getPoints()
+                    print "u:J", u.J, "u.data", u.obj, "u.points", u.obj.getPoints()
+                    raise Exception("Trying to insert a point with the same x-coordinate as an existing one") #TODO: This means that there are points with the same x-coordinate. 
                                     #Make a descriptive exception or find a way to handle this case
                 aux.key = [u.key[0], 0]
                 aux.left = u

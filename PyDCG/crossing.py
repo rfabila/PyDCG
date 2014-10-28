@@ -2,7 +2,7 @@
 geometric graph"""
 
 from geometricbasics import *
-import os, pickle
+import os
 
 __config_file=open(os.path.join(os.path.dirname(__file__), "config/geometricbasics.config"), "r")
 __config=pickle.load(__config_file)

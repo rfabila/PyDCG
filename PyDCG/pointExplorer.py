@@ -830,23 +830,24 @@ def getCenter(polygon):
         res[0] += pt[0]
         res[1] += pt[1]
         
+    res[0].simplify()
+    res[1].simplify()
     res[0]=float(res[0])
     res[1]=float(res[1])
     
-    def mceil(n):
-        return int(ceil(n))
-    def mfloor(n):
-        return int(floor(n))
-    
-    if pointInPolygon([mceil(res[0]/n),mceil(res[1]/n)], polygon):
-        return [int(mceil(res[0]/n)),int(mceil(res[1]/n))]
-    elif pointInPolygon([mceil(res[0]/n),mfloor(res[1]/n)], polygon):
-        return [int(mceil(res[0]/n)),int(mfloor(res[1]/n))]
-    elif pointInPolygon([mfloor(res[0]/n),mceil(res[1]/n)], polygon):
-        return [int(mfloor(res[0]/n)),int(mceil(res[1]/n))]
-    elif pointInPolygon([mfloor(res[0]/n),mfloor(res[1]/n)], polygon):
-        return [int(mfloor(res[0]/n)),int(mfloor(res[1]/n))]
-    
+    def sameXCoord(p, pts):
+        for q in pts:
+            if p[0] == q[0]:
+                return True
+        return False
+        
+    funcs = [lambda n: int(ceil(n)), lambda n: int(floor(n))]
+        
+    for f in funcs:
+        for g in funcs:
+            candidate = [f(res[0]/n), g(res[1]/n)]
+            if pointInPolygon(candidate, polygon) and not sameXCoord(candidate, polygon):
+                return candidate
     return None
 
 def getPolSegs(polygon):
