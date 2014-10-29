@@ -42,17 +42,20 @@ static const char* turn_doc =
     >>> gb.turn(p, q, r)\n\
     -1\n";
 
-extern "C" PyObject* turn_wrapper(PyObject* self, PyObject* args)
+PyObject* turn_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
 {
     //The C++ function prototype is: int turn(const punto&, const punto&, const punto&);
     PyObject* py_p;
     PyObject* py_q;
     PyObject* py_r;
 
+    static const char *kwlist[] = {"p", "q", "r", NULL};
+
+
     //The arguments must be: 3 lists representing 3 points (each point is a list of two or three integers)
-    if (!PyArg_ParseTuple(args, "O!O!O!:turn", &PyList_Type, &py_p, &PyList_Type, &py_q, &PyList_Type, &py_r))
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!O!O!:turn", (char**)kwlist, &PyList_Type, &py_p, &PyList_Type, &py_q, &PyList_Type, &py_r))
         return NULL;
-        
+
     if (PyList_Size(py_p) < 2 || PyList_Size(py_q) < 2 || PyList_Size(py_r) < 2)
     {
     	PyErr_SetString(PyExc_ValueError, "Wrong number of values representing a point, must be 2 or 3.");
@@ -104,15 +107,18 @@ static const char* sort_around_point_doc =
     >>> gb.turn(p, q, r)\n\
     -1\n";
 
-extern "C" PyObject* sort_around_point_wrapper(PyObject* self, PyObject* args)
+PyObject* sort_around_point_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
 {
     //The C function prototype is:
     //void sort_around_point(long p[2], long pts[][2], int n);
 	PyObject* py_pts;
 	PyObject* py_p;
+	PyObject* py_join = NULL;
+
+	static const char *kwlist[] = {"p", "points", "join", NULL}; //TODO: This function doesn't really recieve "join". Unify the different sort_around_point functions that currently exist
 
 	//The arguments must be: a list representing a point (a list of two or three integers)
-	if (!PyArg_ParseTuple(args, "O!O!:sort_around_point", &PyList_Type, &py_p, &PyList_Type, &py_pts))
+	if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!O!|O!:sort_around_point", (char**)kwlist, &PyList_Type, &py_p, &PyList_Type, &py_pts, &PyBool_Type, &py_join))
 		return NULL;
 
 	Py_ssize_t pts_size = PyList_Size(py_pts);
@@ -146,14 +152,14 @@ extern "C" PyObject* sort_around_point_wrapper(PyObject* self, PyObject* args)
 	return res;
 }
 
-extern "C" PyMethodDef geometricbasicsCppMethods[] =
+PyMethodDef geometricbasicsCppMethods[] =
 {
-    {"turn", turn_wrapper, METH_VARARGS, turn_doc},
-    {"sort_around_point", sort_around_point_wrapper, METH_VARARGS, sort_around_point_doc},
+    {"turn", (PyCFunction)turn_wrapper, METH_VARARGS | METH_KEYWORDS, turn_doc},
+    {"sort_around_point", (PyCFunction)sort_around_point_wrapper, METH_VARARGS | METH_KEYWORDS, sort_around_point_doc},
     {NULL, NULL, 0, NULL}
 };
 
-PyMODINIT_FUNC
+extern "C" PyMODINIT_FUNC
 initgeometricbasicsCpp(void)
 {
     (void) Py_InitModule3("geometricbasicsCpp", geometricbasicsCppMethods,

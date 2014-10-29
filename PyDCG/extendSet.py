@@ -16,17 +16,17 @@ import holes, datastructures, pointExplorer
 import random, time, pickle, sys, argparse
 #import holes, pointExplorer, datastructures, random, time, pickle
 
-def extend(pts):
+def extend(pts, speedup='try'):
     if holes.count_convex_rholes(pts, 6) != 0:
         print "Initial set has empty hexagons"
     p = datastructures.randPoint(10000000000)
     bestp = p[:]
     pts.append(p)
     emptyRegions = []
-    minH = holes.count_convex_rholes(pts, 6)
+    minH = holes.count_convex_rholes(pts, 6, speedup=speedup)
     print "starting with", minH
     pts.pop()
-    Ap, Bp = holes.count_convex_rholes_p(p, pts, 6)
+    Ap, Bp = holes.count_convex_rholes_p(p, pts, 6, speedup=speedup)
     regionsChecked = 0
     for pol in pointExplorer.getRandomWalkDFS(p, pts, float('inf')):
         regionsChecked += 1
@@ -36,7 +36,7 @@ def extend(pts):
             emptyRegions.append(pol)
         else:
             print "trying with", q
-            Aq, Bq = holes.count_convex_rholes_p(q, pts, 6)
+            Aq, Bq = holes.count_convex_rholes_p(q, pts, 6, speedup=speedup)
             newH = minH + Aq - Ap + Bp - Bq
             
             if newH <= minH:
@@ -57,7 +57,7 @@ def extend(pts):
     print "Checked", regionsChecked, "best result:", minH, "with", bestp
     return emptyRegions
 
-def hill_climbing(pts = None, tries = 1000, start=10, t=1000000, run_time=300, days=0, save_interval = 300):
+def hill_climbing(pts = None, tries = 1000, start=10, t=1000000000, run_time=300, days=0, save_interval = 300, speedup='try'):
     
     if days>0:
         run_time=24*3600*days
@@ -78,11 +78,11 @@ def hill_climbing(pts = None, tries = 1000, start=10, t=1000000, run_time=300, d
 #               pts.append([random.randint(-k,k),random.randint(-k,k),random.randint(0,1)])
 #            else:
 #               pts.append([random.randint(-k,k),random.randint(-k,k)]) 
-    minH = holes.count_convex_rholes(pts, 6)
+    minH = holes.count_convex_rholes(pts, 6, speedup=speedup)
     
     while minH == 0:
         pts.append(datastructures.randPoint(t))
-        minH = holes.count_convex_rholes(pts, 6)    
+        minH = holes.count_convex_rholes(pts, 6, speedup=speedup)    
     
     while time.time()-start_time<run_time:
         minH = holes.count_convex_rholes(pts, 6)
@@ -97,7 +97,7 @@ def hill_climbing(pts = None, tries = 1000, start=10, t=1000000, run_time=300, d
        
         idx = random.randint(0,len(pts)-1)
         p = pts.pop(idx)
-        Ap, Bp = holes.count_convex_rholes_p(p, pts, 6)
+        Ap, Bp = holes.count_convex_rholes_p(p, pts, 6, speedup=speedup)
         
         for pol in pointExplorer.getRandomWalkDFS(p, pts, tries):
             q = pointExplorer.getCenter(pol)
@@ -105,7 +105,7 @@ def hill_climbing(pts = None, tries = 1000, start=10, t=1000000, run_time=300, d
                 continue
             q = [int(q[0]), int(q[1])]
 #            pts[idxp] = q
-            Aq, Bq = holes.count_convex_rholes_p(q, pts, 6)
+            Aq, Bq = holes.count_convex_rholes_p(q, pts, 6, speedup=speedup)
             newH = minH + Aq - Ap + Bp - Bq
             
             if newH <= minH:

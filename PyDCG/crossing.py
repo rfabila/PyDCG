@@ -2,9 +2,12 @@
 geometric graph"""
 
 from geometricbasics import *
+import pickle
+from functools import wraps #TODO: Update the way the C++ functions are called 
 import os
+import utilities
 
-__config_file=open(os.path.join(os.path.dirname(__file__), "config/geometricbasics.config"), "r")
+__config_file=open(os.path.join(os.path.dirname(__file__), "config/config.cfg"), "r")
 __config=pickle.load(__config_file)
 __config_file.close()
 
@@ -42,8 +45,8 @@ def accelerate_list(cfunc):
                 del kwargs['speedup']
                 
             if speedup == 'try':
-                speedup = (safe_point_set(kwargs.get('pts', args[2])) and
-                           safe_point_set(kwargs.get('candidate_list',args[1])))
+                speedup = (utilities.safe_point_set(kwargs.get('pts', args[2])) and
+                           utilities.safe_point_set(kwargs.get('candidate_list',args[1])))
                 
             if not speedup:
                 #print "Python"
