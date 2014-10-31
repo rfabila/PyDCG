@@ -1476,10 +1476,7 @@ def count_convex_rholes_p_py(p, points, r, mono = False):
                     t+=1
     return resA, resB
     
-def count_convex_rholes_p(p, points, r, mono=False, speedup="try"):
-    return cppWrapper(count_convex_rholes_p_py, 
-                      None if utilities.__config['PURE_PYTHON'] else holesCpp.count_convex_rholes_p, 
-                      speedup, 
-                      [p], 
-                      [points], 
-                      p=p, points=points, r=r, mono=mono)
+def count_convex_rholes_p(p, points, r, mono=False, speedup=True):
+    if utilities.__config['PURE_PYTHON'] or not speedup:
+        return count_convex_rholes_p_py(p, points, r, mono)
+    return holesCpp.count_convex_rholes_p(p, points, r, mono)

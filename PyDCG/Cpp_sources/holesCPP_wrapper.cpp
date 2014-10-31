@@ -1,19 +1,11 @@
 #include <Python.h>
 #include "holesCPP.h"
+#include "utilities.cpp"
 
 using std::vector;
 
 #include <iostream>
 using std::cout;
-
-#ifdef INT32
-static const long long max_val = (1L << 30);
-const char max_val_error[] = "The coordinates of each point must less than or equal to 2^30 in absolute value.";
-#else
-static const long long max_val = (1L << 62);
-const char max_val_error[] = "The coordinates of each point must less than or equal to 2^62 in absolute value.";
-#endif
-
 
 static const char* count_convex_rholes_doc =
 "count_convex_rholes(points, r, mono = True)\n\
@@ -65,52 +57,21 @@ PyObject* count_convex_rholes_wrapper(PyObject* self, PyObject* args, PyObject *
 
     int r;
     int mono = 0;
+    vector<punto> pts;
 
     static const char *kwlist[] = {"points", "r", "mono", NULL};
 
     //The arguments must be: a list with the points (each point is a list of two integers),
     //an integer (r) and a boolean (mono). The boolean is optional.
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!i|O!:count_convex_rholes", (char**)kwlist, &PyList_Type, &py_pts, &r, &PyBool_Type, &py_mono))
-        return NULL;                                                     //This cast ^ is stupid. I just put to avoid the annoying warnings that appear if
-                                                                         //kwlist isn't declared const
-
-
+        return (PyObject*)NULL;                                                     //This cast ^ is stupid. I just put to avoid the annoying warnings that appear if
+                                                                         //kwlist isn't declared cons
     if(py_mono != NULL && py_mono == Py_True)
         mono = 1;
 
-    Py_ssize_t points_size = PyList_Size(py_pts);
+    if(pyPointsetCPointset(py_pts, pts) == FAIL)
+        return (PyObject*)NULL;
 
-    vector<punto> pts;
-    //Py_ssize_t can be bigger than an 2^32, but we don't expect
-    //to work with that many points.
-    pts.reserve(int(points_size));
-
-    for(Py_ssize_t i=0; i < points_size; i++)
-    {
-        PyObject *punto = PyList_GetItem(py_pts, i); //Borrowed Reference
-        Py_ssize_t n_coords = PyList_Size(punto);
-        long long x, y;
-        int color = 0;
-
-        if(n_coords == 3)
-            color = (int)PyInt_AsLong(PyList_GetItem(punto, 2)); //Borrowed Reference
-        else if(n_coords > 3 || n_coords < 2)
-        {
-            PyErr_SetString(PyExc_ValueError, "Wrong number of values representing a point, must be 2 or 3.");
-            return NULL;
-        }
-
-        x = PyInt_AsLong(PyList_GetItem(punto, 0)); //Borrowed References
-        y = PyInt_AsLong(PyList_GetItem(punto, 1));
-
-        if(x > max_val || y > max_val || x < -max_val || y < -max_val)
-        {
-            PyErr_SetString(PyExc_ValueError, max_val_error);
-            return NULL;
-        }
-
-        pts.emplace_back(x, y, color);
-    }
     return Py_BuildValue("i", count_convex_rholes(pts, r, mono));
 }
 
@@ -163,65 +124,23 @@ extern "C" PyObject* count_convex_rholes_p_wrapper(PyObject* self, PyObject* arg
     int r;
     int mono = 0;
     punto p;
+    vector<punto> pts;
 
     static const char *kwlist[] = {"p", "points", "r", "mono", NULL};
 
     //The arguments must be: a point (each point is a list of two or three integers),
     //a list with the points, an integer (r) and a boolean (mono). The boolean is optional.
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!O!i|O!:count_convex_rholes", (char**)kwlist, &PyList_Type, &py_p, &PyList_Type, &py_pts, &r, &PyBool_Type, &py_mono))
-        return NULL;                                                               //See comment in count_convex_rholes_p_wrapper about this cast.
+        return (PyObject*)NULL;                                                               //See comment in count_convex_rholes_p_wrapper about this cast.
 
     if(py_mono != NULL && py_mono == Py_True)
         mono = 1;
 
-    Py_ssize_t points_size = PyList_Size(py_pts);
+    if(pyPointsetCPointset(py_pts, pts) == FAIL)
+        return (PyObject*)NULL;
 
-    vector<punto> pts;
-
-    //Py_ssize_t can be bigger than an 2^32, but we don't expect
-    //to work with that many points.
-    pts.reserve(int(points_size));
-
-    for(Py_ssize_t i=0; i < points_size; i++)
-    {
-        PyObject *punto = PyList_GetItem(py_pts, i); //Borrowed Reference
-        Py_ssize_t n_coords = PyList_Size(punto);
-        long long x, y;
-        int color = 0;
-
-        if(n_coords == 3)
-            color = (int)PyInt_AsLong(PyList_GetItem(punto, 2)); //Borrowed Reference
-        else if(n_coords > 3 || n_coords < 2)
-        {
-            PyErr_SetString(PyExc_ValueError, "Wrong number of values representing a point, must be 2 or 3.");
-            return NULL;
-        }
-
-        x = PyInt_AsLong(PyList_GetItem(punto, 0)); //Borrowed References
-        y = PyInt_AsLong(PyList_GetItem(punto, 1)); //Borrowed References
-
-        if(x > max_val || y > max_val || x < -max_val || y < -max_val)
-        {
-            PyErr_SetString(PyExc_ValueError, max_val_error);
-            return NULL;
-        }
-
-        pts.emplace_back(x, y, color);
-    }
-
-    //Constructing the point p
-
-    Py_ssize_t size_pt = PyList_Size(py_p);
-    if(size_pt > 3 || size_pt < 2)
-    {
-        PyErr_SetString(PyExc_ValueError, "Wrong number of values representing a point, must be 2 or 3.");
-        return NULL;
-    }
-    if(size_pt == 3)
-        p.color = (int)PyInt_AsLong(PyList_GetItem(py_p, 2)); //Borrowed References
-
-    p.x = PyInt_AsLong(PyList_GetItem(py_p, 0)); //Borrowed References
-    p.y = PyInt_AsLong(PyList_GetItem(py_p, 1)); //Borrowed References
+    if (pyPointCPoint(py_p, p) == FAIL)
+        return (PyObject*)NULL;
 
     int A, B;
     count_convex_rholes_p(p, pts, r, A, B, mono);
@@ -270,85 +189,35 @@ PyObject* report_convex_rholes_wrapper(PyObject* self, PyObject* args, PyObject 
 
     int r;
     int mono = 0;
+    vector<punto> pts;
 
     static const char *kwlist[] = {"points", "r", "mono", NULL};
 
     //The arguments must be: a list with the points (each point is a list of two integers),
     //an integer (r) and a boolean (mono). The boolean is optional.
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!i|O!:count_convex_rholes", (char**)kwlist, &PyList_Type, &py_pts, &r, &PyBool_Type, &py_mono))
-        return NULL;                                                            //See comment in count_convex_rholes_p_wrapper about this cast.
+        return (PyObject*)NULL;                                                            //See comment in count_convex_rholes_p_wrapper about this cast.
 
     if(py_mono != NULL && py_mono == Py_True)
         mono = 1;
 
-    Py_ssize_t points_size = PyList_Size(py_pts);
+    if(pyPointsetCPointset(py_pts, pts) == FAIL)
+        return (PyObject*)NULL;
 
-    vector<punto> pts;
-    //Py_ssize_t can be bigger than an 2^32, but we don't expect
-    //to work with that many points.
-    pts.reserve(int(points_size));
-
-    for(Py_ssize_t i=0; i < points_size; i++)
-    {
-        PyObject *punto = PyList_GetItem(py_pts, i); //Borrowed Reference
-        Py_ssize_t n_coords = PyList_Size(punto);
-        long long x, y;
-        int color = 0;
-
-        if(n_coords == 3)
-            color = (int)PyInt_AsLong(PyList_GetItem(punto, 2)); //Borrowed Reference
-        else if(n_coords > 3 || n_coords < 2)
-        {
-            PyErr_SetString(PyExc_ValueError, "Wrong number of values representing a point, must be 2 or 3.");
-            return NULL;
-        }
-
-        x = PyInt_AsLong(PyList_GetItem(punto, 0)); //Borrowed References
-        y = PyInt_AsLong(PyList_GetItem(punto, 1));
-
-        if(x > max_val || y > max_val || x < -max_val || y < -max_val)
-        {
-            PyErr_SetString(PyExc_ValueError, max_val_error);
-            return NULL;
-        }
-
-        pts.emplace_back(x, y, color);
-    }
     auto res = report_convex_rholes(pts, r, mono);
 
     PyObject* py_res = PyList_New(0);
 
     for (auto poli : res)
     {
-        PyObject* py_poli = PyList_New(0);
-        for(auto point : poli)
-        {
-            PyObject* py_point = PyList_New(0);
+        PyObject* py_poli = CPointsetPyPointset(poli);
+        if(py_poli == NULL)
+            return (PyObject*)NULL;
 
-            PyObject* coord = PyInt_FromLong(point.x);
-            if(PyList_Append(py_point, coord) == -1) //Append increases reference count
-                return NULL;
-            Py_DECREF(coord);
-
-            coord = PyInt_FromLong(point.y);
-            if(PyList_Append(py_point, coord) == -1) //Append increases reference count
-                return NULL;
-            Py_DECREF(coord);
-
-            coord = PyInt_FromLong(point.color);
-            if(PyList_Append(py_point, coord) == -1) //Append increases reference count
-                return NULL;
-            Py_DECREF(coord);
-
-            if(PyList_Append(py_poli, py_point) == -1)
-                return NULL;
-            Py_DECREF(py_point);
-        }
         if(PyList_Append(py_res, py_poli) == -1)
-            return NULL;
+            return (PyObject*)NULL;
         Py_DECREF(py_poli);
     }
-
     return py_res;
 }
 
@@ -358,69 +227,30 @@ PyObject* report_empty_triangles_wrapper(PyObject* self, PyObject* args, PyObjec
     //std::vector<std::vector<punto> > report_empty_triangles(const std::vector<punto>&);
     PyObject* py_pts;
 
+    vector<punto> pts;
+
     static const char *kwlist[] = {"points", NULL};
 
     //The argument must be a list with the points (each point is a list of two integers)
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!:report_empty_triangles", (char**)kwlist, &PyList_Type, &py_pts))
         return NULL;                                                 //See comment in count_convex_rholes_p_wrapper about this cast.
 
-    Py_ssize_t points_size = PyList_Size(py_pts);
 
-    vector<punto> pts;
-    //Py_ssize_t can be bigger than an 2^32, but we don't expect
-    //to work with that many points.
-    pts.reserve(int(points_size));
+    if(pyPointsetCPointset(py_pts, pts) == FAIL)
+        return (PyObject*)NULL;
 
-    for(Py_ssize_t i=0; i < points_size; i++)
-    {
-        PyObject *punto = PyList_GetItem(py_pts, i); //Borrowed Reference
-        Py_ssize_t n_coords = PyList_Size(punto);
-        long long x, y;
-
-        if(n_coords != 2)
-        {
-            PyErr_SetString(PyExc_ValueError, "Wrong number of values representing a point, must be 2.");
-            return NULL;
-        }
-
-        x = PyInt_AsLong(PyList_GetItem(punto, 0)); //Borrowed References
-        y = PyInt_AsLong(PyList_GetItem(punto, 1));
-
-        if(x > max_val || y > max_val || x < -max_val || y < -max_val)
-        {
-            PyErr_SetString(PyExc_ValueError, max_val_error);
-            return NULL;
-        }
-
-        pts.emplace_back(x, y);
-    }
     auto res = report_empty_triangles(pts);
 
     PyObject* py_res = PyList_New(0);
 
     for (auto triang : res)
     {
-        PyObject* py_poli = PyList_New(0);
-        for(auto point : triang)
-        {
-            PyObject* py_point = PyList_New(0);
+        PyObject* py_poli = CPointsetPyPointset(triang);
+        if(py_poli == NULL)
+            return (PyObject*)NULL;
 
-            PyObject* coord = PyInt_FromLong(point.x);
-            if(PyList_Append(py_point, coord) == -1) //Append increases reference count
-                return NULL;
-            Py_DECREF(coord);
-
-            coord = PyInt_FromLong(point.y);
-            if(PyList_Append(py_point, coord) == -1) //Append increases reference count
-                return NULL;
-            Py_DECREF(coord);
-
-            if(PyList_Append(py_poli, py_point) == -1)
-                return NULL;
-            Py_DECREF(py_point);
-        }
         if(PyList_Append(py_res, py_poli) == -1)
-            return NULL;
+            return (PyObject*)NULL;
         Py_DECREF(py_poli);
     }
 
@@ -431,35 +261,15 @@ PyObject* countEmptyTriangs_wrapper(PyObject* self, PyObject* args, PyObject *ke
 {
     PyObject* py_pts;
 
+    vector<punto> pts;
+
     static const char *kwlist[] = {"points", NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!:countEmptyTriangs", (char**)kwlist, &PyList_Type, &py_pts))
         return NULL;
 
-    Py_ssize_t N_points = PyList_Size(py_pts);
-
-    vector<punto> pts;
-
-    for(int i=0; i<N_points; i++)
-    {
-        PyObject *punto = PyList_GetItem(py_pts, i); //BORROWED REFERENCE!
-        Py_ssize_t n_coords = PyList_Size(punto);
-        long x, y;
-        int color=0;
-
-        if(n_coords==3)
-            color = (int)PyInt_AsLong(PyList_GetItem(punto, 2));
-        else if(n_coords>3)
-        {
-            printf("Demasiados valores en la lista.");
-            return NULL;
-        }
-        x = PyInt_AsLong(PyList_GetItem(punto, 0)); //BORROWED REFERENCES!
-        y = PyInt_AsLong(PyList_GetItem(punto, 1));
-
-        //Se debería checar si no hubo exepción
-        pts.emplace_back(x, y, color);
-    }
+    if(pyPointsetCPointset(py_pts, pts) == FAIL)
+        return (PyObject*)NULL;
 
     return Py_BuildValue("i", countEmptyTriangs(pts));
 }
@@ -469,49 +279,19 @@ PyObject* count_empty_triangles_p_wrapper(PyObject* self, PyObject* args, PyObje
     PyObject* py_pts;
     PyObject* py_p;
 
-    static const char *kwlist[] = {"p", "points", NULL};
-
     vector<punto> pts;
     punto p;
+
+    static const char *kwlist[] = {"p", "points", NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!O!:count_convex_rholes", (char**)kwlist, &PyList_Type, &py_p, &PyList_Type, &py_pts))
         return NULL;
 
-    int N_points = (int)PyList_Size(py_pts);
+    if(pyPointsetCPointset(py_pts, pts) == FAIL)
+        return (PyObject*)NULL;
 
-    //Pasar la lista de puntos a vector<punto>
-    for(int i=0; i<N_points; i++)
-    {
-        PyObject *punto = PyList_GetItem(py_pts, i); //BORROWED REFERENCE!
-        Py_ssize_t n_coords = PyList_Size(punto);
-        long x, y;
-        int color=0;
-
-        if(n_coords==3)
-            color = (int)PyInt_AsLong(PyList_GetItem(punto, 2));
-        else if(n_coords>3)
-        {
-            printf("Demasiados valores en la lista.");
-            return NULL;
-        }
-        x = PyInt_AsLong(PyList_GetItem(punto, 0)); //BORROWED REFERENCES!
-        y = PyInt_AsLong(PyList_GetItem(punto, 1));
-
-        //Se debería checar si no hubo exepción
-        pts.emplace_back(x, y, color);
-    }
-
-    //Pasar py_p a punto
-    Py_ssize_t N_pt = PyList_Size(py_p);
-    if(N_pt==3)
-        p.color = (int)PyInt_AsLong(PyList_GetItem(py_p, 2));
-    else if(N_pt>3)
-    {
-        printf("Demasiados valores en p.");
-        return NULL;
-    }
-    p.x = PyInt_AsLong(PyList_GetItem(py_p, 0)); //BORROWED REFERENCES!
-    p.y = PyInt_AsLong(PyList_GetItem(py_p, 1));
+    if (pyPointCPoint(py_p, p) == FAIL)
+        return (PyObject*)NULL;
 
     int A, B;
     count_empty_triangles_p(p, pts, A, B);
@@ -519,7 +299,7 @@ PyObject* count_empty_triangles_p_wrapper(PyObject* self, PyObject* args, PyObje
     return Py_BuildValue("ii", A, B);
 }
 
-PyObject* report_empty_triangles_p_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
+PyObject* report_empty_triangles_p_wrapper(PyObject* self, PyObject* args, PyObject *keywds) //TODO: Update this one
 {
     //The C++ function prototype is:
     //pair<list<triangulo>, std::unordered_set<triangulo> > report_empty_triangles_p(punto, const vector<punto>&);
@@ -713,38 +493,9 @@ PyObject* general_position_wrapper(PyObject* self, PyObject* args, PyObject *key
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!:general_position", (char**)kwlist, &PyList_Type, &py_points))
         return NULL;
 
-    Py_ssize_t points_size = PyList_Size(py_points);
+    if(pyPointsetCPointset(py_points, points) == FAIL)
+        return (PyObject*)NULL;
 
-    //Py_ssize_t can be bigger than an 2^32, but we don't expect
-    //to work with that many points.
-    points.reserve(int(points_size));
-
-    for(Py_ssize_t i=0; i < points_size; i++)
-    {
-        PyObject *punto = PyList_GetItem(py_points, i); //Borrowed Reference
-        Py_ssize_t n_coords = PyList_Size(punto);
-        long long x, y;
-        int color = 0;
-
-        if(n_coords == 3)
-            color = (int)PyInt_AsLong(PyList_GetItem(punto, 2)); //Borrowed Reference
-        else if(n_coords > 3 || n_coords < 2)
-        {
-            PyErr_SetString(PyExc_ValueError, "Wrong number of values representing a point, must be 2 or 3.");
-            return NULL;
-        }
-
-        x = PyInt_AsLong(PyList_GetItem(punto, 0)); //Borrowed References
-        y = PyInt_AsLong(PyList_GetItem(punto, 1));
-
-        if(x > max_val || y > max_val || x < -max_val || y < -max_val)
-        {
-            PyErr_SetString(PyExc_ValueError, max_val_error);
-            return NULL;
-        }
-
-        points.emplace_back(x, y, color);
-    }
     return Py_BuildValue("i", general_position(points));
 }
 
