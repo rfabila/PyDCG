@@ -77,14 +77,12 @@ def sort_around_point_py(p, points, join=True, checkConcave=True):
 
 def sort_around_point(p, points, join=True, speedup=False):
     """Sorts `points` around `p` in CCW order."""
-    name = 'sort_around_point'
-    pyf = sort_around_point_py    
-    if utilities.__config['PURE_PYTHON']:
-        cppf = None
-    else:
-        cppf = gbCpp.sort_around_point
-        
-    return cppWrapper(name, pyf, cppf, speedup, p=p, points=points, join=join)
+    return cppWrapper(sort_around_point_py,
+                      None if utilities.__config['PURE_PYTHON'] else gbCpp.sort_around_point,
+                      speedup,
+                      [p],
+                      [points],
+                      p=p, points=points, join=join)
 
 
 def __test_sort_around_point_versions(n=100, k=10000000): #TODO: check in ubuntu if the functions work, if so, delete this
