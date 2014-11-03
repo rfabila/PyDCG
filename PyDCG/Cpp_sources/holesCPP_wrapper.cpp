@@ -1,11 +1,5 @@
-#include <Python.h>
-#include "holesCPP.h"
 #include "utilities.cpp"
-
-using std::vector;
-
-#include <iostream>
-using std::cout;
+#include "holesCPP.h"
 
 static const char* count_convex_rholes_doc =
 "count_convex_rholes(points, r, mono = True)\n\
@@ -73,6 +67,79 @@ PyObject* count_convex_rholes_wrapper(PyObject* self, PyObject* args, PyObject *
         return (PyObject*)NULL;
 
     return Py_BuildValue("i", count_convex_rholes(pts, r, mono));
+}
+
+static const char* report_convex_rholes_doc =
+"report_convex_rholes(points, r, mono = True)\n\
+    \n\
+    Reports the r-holes in a point set.\n\
+    \n\
+    This function reports how many convex `r`-holes are in `points` (the \n\
+    point set may be colored). It is an implementation of the algorithm \n\
+    presented in \"Searching for Empty Convex Polygons\"\n\
+    \n\
+    Parameters\n\
+    ----------\n\
+    points : list\n\
+        This list represents the point set, each point is represented as a\n\
+        list of 3 integers: the first two are the coordinates of the point,\n\
+        the third one is the color. The color is optional.\n\
+    r : int\n\
+        The number of sides of the holes we want to fint in the point set.\n\
+    mono : boolean\n\
+        Determines wheter to look for monochromatic `r`-holes or not\n\
+    \n\
+    Returns\n\
+    -------\n\
+    H : int\n\
+        A list containing the `r`-holes in `points`. Each `r`-hole is repre-\n\
+        sented as a list of points, in counterclockwise order. Each point is\n\
+        stored in the same way explained for the parameter `points`.\n\
+    \n\
+    Notes\n\
+    -----\n\
+    The coordinates of the points should be less than or equal to 2^30 to\n\
+    prevent overflow on the C++ side.";
+
+extern "C" PyObject* report_convex_rholes_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
+{
+    //The C++ function prototype is:
+    //std::deque<std::vector<punto> > report_convex_rholes(const std::vector<punto>&, int, bool=false);
+    PyObject* py_pts;
+    PyObject* py_mono = NULL;
+
+    int r;
+    int mono = 0;
+    vector<punto> pts;
+
+    static const char *kwlist[] = {"points", "r", "mono", NULL};
+
+    //The arguments must be: a list with the points (each point is a list of two integers),
+    //an integer (r) and a boolean (mono). The boolean is optional.
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!i|O!:count_convex_rholes", (char**)kwlist, &PyList_Type, &py_pts, &r, &PyBool_Type, &py_mono))
+        return (PyObject*)NULL;                                                            //See comment in count_convex_rholes_p_wrapper about this cast.
+
+    if(py_mono != NULL && py_mono == Py_True)
+        mono = 1;
+
+    if(pyPointsetCPointset(py_pts, pts) == FAIL)
+        return (PyObject*)NULL;
+
+    auto res = report_convex_rholes(pts, r, mono);
+
+    PyObject* py_res = PyList_New(0);
+
+    for (auto poli : res)
+    {
+        PyObject* py_poli = CPointsetPyPointset(poli);
+        if(py_poli == NULL)
+            return (PyObject*)NULL;
+
+        if(PyList_Append(py_res, py_poli) == -1)
+            return (PyObject*)NULL;
+        Py_DECREF(py_poli);
+    }
+    return py_res;
 }
 
 static const char* count_convex_rholes_p_doc =
@@ -148,80 +215,24 @@ extern "C" PyObject* count_convex_rholes_p_wrapper(PyObject* self, PyObject* arg
     return Py_BuildValue("ii", A, B);
 }
 
-static const char* report_convex_rholes_doc =
-"report_convex_rholes(points, r, mono = True)\n\
-    \n\
-    Reports the r-holes in a point set.\n\
-    \n\
-    This function reports how many convex `r`-holes are in `points` (the \n\
-    point set may be colored). It is an implementation of the algorithm \n\
-    presented in \"Searching for Empty Convex Polygons\"\n\
-    \n\
-    Parameters\n\
-    ----------\n\
-    points : list\n\
-        This list represents the point set, each point is represented as a\n\
-        list of 3 integers: the first two are the coordinates of the point,\n\
-        the third one is the color. The color is optional.\n\
-    r : int\n\
-        The number of sides of the holes we want to fint in the point set.\n\
-    mono : boolean\n\
-        Determines wheter to look for monochromatic `r`-holes or not\n\
-    \n\
-    Returns\n\
-    -------\n\
-    H : int\n\
-        A list containing the `r`-holes in `points`. Each `r`-hole is repre-\n\
-        sented as a list of points, in counterclockwise order. Each point is\n\
-        stored in the same way explained for the parameter `points`.\n\
-    \n\
-    Notes\n\
-    -----\n\
-    The coordinates of the points should be less than or equal to 2^30 to\n\
-    prevent overflow on the C++ side.";
-
-PyObject* report_convex_rholes_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
+extern "C" PyObject* countEmptyTriangs_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
 {
-    //The C++ function prototype is:
-    //std::deque<std::vector<punto> > report_convex_rholes(const std::vector<punto>&, int, bool=false);
     PyObject* py_pts;
-    PyObject* py_mono = NULL;
 
-    int r;
-    int mono = 0;
     vector<punto> pts;
 
-    static const char *kwlist[] = {"points", "r", "mono", NULL};
+    static const char *kwlist[] = {"points", NULL};
 
-    //The arguments must be: a list with the points (each point is a list of two integers),
-    //an integer (r) and a boolean (mono). The boolean is optional.
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!i|O!:count_convex_rholes", (char**)kwlist, &PyList_Type, &py_pts, &r, &PyBool_Type, &py_mono))
-        return (PyObject*)NULL;                                                            //See comment in count_convex_rholes_p_wrapper about this cast.
-
-    if(py_mono != NULL && py_mono == Py_True)
-        mono = 1;
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!:countEmptyTriangs", (char**)kwlist, &PyList_Type, &py_pts))
+        return NULL;
 
     if(pyPointsetCPointset(py_pts, pts) == FAIL)
         return (PyObject*)NULL;
 
-    auto res = report_convex_rholes(pts, r, mono);
-
-    PyObject* py_res = PyList_New(0);
-
-    for (auto poli : res)
-    {
-        PyObject* py_poli = CPointsetPyPointset(poli);
-        if(py_poli == NULL)
-            return (PyObject*)NULL;
-
-        if(PyList_Append(py_res, py_poli) == -1)
-            return (PyObject*)NULL;
-        Py_DECREF(py_poli);
-    }
-    return py_res;
+    return Py_BuildValue("i", countEmptyTriangs(pts));
 }
 
-PyObject* report_empty_triangles_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
+extern "C" PyObject* report_empty_triangles_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
 {
     //The C++ function prototype is:
     //std::vector<std::vector<punto> > report_empty_triangles(const std::vector<punto>&);
@@ -257,24 +268,7 @@ PyObject* report_empty_triangles_wrapper(PyObject* self, PyObject* args, PyObjec
     return py_res;
 }
 
-PyObject* countEmptyTriangs_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
-{
-    PyObject* py_pts;
-
-    vector<punto> pts;
-
-    static const char *kwlist[] = {"points", NULL};
-
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!:countEmptyTriangs", (char**)kwlist, &PyList_Type, &py_pts))
-        return NULL;
-
-    if(pyPointsetCPointset(py_pts, pts) == FAIL)
-        return (PyObject*)NULL;
-
-    return Py_BuildValue("i", countEmptyTriangs(pts));
-}
-
-PyObject* count_empty_triangles_p_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
+extern "C" PyObject* count_empty_triangles_p_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
 {
     PyObject* py_pts;
     PyObject* py_p;
@@ -299,7 +293,7 @@ PyObject* count_empty_triangles_p_wrapper(PyObject* self, PyObject* args, PyObje
     return Py_BuildValue("ii", A, B);
 }
 
-PyObject* report_empty_triangles_p_wrapper(PyObject* self, PyObject* args, PyObject *keywds) //TODO: Update this one
+extern "C" PyObject* report_empty_triangles_p_wrapper(PyObject* self, PyObject* args, PyObject *keywds) //TODO: Update this one
 {
     //The C++ function prototype is:
     //pair<list<triangulo>, std::unordered_set<triangulo> > report_empty_triangles_p(punto, const vector<punto>&);
@@ -479,7 +473,7 @@ PyObject* report_empty_triangles_p_wrapper(PyObject* self, PyObject* args, PyObj
 	return Py_BuildValue("OO", py_A, py_B);
 }
 
-PyObject* general_position_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
+extern "C" PyObject* general_position_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
 {
     //The C++ function prototype is: general_position(vector<punto>& points)
     PyObject* py_points;

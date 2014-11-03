@@ -10,6 +10,8 @@ static const long long max_val = (1L << 62);
 const char max_val_error[] = "The coordinates of each point must less than or equal to 2^62 in absolute value.";
 #endif
 
+using std::vector;
+
 const int FAIL = 0;
 const int SUCCESS = 1;
 
