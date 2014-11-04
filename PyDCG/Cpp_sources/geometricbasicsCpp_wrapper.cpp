@@ -1,6 +1,4 @@
-#include <Python.h>
-#include "geometricbasicsCpp.h"
-#include <iostream>
+#include "utilities.cpp"
 
 static const char* turn_doc =
 "turn(p, q, r)\n\
@@ -49,6 +47,8 @@ PyObject* turn_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
     PyObject* py_q;
     PyObject* py_r;
 
+    punto p, q, r;
+
     static const char *kwlist[] = {"p", "q", "r", NULL};
 
 
@@ -56,15 +56,8 @@ PyObject* turn_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!O!O!:turn", (char**)kwlist, &PyList_Type, &py_p, &PyList_Type, &py_q, &PyList_Type, &py_r))
         return NULL;
 
-    if (PyList_Size(py_p) < 2 || PyList_Size(py_q) < 2 || PyList_Size(py_r) < 2)
-    {
-    	PyErr_SetString(PyExc_ValueError, "Wrong number of values representing a point, must be 2 or 3.");
-    	return NULL;
-    }
-
-    punto p(PyLong_AsLong(PyList_GetItem(py_p, 0)), PyLong_AsLong(PyList_GetItem(py_p, 1)));
-    punto q(PyLong_AsLong(PyList_GetItem(py_q, 0)), PyLong_AsLong(PyList_GetItem(py_q, 1)));
-    punto r(PyLong_AsLong(PyList_GetItem(py_q, 0)), PyLong_AsLong(PyList_GetItem(py_r, 1)));
+    if (pyPointCPoint(py_p, p) == FAIL || pyPointCPoint(py_q, q) == FAIL || pyPointCPoint(py_q, q) == FAIL)
+        return (PyObject*)NULL;
 
     return Py_BuildValue("i", turn(p,q,r));
 }
@@ -107,7 +100,7 @@ static const char* sort_around_point_doc =
     >>> gb.turn(p, q, r)\n\
     -1\n";
 
-PyObject* sort_around_point_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
+PyObject* sort_around_point_wrapper(PyObject* self, PyObject* args, PyObject *keywds) //check this. Thereś another sort_around_point version in holesCpp
 {
     //The C function prototype is:
     //void sort_around_point(long p[2], long pts[][2], int n);
