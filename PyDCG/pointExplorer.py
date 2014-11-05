@@ -1130,7 +1130,8 @@ def getRandomWalkDFS(p, pts, length=10):
     n = (len(indices) - 1) * 2
     
     start = getPolygon(U, L)
-    regions = [start]
+    yield start
+    regions = 1
     visitedPolygons = set()
     visitedPolygons.add(getPolygonKey(start))
     
@@ -1262,12 +1263,12 @@ def getRandomWalkDFS(p, pts, length=10):
             if triang not in visitedPolygons:
                 visitedPolygons.add(triang)
                 yield poly
-                regions.append(poly)
+                regions += 1
 #                print "                               van", len(regions)
 #                print " "*len(S), "push!, I crossed", crossingEdge
                 S.append( region( U, L, [p1,p2], side, (ant1, suc1), (ant2, suc2), lines1, lines2 ) )
 #                print "level", len(S)
-                if len(regions) >= length:
+                if regions >= length:
                     print "found enough regions"
                     break
             else:
