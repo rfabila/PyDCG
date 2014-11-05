@@ -31,23 +31,25 @@ def safe_point_set(pts):
             return False
     return True
 
+#TODO: Decide whether the bounds are going to be checked here or on the C++ side. I think currently
+#there C wrappers are also checking this
 
-def cppWrapper(name, pyf, cppf, speedup, **kwargs):
-    if not speedup:
-        return pyf(**kwargs)
-
-    if __config['PURE_PYTHON'] and (speedup == 'try' or speedup):
-        warnings.warn(
-            "PyDCG:PURE_PYTHON option set to True. The Python version of '" +
-            name +
-            "' will be used.",
-            stacklevel=3)
+def cppWrapper(pyf, cppf, speedup, checkPoints=None, checkPointSets=None, **kwargs):
+    if __config['PURE_PYTHON'] or not speedup:
         return pyf(**kwargs)
 
     if speedup == 'try':
-        safepts = safe_point_set(kwargs['points'])
-        safep = True if 'p' not in kwargs else safe_point(kwargs['p'])
-        if safepts and safep:
+        safePoints = True
+        if checkPoints is not None:
+            for p in checkPoints:
+                safePoints = safePoints and safe_point(p)
+                
+        safePointSets = True
+        if checkPointSets is not None:
+            for pts in checkPointSets:
+                safePointSets = safePointSets and safe_point_set(pts)
+                
+        if safePoints and safePointSets:
             return cppf(**kwargs)
         else:
             return pyf(**kwargs)
