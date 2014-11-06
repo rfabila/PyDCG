@@ -4,6 +4,7 @@ import struct
 import geometricbasics
 import math
 import os
+import pickle
 
 #Access to the Graz order type database
 def point_set_iterator(n):
@@ -234,3 +235,14 @@ def double_circle(n):
         pts.pop()
     
     return pts
+
+def overmars_sets():
+    prefix = os.path.join(os.path.dirname(__file__), "point_sets/set29_")
+    P=[]
+    for i in range(1,8):
+        file_name=prefix+str(i)+".pkl"
+        file=open(file_name,"r")
+        pts=pickle.load(file)
+        P.append(pts)
+        file.close()
+    return P
