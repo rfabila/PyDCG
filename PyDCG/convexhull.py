@@ -5,6 +5,14 @@
 
 from __future__ import generators
 
+def CH(pts):
+    """Returns the convex hull of pts"""
+    if len(pts)<=3:
+        return pts
+    (U,L)=hulls(pts)
+    U.extend(L[1:len(L)-1])
+    return U
+
 def orientation(p,q,r):
     '''Return positive if p-q-r are clockwise, neg if ccw, zero if colinear.'''
     return (q[1]-p[1])*(r[0]-p[0]) - (q[0]-p[0])*(r[1]-p[1])
@@ -46,4 +54,3 @@ def diameter(Points):
     '''Given a list of 2d points, returns the pair that's farthest apart.'''
     diam,pair = max([((p[0]-q[0])**2 + (p[1]-q[1])**2, (p,q))
                      for p,q in rotatingCalipers(Points)])
-    return pair
