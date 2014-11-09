@@ -7,6 +7,8 @@ import datastructures
 import random
 import sys
 import traceback
+import decimal
+import bisect
 from line import Line
 from collections import deque
 from math import ceil, floor
@@ -160,8 +162,13 @@ class rational(object):
     def __repr__(self):
         return "rational(%d,%d)" % (self.a, self.b)
 
-    def __float__(self):
-        return float(self.a) / float(self.b)
+    def __float__(self): #TODO: Check if it's worth it to use decimal
+        try:
+            return float(self.a) / float(self.b)
+        except Exception as e:
+            print self.a
+            print self.b
+            raise e
 
     #TODO: Check if this is necessary (I think so, since somehere I use rationals as keys but Iḿ not sure anymore)
     def __hash__(self): 
@@ -822,7 +829,12 @@ def pointInPolygon(p, pol):
             return False
     return True
         
-
+def sameXCoord(p, pts):
+    for q in pts:
+        if p[0] == q[0]:
+            return True
+    return False
+        
 def getCenter(polygon):
     n = float(len(polygon))
     res = [0, 0]
@@ -835,11 +847,7 @@ def getCenter(polygon):
     res[0]=float(res[0])
     res[1]=float(res[1])
     
-    def sameXCoord(p, pts):
-        for q in pts:
-            if p[0] == q[0]:
-                return True
-        return False
+    
         
     funcs = [lambda n: int(ceil(n)), lambda n: int(floor(n))]
         
@@ -1130,7 +1138,8 @@ def getRandomWalkDFS(p, pts, length=10):
     n = (len(indices) - 1) * 2
     
     start = getPolygon(U, L)
-    regions = [start]
+    regions = 1
+    yield start
     visitedPolygons = set()
     visitedPolygons.add(getPolygonKey(start))
     
@@ -1262,12 +1271,13 @@ def getRandomWalkDFS(p, pts, length=10):
             if triang not in visitedPolygons:
                 visitedPolygons.add(triang)
                 yield poly
-                regions.append(poly)
+                regions += 1
+#                regions.append(poly)
 #                print "                               van", len(regions)
 #                print " "*len(S), "push!, I crossed", crossingEdge
                 S.append( region( U, L, [p1,p2], side, (ant1, suc1), (ant2, suc2), lines1, lines2 ) )
 #                print "level", len(S)
-                if len(regions) >= length:
+                if regions >= length:
                     print "found enough regions"
                     break
             else:
@@ -1327,4 +1337,77 @@ def cellsNumber(n):
     if n == 2:
         return 2
     return cellsNumber(n-1) + (n-1)*(choose(n-1, 2)-n+5)-1
+    
+def randPointPolygon(poly, tries=100):
+    triangs = [[poly[0], poly[i], poly[i+1]] for i in xrange(1, len(poly)-1)]
+    
+    weights = map(triangArea, triangs)
+    
+    totalArea = reduce(lambda a,b : a+b, weights)
+    weights = map(lambda x : x/totalArea, weights)
+    weights = [sum(weights[:i]) for i in xrange(1, len(weights)+1 )]
+    
+    while tries > 0:
+        index = bisect.bisect(weights, random.random())
+        p = randPointTriang(triangs[index])
+        if p is not None:
+            return p
+        tries -= 1
+    return None
+    
+
+def randPointTriang(triang, tries=100):
+    v1 = [0,0]
+    v1[0] = triang[1][0]-triang[0][0]
+    v1[1] = triang[1][1]-triang[0][1]
+    
+    v2 = [0,0]
+    v2[0] = triang[2][0]-triang[0][0]
+    v2[1] = triang[2][1]-triang[0][1]
+    
+    funcs = [lambda n: int(ceil(n)), lambda n: int(floor(n))]
+    while tries>0:
+        a = random.random()
+        b = random.random()
+        while a+b > 1:
+            a = random.random()
+            b = random.random()
+        p = [0,0]
+        p[0] = a*float(v1[0])+b*float(v2[0])+float(triang[0][0])
+        p[1] = a*float(v1[1])+b*float(v2[1])+float(triang[0][1])
+        
+        for f in funcs:
+            for g in funcs:
+                candidate = [f(p[0]), g(p[1])]
+                if pointInPolygon(candidate, triang) and not sameXCoord(candidate, triang):
+                    return candidate
+        
+        tries -= 1
+    return None
+        
+
+def triangArea(triang):
+    a, b, c = triang
+    area = a[0]*(b[1] - c[1]) + b[0]*(c[1] - a[1]) + c[0]*(a[1] - b[1])
+    area /= 2.0
+    return abs(float(area))
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
