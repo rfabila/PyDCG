@@ -62,7 +62,7 @@ PyObject* turn_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
     return Py_BuildValue("i", turn(p,q,r));
 }
 
-static const char* sort_around_point_doc =
+/*static const char* sort_around_point_doc =
 "sort_around_point(p, pts)\n\
     \n\
     Sorts the points in `pts` around point `p`.\n\
@@ -143,12 +143,12 @@ PyObject* sort_around_point_wrapper(PyObject* self, PyObject* args, PyObject *ke
 	delete c_pts;
 
 	return res;
-}
-
+} //TODO: This function was moved to crossing for the moment since it relies on a global variable 'pivot'
+*/
 PyMethodDef geometricbasicsCppMethods[] =
 {
     {"turn", (PyCFunction)turn_wrapper, METH_VARARGS | METH_KEYWORDS, turn_doc},
-    {"sort_around_point", (PyCFunction)sort_around_point_wrapper, METH_VARARGS | METH_KEYWORDS, sort_around_point_doc},
+    //{"sort_around_point", (PyCFunction)sort_around_point_wrapper, METH_VARARGS | METH_KEYWORDS, sort_around_point_doc},
     {NULL, NULL, 0, NULL}
 };
 

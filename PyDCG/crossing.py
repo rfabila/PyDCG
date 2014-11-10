@@ -7,55 +7,58 @@ from functools import wraps #TODO: Update the way the C++ functions are called
 import os
 import utilities
 
-__config_file=open(os.path.join(os.path.dirname(__file__), "config/config.cfg"), "r")
-__config=pickle.load(__config_file)
-__config_file.close()
-
-if not __config['PURE_PYTHON']:
+if not utilities.__config['PURE_PYTHON']: #TODO: Make this a package global variable and update all modules
     import crossingCpp
 
-def accelerate(cfunc):
-    def bind_cfunc(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            speedup = False
-            if 'speedup' in kwargs:
-                speedup = kwargs['speedup']
-                del kwargs['speedup']
-                
-            if speedup == 'try':
-                speedup = safe_point_set(kwargs.get('points', args[0]))
-                
-            if not speedup:
-#                print "Funcion de Python"
-                return func(*args, **kwargs)
-            else:
-#                print "Funcion de C++"
-                return cfunc(*args, **kwargs)
-        return wrapper
-    return bind_cfunc
+#__config_file=open(os.path.join(os.path.dirname(__file__), "config/config.cfg"), "r")
+#__config=pickle.load(__config_file)
+#__config_file.close()
+#
+#if not __config['PURE_PYTHON']:
+#    import crossingCpp
 
-def accelerate_list(cfunc):
-    def bind_cfunc(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            speedup = False
-            if 'speedup' in kwargs:
-                speedup = kwargs['speedup']
-                del kwargs['speedup']
-                
-            if speedup == 'try':
-                speedup = (utilities.safe_point_set(kwargs.get('pts', args[2])) and
-                           utilities.safe_point_set(kwargs.get('candidate_list',args[1])))
-                
-            if not speedup:
-                #print "Python"
-                return func(*args, **kwargs)
-            else:
-                #print "C++"
-                return cfunc(*args, **kwargs)
-        return wrapper
-    return bind_cfunc
+#def accelerate(cfunc):
+#    def bind_cfunc(func):
+#        @wraps(func)
+#        def wrapper(*args, **kwargs):
+#            speedup = False
+#            if 'speedup' in kwargs:
+#                speedup = kwargs['speedup']
+#                del kwargs['speedup']
+#                
+#            if speedup == 'try':
+#                speedup = safe_point_set(kwargs.get('points', args[0]))
+#                
+#            if not speedup:
+##                print "Funcion de Python"
+#                return func(*args, **kwargs)
+#            else:
+##                print "Funcion de C++"
+#                return cfunc(*args, **kwargs)
+#        return wrapper
+#    return bind_cfunc
+#
+#def accelerate_list(cfunc):
+#    def bind_cfunc(func):
+#        @wraps(func)
+#        def wrapper(*args, **kwargs):
+#            speedup = False
+#            if 'speedup' in kwargs:
+#                speedup = kwargs['speedup']
+#                del kwargs['speedup']
+#                
+#            if speedup == 'try':
+#                speedup = (utilities.safe_point_set(kwargs.get('pts', args[2])) and
+#                           utilities.safe_point_set(kwargs.get('candidate_list',args[1])))
+#                
+#            if not speedup:
+#                #print "Python"
+#                return func(*args, **kwargs)
+#            else:
+#                #print "C++"
+#                return cfunc(*args, **kwargs)
+#        return wrapper
+#    return bind_cfunc
 
 def count_k_edges(pts,k):
     """Returns the number of k edges in pts"""
@@ -145,7 +148,7 @@ def count_crossings(pts):
 #if not __config['PURE_PYTHON']:
  #   count_crossings = accelerate(crossingCpp.crossing)(count_crossings)
 
-def count_crossings_candidate_list(point_index,candidate_list,pts):
+def count_crossings_candidate_list_py(point_index,candidate_list,pts):
     """Let k=len(candidate_list), n=len(pts). Returns the
        best candidate for pts[point_index] in time
        O(n^2logn)+O(k*nlogn)."""
@@ -284,5 +287,13 @@ def count_crossings_candidate_list(point_index,candidate_list,pts):
 
     return cr_list
 
-if not __config['PURE_PYTHON']:
-    count_crossings_candidate_list = accelerate_list(crossingCpp.count_crossings_candidate_list)(count_crossings_candidate_list)
+#if not __config['PURE_PYTHON']:
+#    count_crossings_candidate_list = accelerate_list(crossingCpp.count_crossings_candidate_list)(count_crossings_candidate_list)
+    
+def count_crossings_candidate_list(point_index,candidate_list,pts, speedup=True):
+    if utilities.__config['PURE_PYTHON'] or not speedup:
+        count_crossings_candidate_list_py(point_index,candidate_list,pts)
+    try:
+        return crossingCpp.count_crossings_candidate_list(point_index,candidate_list,pts)
+    except: #TODO: This should catcj only OverflowError
+        return count_crossings_candidate_list_py(point_index,candidate_list,pts)
