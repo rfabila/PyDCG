@@ -7,6 +7,8 @@ import datastructures
 import random
 import sys
 import traceback
+import decimal
+import bisect
 from line import Line
 from collections import deque
 from math import ceil, floor
@@ -160,8 +162,13 @@ class rational(object):
     def __repr__(self):
         return "rational(%d,%d)" % (self.a, self.b)
 
-    def __float__(self):
-        return float(self.a) / float(self.b)
+    def __float__(self): #TODO: Check if it's worth it to use decimal
+        try:
+            return float(self.a) / float(self.b)
+        except Exception as e:
+            print self.a
+            print self.b
+            raise e
 
     #TODO: Check if this is necessary (I think so, since somehere I use rationals as keys but Iḿ not sure anymore)
     def __hash__(self): 
@@ -822,7 +829,12 @@ def pointInPolygon(p, pol):
             return False
     return True
         
-
+def sameXCoord(p, pts):
+    for q in pts:
+        if p[0] == q[0]:
+            return True
+    return False
+        
 def getCenter(polygon):
     n = float(len(polygon))
     res = [0, 0]
@@ -835,11 +847,7 @@ def getCenter(polygon):
     res[0]=float(res[0])
     res[1]=float(res[1])
     
-    def sameXCoord(p, pts):
-        for q in pts:
-            if p[0] == q[0]:
-                return True
-        return False
+    
         
     funcs = [lambda n: int(ceil(n)), lambda n: int(floor(n))]
         
@@ -1130,7 +1138,8 @@ def getRandomWalkDFS(p, pts, length=10):
     n = (len(indices) - 1) * 2
     
     start = getPolygon(U, L)
-    regions = [start]
+    regions = 1
+    yield start
     visitedPolygons = set()
     visitedPolygons.add(getPolygonKey(start))
     
@@ -1262,12 +1271,13 @@ def getRandomWalkDFS(p, pts, length=10):
             if triang not in visitedPolygons:
                 visitedPolygons.add(triang)
                 yield poly
-                regions.append(poly)
+                regions += 1
+#                regions.append(poly)
 #                print "                               van", len(regions)
 #                print " "*len(S), "push!, I crossed", crossingEdge
                 S.append( region( U, L, [p1,p2], side, (ant1, suc1), (ant2, suc2), lines1, lines2 ) )
 #                print "level", len(S)
-                if len(regions) >= length:
+                if regions >= length:
                     print "found enough regions"
                     break
             else:
