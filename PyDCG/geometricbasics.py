@@ -77,8 +77,10 @@ def sort_around_point_py(p, points, join=True, checkConcave=True):
 
 def sort_around_point(p, points, join=True, speedup=False):
     """Sorts `points` around `p` in CCW order."""
+    #TODO: This function does not exist in geometricbasicsCpp at the moment. It was moved to 
+    #crossingCpp because of its dependence of 'pivote'. 
     return cppWrapper(sort_around_point_py,
-                      None if utilities.__config['PURE_PYTHON'] else gbCpp.sort_around_point,
+                      None,
                       speedup,
                       [p],
                       [points],

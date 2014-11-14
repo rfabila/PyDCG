@@ -60,7 +60,7 @@ extern "C" PyObject* crossing_wrapper(PyObject* self, PyObject* args)
 
     //The arguments must be: a list with the points (each point is a list of two integers),
     if (!PyArg_ParseTuple(args, "O!:crossing", &PyList_Type, &py_pts))
-        return NULL;
+        return (PyObject*)NULL;
 
     Py_ssize_t points_size = PyList_Size(py_pts);
     //Py_ssize_t can be bigger than an 2^32, but we don't expect
@@ -76,16 +76,20 @@ extern "C" PyObject* crossing_wrapper(PyObject* self, PyObject* args)
         if(n_coords > 3 || n_coords < 2)
         {
             PyErr_SetString(PyExc_ValueError, "Wrong number of values representing a point, must be 2 or 3.");
-            return NULL;
+            return (PyObject*)NULL;
         }
 
         x = PyInt_AsLong(PyList_GetItem(point, 0)); //Borrowed References
+        if(PyErr_Occurred() != NULL)
+            return (PyObject*)NULL;
         y = PyInt_AsLong(PyList_GetItem(point, 1));
+        if(PyErr_Occurred() != NULL)
+            return (PyObject*)NULL;
 
         if(x > max_val || y > max_val || x < -max_val || y < -max_val)
         {
-            PyErr_SetString(PyExc_ValueError, max_val_error);
-            return NULL;
+            PyErr_SetString(PyExc_OverflowError, max_val_error);
+            return (PyObject*)NULL;
         }
 
         pts[i][0] = x;
@@ -107,7 +111,7 @@ extern "C" PyObject* count_crossings_candidate_list_wrapper(PyObject* self, PyOb
 
     //The arguments must be: an integer and two lists with points (each point is a list of two integers)
     if (!PyArg_ParseTuple(args, "iO!O!:count_crossings_candidate_list", &index, &PyList_Type, &py_candidate_list, &PyList_Type, &py_points))
-        return NULL;
+        return (PyObject*)NULL;
 
     Py_ssize_t points_size = PyList_Size(py_points);
     Py_ssize_t candidates_size = PyList_Size(py_candidate_list);
@@ -128,16 +132,20 @@ extern "C" PyObject* count_crossings_candidate_list_wrapper(PyObject* self, PyOb
         if(n_coords > 3 || n_coords < 2)
         {
             PyErr_SetString(PyExc_ValueError, "Wrong number of values representing a point, must be 2 or 3.");
-            return NULL;
+            return (PyObject*)NULL;
         }
 
         x = PyInt_AsLong(PyList_GetItem(punto, 0)); //Borrowed References
+        if(PyErr_Occurred() != NULL)
+            return (PyObject*)NULL;
         y = PyInt_AsLong(PyList_GetItem(punto, 1));
+        if(PyErr_Occurred() != NULL)
+            return (PyObject*)NULL;
 
         if(x > max_val || y > max_val || x < -max_val || y < -max_val)
         {
-            PyErr_SetString(PyExc_ValueError, max_val_error);
-            return NULL;
+            PyErr_SetString(PyExc_OverflowError, max_val_error);
+            return (PyObject*)NULL;
         }
 
 
@@ -153,11 +161,21 @@ extern "C" PyObject* count_crossings_candidate_list_wrapper(PyObject* self, PyOb
         if(n_coords > 3 || n_coords < 2)
         {
             PyErr_SetString(PyExc_ValueError, "Wrong number of values representing a point, must be 2 or 3.");
-            return NULL;
+            return (PyObject*)NULL;
         }
 
         x = PyInt_AsLong(PyList_GetItem(punto, 0)); //Borrowed References
+        if(PyErr_Occurred() != NULL)
+            return (PyObject*)NULL;
         y = PyInt_AsLong(PyList_GetItem(punto, 1));
+        if(PyErr_Occurred() != NULL)
+            return (PyObject*)NULL;
+
+        if(x > max_val || y > max_val || x < -max_val || y < -max_val)
+        {
+            PyErr_SetString(PyExc_OverflowError, max_val_error);
+            return (PyObject*)NULL;
+        }
 
         candidates.emplace_back(x, y);
     }
@@ -170,7 +188,7 @@ extern "C" PyObject* count_crossings_candidate_list_wrapper(PyObject* self, PyOb
     {
         PyObject* py_crossings = PyInt_FromLong(crossings);
         if(PyList_Append(py_res, py_crossings) == -1) //Append increases reference count
-            return NULL;
+            return (PyObject*)NULL;
         Py_DECREF(py_crossings);
     }
 
