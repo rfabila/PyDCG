@@ -164,6 +164,7 @@ class rational(object):
 
     def __float__(self): #TODO: Check if it's worth it to use decimal
         try:
+            self.simplify()
             return float(self.a) / float(self.b)
         except Exception as e:
             print self.a
@@ -1389,5 +1390,8 @@ def randPointTriang(triang, tries=100):
 def triangArea(triang):
     a, b, c = triang
     area = a[0]*(b[1] - c[1]) + b[0]*(c[1] - a[1]) + c[0]*(a[1] - b[1])
-    area /= 2.0
+    if isinstance(area, rational):
+        area /= 2
+    else:
+        area /= 2.0
     return abs(float(area))
