@@ -33,6 +33,11 @@ int pyPointCPoint(PyObject* py_p, punto& p)
     p.y = PyInt_AsLong(PyList_GetItem(py_p, 1)); //Borrowed References
     if(PyErr_Occurred() != NULL)
         return FAIL;
+    if(p.x > max_val || p.y > max_val || p.x < -max_val || p.y < -max_val)
+    {
+        PyErr_SetString(PyExc_OverflowError, max_val_error);
+        return FAIL;
+    }
     return SUCCESS;
 }
 
@@ -63,6 +68,11 @@ int pyPointsetCPointset(PyObject* py_pts, vector<punto>& pts)
         y = PyInt_AsLong(PyList_GetItem(punto, 1)); //Borrowed References
         if(PyErr_Occurred() != NULL)
             return FAIL;
+        if(x > max_val || y > max_val || x < -max_val || y < -max_val)
+        {
+            PyErr_SetString(PyExc_OverflowError, max_val_error);
+            return FAIL;
+        }
         pts.emplace_back(x, y, color);
     }
     return SUCCESS;

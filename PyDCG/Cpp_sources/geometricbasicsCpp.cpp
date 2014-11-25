@@ -1,5 +1,5 @@
 #include "geometricbasicsCpp.h"
-long pivote[2];
+//long pivote[2];
 
 //Definiciones de la clase punto
 
@@ -189,59 +189,7 @@ int turn(long p0[], long p1[], long p2[])
     return 0;
 }
 
-int cmp_points(const void *qp, const void *rp)
-{
-    //long qx, qy, rx, ry;
-    long q[2];
-    long r[2];
-    long origin[2] = { 0, 0 };
-    BIG_INT tempres;
-    q[0] = *((const long*) qp) - pivote[0];
-    q[1] = *((const long*) qp + 1) - pivote[1];
-    r[0] = *((const long*) rp) - pivote[0];
-    r[1] = *((const long*) rp + 1) - pivote[1];
-    tempres = ((BIG_INT) r[0]) * ((BIG_INT) q[0]);
-    //Both in the same open semiplane
-    if (tempres > 0)
-        return turn(origin, q, r);
-    //Each in a different open semiplane
-    if (tempres < 0)
-    {
-        if (r[0] < 0)
-            return -1;
-        else
-            return 1;
-    }
-    //Both of them on the Y-axis
-    if (r[0] == q[0])
-    {
-        tempres = ((BIG_INT) r[1]) * ((BIG_INT) q[1]);
-        //One below and one above the X-axis
-        if (tempres < 0)
-            if (r[1] > 0)
-                return 1;
-            else
-                return -1;
-        else
-            return 0;
-    }
-    //only one in the Y-axis
-    if (r[0] == 0)
-        if (r[1] > 0)
-            if (q[0] > 0)
-                return -1;
-            else
-                return 1;
-        else
-            return -1;
-    else if (q[1] > 0)
-        if (r[0] > 0)
-            return 1;
-        else
-            return -1;
-    else
-        return 1;
-}
+
 
 void reverse_in_place(long pts[][2], int start, int end)
 {
@@ -286,20 +234,3 @@ void print_pts(long pts[][2], int n)
         printf("[%ld,%ld]\n", pts[i][0], pts[i][1]);
     }
 }
-void sort_around_point(long p[2], long pts[][2], int n)
-{
-    int concave_val;
-    pivote[0] = p[0];
-    pivote[1] = p[1];
-    qsort(pts, n, 2 * sizeof(long), cmp_points);
-    //print_pts(pts,n);
-    //printf("---------------------------\n");
-    concave_val = concave(p, pts, n);
-    if (concave_val != -1)
-    {
-        concave_val = (concave_val + 1) % n;
-        shift(pts, concave_val, n);
-    }
-    //print_pts(pts,n);
-}
-

@@ -6,6 +6,49 @@ import math
 import os
 import pickle
 
+def horton_set(n):
+    """Returns a set of n points with the same order type
+    as the Horton Set. It should be pointed out that horton
+    sets have 2^k points in the case for when n is not a power
+    of 2 we compute the Horton set of 2^k points for the first
+    value of k such that 2^k>=n. Afterwards we just return
+    the first n points.
+    
+    For more details see our paper: Drawing the Horton Set in an Integer Grid of Minimum Size """
+    
+    k=int(math.ceil(math.log(n,2)))
+    
+    H=_horton_exp(k)
+    return H[:n]
+    
+    
+def _horton_exp(k):
+    """Returns the Horton set of 2^k points."""
+    
+    if k<=0:
+        return [[0,0]]
+    
+    if k<=1:
+        g_k=0
+        
+    else:
+        f_k=2**((k*(k-1)/2)-1)
+        if k<=2:
+            f_k_1=0
+        else:
+            f_k_1=2**(((k-1)*(k-2)/2)-1)
+        g_k=f_k-f_k_1
+        
+    H_k_1=_horton_exp(k-1)
+    H_even=[[2*x[0],x[1]] for x in H_k_1]
+    H_odd=[[2*x[0]+1,x[1]+g_k] for x in H_k_1]
+    H=[]
+    for i in range(len(H_even)):
+        H.append(H_even[i])
+        H.append(H_odd[i])
+        
+    return H
+
 #Access to the Graz order type database
 def point_set_iterator(n):
     """Returns an iterator that provides integer coordinate realizations

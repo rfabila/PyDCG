@@ -1,6 +1,8 @@
 #include "count_crossing.h"
 #include "geometricbasicsCpp.h"
 
+long pivote[2]; //Check this variable
+
 struct candidato
 {
     punto pt;
@@ -15,15 +17,85 @@ struct candidato
 
 //Is this just a wrapper to qsort? Doesn't seem to do anything else.
 void sort_points(long p[2], void *pts, int length) {
-	//long pivote[2]; //Moví este arreglo aquí porque causaba conflictos con un arreglo
-					//con el mismo nombre en geometricbasics. - Carlos
-	//pivote[0] = p[0]; // What's the purpose of pivote? I'm commenting these lines.
-	//pivote[1] = p[1];
+	long pivote[2];
+	pivote[0] = p[0];
+	pivote[1] = p[1];
 	qsort(pts, length, 2 * sizeof(long), cmp_points);
 }
 
 /////////////////////////////////////////////////////////////////////////
 
+
+void sort_around_point(long p[2], long pts[][2], int n)
+{
+    int concave_val;
+    pivote[0] = p[0];
+    pivote[1] = p[1];
+    qsort(pts, n, 2 * sizeof(long), cmp_points);
+    //print_pts(pts,n);
+    //printf("---------------------------\n");
+    concave_val = concave(p, pts, n);
+    if (concave_val != -1)
+    {
+        concave_val = (concave_val + 1) % n;
+        shift(pts, concave_val, n);
+    }
+    //print_pts(pts,n);
+}
+
+int cmp_points(const void *qp, const void *rp)
+{
+    //long qx, qy, rx, ry;
+    long q[2];
+    long r[2];
+    long origin[2] = { 0, 0 };
+    BIG_INT tempres;
+    q[0] = *((const long*) qp) - pivote[0];
+    q[1] = *((const long*) qp + 1) - pivote[1];
+    r[0] = *((const long*) rp) - pivote[0];
+    r[1] = *((const long*) rp + 1) - pivote[1];
+    tempres = ((BIG_INT) r[0]) * ((BIG_INT) q[0]);
+    //Both in the same open semiplane
+    if (tempres > 0)
+        return turn(origin, q, r);
+    //Each in a different open semiplane
+    if (tempres < 0)
+    {
+        if (r[0] < 0)
+            return -1;
+        else
+            return 1;
+    }
+    //Both of them on the Y-axis
+    if (r[0] == q[0])
+    {
+        tempres = ((BIG_INT) r[1]) * ((BIG_INT) q[1]);
+        //One below and one above the X-axis
+        if (tempres < 0)
+            if (r[1] > 0)
+                return 1;
+            else
+                return -1;
+        else
+            return 0;
+    }
+    //only one in the Y-axis
+    if (r[0] == 0)
+        if (r[1] > 0)
+            if (q[0] > 0)
+                return -1;
+            else
+                return 1;
+        else
+            return -1;
+    else if (q[1] > 0)
+        if (r[0] > 0)
+            return 1;
+        else
+            return -1;
+    else
+        return 1;
+}
 
 long crossing(long pts[][2], int n) {
 	long total, cr;
