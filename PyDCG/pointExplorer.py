@@ -225,6 +225,11 @@ class line(object):
 
     def evalx(self, x):
         return self.m * x + self.b
+        
+    def __eq__(self, other):
+        if isinstance(other, line) and other.m == self.m and other.b == self.b:
+            return True
+        return False
 
 
 def dualize(obj):
@@ -286,12 +291,17 @@ def getPointRegion(q, sortedpoints, indices):
     return upperHull, lowerHull, counters
 
 
-def getRegionR(upper, lower):
+def getRegionR(upper, lower, toList = True):
     # TODO: erase extra calls to popColiinear, rewrite repeated code
     # TODO: Make dynamic_haf_hull.toList() return a deque, since many
     # functions pop from the front
-    U = upper.toList()
-    L = lower.toList()
+    if toList:
+        U = upper.toList()
+        L = lower.toList()
+    else:
+        U = upper
+        L = lower
+        
     L.reverse()
             
     def popCollinear(env):
@@ -722,7 +732,7 @@ def updateVis(vis, pts, res, indexp, indexLines, pol=False):
         vis.segments = []
 
 
-def getPolygon(U, L, tellUnbounded=False):
+def getPolygon(U, L, k=1000000):
     if len(U) == 0 and len(L) == 0:
         raise Exception("Can't form a polygon from empty chains")
         return
@@ -736,36 +746,30 @@ def getPolygon(U, L, tellUnbounded=False):
 
     if len(L) == 0:
         p1 = upts[0][:]
-        p1[0] += 1000000
+        p1[0] += k
         p1[1] = U[0][1].evalx(p1[0])
 
         p2 = upts[-1][:]
-        p2[0] -= 1000000
+        p2[0] -= k
         p2[1] = U[-1][1].evalx(p2[0])
 
         upts.insert(0, p1)
         upts.append(p2)
-        
-        if tellUnbounded:
-            return upts, True
 
         return upts
 
     if len(U) == 0:
         #        print "lpts", lpts
         p1 = lpts[0][:]
-        p1[0] -= 1000000
+        p1[0] -= k
         p1[1] = L[-1][1].evalx(p1[0])
 
         p2 = lpts[-1][:]
-        p2[0] += 1000000
+        p2[0] += k
         p2[1] = L[0][1].evalx(p2[0])
 
         lpts.insert(0, p1)
         lpts.append(p2)
-        
-        if tellUnbounded:
-            return lpts, True
 
         return lpts
 
@@ -777,14 +781,11 @@ def getPolygon(U, L, tellUnbounded=False):
     if len(U) == 1 and len(L) == 1:  # This means the region is just a wedge
         # Let's see if we need the right or the left wedge
         p = lm
-        p1 = [p[0] + 1000000, U[0][1].evalx(p[0] + 1000000)]
-        p2 = [p[0] + 1000000, L[0][1].evalx(p[0] + 1000000)]
+        p1 = [p[0] + k, U[0][1].evalx(p[0] + k)]
+        p2 = [p[0] + k, L[0][1].evalx(p[0] + k)]
         if turn(p1, p, p2) > 0:
-            p1 = [p[0] - 1000000, L[0][1].evalx(p[0] - 1000000)]
-            p2 = [p[0] - 1000000, U[0][1].evalx(p[0] - 1000000)]
-            
-        if tellUnbounded:
-            return [p1, p, p2], True
+            p1 = [p[0] - k, L[0][1].evalx(p[0] - k)]
+            p2 = [p[0] - k, U[0][1].evalx(p[0] - k)]
 #
         return [p1, p, p2]
 
@@ -794,18 +795,15 @@ def getPolygon(U, L, tellUnbounded=False):
             lpts.append(rm)
             lpts += upts
             p1 = lpts[0][:]
-            p1[0] -= 1000000
+            p1[0] -= k
             p1[1] = L[-1][1].evalx(p1[0])
 
             p2 = lpts[-1][:]
-            p2[0] -= 1000000
+            p2[0] -= k
             p2[1] = U[-1][1].evalx(p2[0])
 
             lpts.insert(0, p1)
             lpts.append(p2)
-            
-            if tellUnbounded:
-                return lpts, True
 
             return lpts
 
@@ -816,17 +814,14 @@ def getPolygon(U, L, tellUnbounded=False):
             upts += lpts
 
             p1 = upts[0][:]
-            p1[0] += 1000000
+            p1[0] += k
             p1[1] = U[0][1].evalx(p1[0])
 
             p2 = upts[-1][:]
-            p2[0] += 1000000
+            p2[0] += k
             p2[1] = L[0][1].evalx(p2[0])
             upts.insert(0, p1)
             upts.append(p2)
-            
-            if tellUnbounded:
-                return upts, True
 
             return upts
 
@@ -834,9 +829,6 @@ def getPolygon(U, L, tellUnbounded=False):
     upts.append(lm)
     upts += lpts
     upts.append(rm)
-    
-    if tellUnbounded:
-        return upts, False
 
     return upts
 
@@ -865,9 +857,7 @@ def getCenter(polygon):
     res[1].simplify()
     res[0]=float(res[0])
     res[1]=float(res[1])
-    
-    
-        
+            
     funcs = [lambda n: int(ceil(n)), lambda n: int(floor(n))]
         
     for f in funcs:
@@ -1452,7 +1442,7 @@ def getRandomWalkPent(pts):
     
     def search(p):
         for pt in pts:
-            if p[0] == pt[0] and p[1] == pt[2]:
+            if p[0] == pt[0] and p[1] == pt[1]:
                 return True
         return False
     
@@ -1468,13 +1458,15 @@ def getRandomWalkPent(pts):
             lower.insert(dualize(l), l)
                 
     U, L = getRegionR(upper, lower)
-    start = getPolygon(U, L)
+    start = getPolygon(U, L, 10000000000)
+    
     originalPoints = 0
     for pt in start:
         if search(pt):
             originalPoints += 1
     if originalPoints != 2:
         yield start
+        
     visitedPolygons = set()
     visitedPolygons.add(getPolygonKey(start))
     
@@ -1524,7 +1516,7 @@ def getRandomWalkPent(pts):
                 upper.insert(dualize(crossingEdge), crossingEdge)
         
             U, L = getRegionR(upper, lower) #TODO: write a composing function
-            poly = getPolygon(U, L)
+            poly = getPolygon(U, L, 10000000000)
             triang = getPolygonKey(poly)
             
             if triang not in visitedPolygons:
@@ -1556,6 +1548,121 @@ def getRandomWalkPent(pts):
                 else:
                     upper.delete(dualize(edge))
                     lower.insert(dualize(edge), edge)
+#            print " "*len(S), "pop!"
+            S.pop()
+            
+def getRandomWalkN2Graham(pts):
+    p = [random.randint(-100000000, 100000000), random.randint(-100000000, 100000000)]
+    
+    upper = []
+    lower = []
+    
+    for i in xrange(len(pts)):
+        for j in xrange(i+1, len(pts)):
+            l = line(pts[i], pts[j])
+            intersection = l.evalx(p[0])
+            if intersection > p[1]:
+                upper.append([dualize(l), l])
+            elif intersection < p[1]:
+                lower.append([dualize(l), l])
+                
+    def hull(Points, side):
+        '''Graham scan to find upper and lower convex hulls of a set of 2d points.'''
+        H = []
+        Points.sort()
+        for p in Points:
+            if side == datastructures.UPPER:
+                while len(H) > 1 and turn(H[-2][0],H[-1][0],p[0]) <= 0: H.pop()
+            if side == datastructures.LOWER:
+                while len(H) > 1 and turn(H[-2][0],H[-1][0],p[0]) >= 0: H.pop()
+            H.append(p)
+        if side == datastructures.LOWER:
+            H.reverse()
+        return H
+                
+    U = hull(upper, datastructures.UPPER)
+    L = hull(lower, datastructures.LOWER)
+    U, L = getRegionR(U, L, False)
+    
+    start = getPolygon(U, L)
+    yield start
+    visitedPolygons = set()
+    visitedPolygons.add(getPolygonKey(start))
+    
+    class region(object):
+        def __init__(self, regionU, regionL, lastEdge = None, side = None):
+            self.regionU = regionU
+            self.regionL = regionL
+            self.total = len(regionU) + len(regionL)
+            self.edgeIndex = random.randint(0, self.total-1)
+            self.i = 0
+            self.lastEdge = lastEdge
+            self.side = side
+                
+    S = deque()
+    S.append(region(U, L))
+    
+    while len(S) > 0:
+        current = S[-1]
+        regionU, regionL = current.regionU, current.regionL
+        
+        if current.i < current.total:
+            current.i += 1
+            current.edgeIndex = (current.edgeIndex + 1) % current.total
+#            print " "*len(S), "Will use", current.edgeIndex, " of" , current.total
+            if current.edgeIndex < len(regionU):
+                crossingEdge = regionU[current.edgeIndex][1]
+                side = UP
+            else:                
+                crossingEdge = regionL[current.edgeIndex - len(regionU)][1]
+                side = DOWN
+            p1, p2 = crossingEdge.getPoints()
+            if p1 > p2:
+                p1, p2 = p2, p1
+            if [p1, p2] == current.lastEdge:
+#                print " "*len(S), "points", p1, p2, [p1, p2]
+#                print " "*len(S), "lastedge!"
+                continue
+#            print "next line"
+    
+            if side == UP:
+                upper.pop(upper.index([dualize(crossingEdge), crossingEdge]))
+                lower.append([dualize(crossingEdge), crossingEdge])
+        
+            elif side == DOWN:
+                lower.pop(lower.index([dualize(crossingEdge), crossingEdge]))
+                upper.append([dualize(crossingEdge), crossingEdge])
+        
+            U = hull(upper, datastructures.UPPER)
+            L = hull(lower, datastructures.LOWER)         
+            U, L = getRegionR(U,L,False) #TODO: write a composing function
+            poly = getPolygon(U,L)
+            triang = getPolygonKey(poly)
+            
+            if triang not in visitedPolygons:
+                visitedPolygons.add(triang)
+                yield poly
+                S.append( region( U, L, [p1,p2], side) )
+#                print "level", len(S)
+            else:
+                if side == UP:   
+                    lower.pop(lower.index([dualize(crossingEdge), crossingEdge]))
+                    upper.append([dualize(crossingEdge), crossingEdge])
+                else:
+                    upper.pop(upper.index([dualize(crossingEdge), crossingEdge]))
+                    lower.append([dualize(crossingEdge), crossingEdge])
+        else:
+#            print " "*len(S), "done"
+            if len(S) > 1:
+                p1, p2 = current.lastEdge
+                edge = line(p1, p2)
+                
+                if current.side == UP:
+                    lower.pop(lower.index([dualize(edge), edge]))
+                    upper.append([dualize(edge), edge])
+                else:
+                    upper.pop(upper.index([dualize(edge), edge]))
+                    lower.append([dualize(edge), edge])
 #            print " "*len(S), "pop!"
             S.pop()
 
