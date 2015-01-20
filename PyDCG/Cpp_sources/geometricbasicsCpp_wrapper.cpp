@@ -42,12 +42,12 @@ static const char* turn_doc =
 
 PyObject* turn_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
 {
-    //The C++ function prototype is: int turn(const punto&, const punto&, const punto&);
+    //The C++ function prototype is: int turn(const Punto&, const Punto&, const Punto&);
     PyObject* py_p;
     PyObject* py_q;
     PyObject* py_r;
 
-    punto p, q, r;
+    Punto p, q, r;
 
     static const char *kwlist[] = {"p", "q", "r", NULL};
 
@@ -56,7 +56,7 @@ PyObject* turn_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!O!O!:turn", (char**)kwlist, &PyList_Type, &py_p, &PyList_Type, &py_q, &PyList_Type, &py_r))
         return NULL;
 
-    if (pyPointCPoint(py_p, p) == FAIL || pyPointCPoint(py_q, q) == FAIL || pyPointCPoint(py_q, q) == FAIL)
+    if (pyPoint_CPoint(py_p, p) == FAIL || pyPoint_CPoint(py_q, q) == FAIL || pyPoint_CPoint(py_q, q) == FAIL)
         return (PyObject*)NULL;
 
     return Py_BuildValue("i", turn(p,q,r));

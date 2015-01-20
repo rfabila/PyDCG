@@ -45,13 +45,13 @@ static const char* count_convex_rholes_doc =
 
 PyObject* count_convex_rholes_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
 {
-    //The C++ function prototype is: int count_convex_rholes(const std::vector<punto>&, int, bool=false);
+    //The C++ function prototype is: int count_convex_rholes(const std::vector<Punto>&, int, bool=false);
     PyObject* py_pts;
     PyObject* py_mono = NULL;
 
     int r;
     int mono = 0;
-    vector<punto> pts;
+    vector<Punto> pts;
 
     static const char *kwlist[] = {"points", "r", "mono", NULL};
 
@@ -59,11 +59,11 @@ PyObject* count_convex_rholes_wrapper(PyObject* self, PyObject* args, PyObject *
     //an integer (r) and a boolean (mono). The boolean is optional.
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!i|O!:count_convex_rholes", (char**)kwlist, &PyList_Type, &py_pts, &r, &PyBool_Type, &py_mono))
         return (PyObject*)NULL;                                                     //This cast ^ is stupid. I just put to avoid the annoying warnings that appear if
-                                                                         //kwlist isn't declared cons
-    if(py_mono != NULL && py_mono == Py_True)
+                                                                         //kwlist isn't declared const
+    if(py_mono == Py_True)
         mono = 1;
 
-    if(pyPointsetCPointset(py_pts, pts) == FAIL)
+    if(pyPointset_CPointset(py_pts, pts) == FAIL)
         return (PyObject*)NULL;
 
     return Py_BuildValue("i", count_convex_rholes(pts, r, mono));
@@ -104,13 +104,13 @@ static const char* report_convex_rholes_doc =
 extern "C" PyObject* report_convex_rholes_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
 {
     //The C++ function prototype is:
-    //std::deque<std::vector<punto> > report_convex_rholes(const std::vector<punto>&, int, bool=false);
+    //std::deque<std::vector<Punto> > report_convex_rholes(const std::vector<Punto>&, int, bool=false);
     PyObject* py_pts;
     PyObject* py_mono = NULL;
 
     int r;
-    int mono = 0;
-    vector<punto> pts;
+    bool mono = false;
+    vector<Punto> pts;
 
     static const char *kwlist[] = {"points", "r", "mono", NULL};
 
@@ -119,10 +119,10 @@ extern "C" PyObject* report_convex_rholes_wrapper(PyObject* self, PyObject* args
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!i|O!:count_convex_rholes", (char**)kwlist, &PyList_Type, &py_pts, &r, &PyBool_Type, &py_mono))
         return (PyObject*)NULL;                                                            //See comment in count_convex_rholes_p_wrapper about this cast.
 
-    if(py_mono != NULL && py_mono == Py_True)
-        mono = 1;
+    if(py_mono == Py_True)
+        mono = true;
 
-    if(pyPointsetCPointset(py_pts, pts) == FAIL)
+    if(pyPointset_CPointset(py_pts, pts) == FAIL)
         return (PyObject*)NULL;
 
     auto res = report_convex_rholes(pts, r, mono);
@@ -131,11 +131,11 @@ extern "C" PyObject* report_convex_rholes_wrapper(PyObject* self, PyObject* args
 
     for (auto poli : res)
     {
-        PyObject* py_poli = CPointsetPyPointset(poli);
+        PyObject* py_poli = CPointset_PyPointset(poli);
         if(py_poli == NULL)
             return (PyObject*)NULL;
 
-        if(PyList_Append(py_res, py_poli) == -1)
+        if(PyList_Append(py_res, py_poli) == -1) //Append increases reference count
             return (PyObject*)NULL;
         Py_DECREF(py_poli);
     }
@@ -183,15 +183,15 @@ static const char* count_convex_rholes_p_doc =
 extern "C" PyObject* count_convex_rholes_p_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
 {
     //The C++ function prototype is:
-    //void count_convex_rholes_p(punto, const std::vector<punto>&, int, int&, int&, bool=false);
+    //void count_convex_rholes_p(Punto, const std::vector<Punto>&, int, int&, int&, bool=false);
     PyObject* py_pts;
     PyObject* py_p;
     PyObject* py_mono = NULL;
 
     int r;
-    int mono = 0;
-    punto p;
-    vector<punto> pts;
+    bool mono = false;
+    Punto p;
+    vector<Punto> pts;
 
     static const char *kwlist[] = {"p", "points", "r", "mono", NULL};
 
@@ -200,13 +200,13 @@ extern "C" PyObject* count_convex_rholes_p_wrapper(PyObject* self, PyObject* arg
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!O!i|O!:count_convex_rholes", (char**)kwlist, &PyList_Type, &py_p, &PyList_Type, &py_pts, &r, &PyBool_Type, &py_mono))
         return (PyObject*)NULL;                                                               //See comment in count_convex_rholes_p_wrapper about this cast.
 
-    if(py_mono != NULL && py_mono == Py_True)
-        mono = 1;
+    if(py_mono == Py_True)
+        mono = true;
 
-    if(pyPointsetCPointset(py_pts, pts) == FAIL)
+    if(pyPointset_CPointset(py_pts, pts) == FAIL)
         return (PyObject*)NULL;
 
-    if (pyPointCPoint(py_p, p) == FAIL)
+    if(pyPoint_CPoint(py_p, p) == FAIL)
         return (PyObject*)NULL;
 
     int A, B;
@@ -219,14 +219,14 @@ extern "C" PyObject* countEmptyTriangs_wrapper(PyObject* self, PyObject* args, P
 {
     PyObject* py_pts;
 
-    vector<punto> pts;
+    vector<Punto> pts;
 
     static const char *kwlist[] = {"points", NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!:countEmptyTriangs", (char**)kwlist, &PyList_Type, &py_pts))
         return NULL;
 
-    if(pyPointsetCPointset(py_pts, pts) == FAIL)
+    if(pyPointset_CPointset(py_pts, pts) == FAIL)
         return (PyObject*)NULL;
 
     return Py_BuildValue("i", countEmptyTriangs(pts));
@@ -235,10 +235,10 @@ extern "C" PyObject* countEmptyTriangs_wrapper(PyObject* self, PyObject* args, P
 extern "C" PyObject* report_empty_triangles_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
 {
     //The C++ function prototype is:
-    //std::vector<std::vector<punto> > report_empty_triangles(const std::vector<punto>&);
+    //std::vector<std::vector<Punto> > report_empty_triangles(const std::vector<Punto>&);
     PyObject* py_pts;
 
-    vector<punto> pts;
+    vector<Punto> pts;
 
     static const char *kwlist[] = {"points", NULL};
 
@@ -247,7 +247,7 @@ extern "C" PyObject* report_empty_triangles_wrapper(PyObject* self, PyObject* ar
         return NULL;                                                 //See comment in count_convex_rholes_p_wrapper about this cast.
 
 
-    if(pyPointsetCPointset(py_pts, pts) == FAIL)
+    if(pyPointset_CPointset(py_pts, pts) == FAIL)
         return (PyObject*)NULL;
 
     auto res = report_empty_triangles(pts);
@@ -256,7 +256,7 @@ extern "C" PyObject* report_empty_triangles_wrapper(PyObject* self, PyObject* ar
 
     for (auto triang : res)
     {
-        PyObject* py_poli = CPointsetPyPointset(triang);
+        PyObject* py_poli = CPointset_PyPointset(triang);
         if(py_poli == NULL)
             return (PyObject*)NULL;
 
@@ -273,18 +273,18 @@ extern "C" PyObject* count_empty_triangles_p_wrapper(PyObject* self, PyObject* a
     PyObject* py_pts;
     PyObject* py_p;
 
-    vector<punto> pts;
-    punto p;
+    vector<Punto> pts;
+    Punto p;
 
     static const char *kwlist[] = {"p", "points", NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!O!:count_convex_rholes", (char**)kwlist, &PyList_Type, &py_p, &PyList_Type, &py_pts))
         return NULL;
 
-    if(pyPointsetCPointset(py_pts, pts) == FAIL)
+    if(pyPointset_CPointset(py_pts, pts) == FAIL)
         return (PyObject*)NULL;
 
-    if (pyPointCPoint(py_p, p) == FAIL)
+    if (pyPoint_CPoint(py_p, p) == FAIL)
         return (PyObject*)NULL;
 
     int A, B;
@@ -296,198 +296,71 @@ extern "C" PyObject* count_empty_triangles_p_wrapper(PyObject* self, PyObject* a
 extern "C" PyObject* report_empty_triangles_p_wrapper(PyObject* self, PyObject* args, PyObject *keywds) //TODO: Update this one
 {
     //The C++ function prototype is:
-    //pair<list<triangulo>, std::unordered_set<triangulo> > report_empty_triangles_p(punto, const vector<punto>&);
+    //pair<list<triangulo>, std::unordered_set<triangulo> > report_empty_triangles_p(Punto, const vector<Punto>&);
 	PyObject* py_pts;
 	PyObject* py_p;
 
 	static const char *kwlist[] = {"p", "points", NULL};
 
-	vector<punto> pts;
-	punto p;
+	vector<Punto> pts;
+	Punto p;
 
 	if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!O!:report_empty_triangles_p", (char**)kwlist, &PyList_Type, &py_p, &PyList_Type, &py_pts))
 		return NULL;
 
-	int N_points = (int)PyList_Size(py_pts);
+    if(pyPointset_CPointset(py_pts, pts) == FAIL)
+        return (PyObject*)NULL;
 
-	//Pasar la lista de puntos a vector<punto>
-	for(int i=0; i<N_points; i++)
-	{
-		PyObject *punto = PyList_GetItem(py_pts, i); //BORROWED REFERENCE!
-		Py_ssize_t n_coords = PyList_Size(punto);
-		long x, y;
+    if (pyPoint_CPoint(py_p, p) == FAIL)
+        return (PyObject*)NULL;
 
-		if(n_coords > 2)
-		{
-			printf("Demasiados valores en la lista.");
-			return NULL;
-		}
-		x = PyInt_AsLong(PyList_GetItem(punto, 0)); //BORROWED REFERENCES!
-		y = PyInt_AsLong(PyList_GetItem(punto, 1));
+    vector<vector<Punto> > A, B;
 
-		//Se debería checar si no hubo exepción
-//		printf("pongo %d, %d", x, y);
-		pts.emplace_back(x, y);
-	}
+    report_empty_triangles_p(p, pts, A, B);
 
-	//Pasar py_p a punto
-	Py_ssize_t N_pt = PyList_Size(py_p);
-	if(N_pt > 2)
-	{
-		printf("Demasiados valores en p.");
-		return NULL;
-	}
-	p.x = PyInt_AsLong(PyList_GetItem(py_p, 0)); //BORROWED REFERENCES!
-	p.y = PyInt_AsLong(PyList_GetItem(py_p, 1));
+    PyObject* py_A = PyList_New(0);
+    PyObject* py_B = PyList_New(0);
 
-	auto res = report_empty_triangles_p(p, pts);
+    for (auto triang : A)
+    {
+        PyObject* py_triang = CPointset_PyPointset(triang);
+        if(py_triang == NULL)
+            return (PyObject*)NULL;
 
-	std::list<triangulo>& A = res.first;
-	std::unordered_set<triangulo, triangHash>& B = res.second;
+        if(PyList_Append(py_A, py_triang) == -1)
+            return (PyObject*)NULL;
+        Py_DECREF(py_triang);
+    }
 
-	PyObject* py_A = PyList_New(0);
-	PyObject* py_B = PyList_New(0);
+    for (auto triang : B)
+    {
+        PyObject* py_triang = CPointset_PyPointset(triang);
+        if(py_triang == NULL)
+            return (PyObject*)NULL;
 
-	for (auto triang : A)
-	{
-		PyObject* py_triang = PyList_New(0);
-		PyObject* py_point = PyList_New(0);
-
-		PyObject* coord1 = PyInt_FromLong(triang.a.x);
-		PyObject* coord2 = PyInt_FromLong(triang.a.y);
-
-		//Insert triang.a
-		if(PyList_Append(py_point, coord1) == -1) //Append increases reference count
-			return NULL;
-		Py_DECREF(coord1);
-
-		if(PyList_Append(py_point, coord2) == -1) //Append increases reference count
-			return NULL;
-		Py_DECREF(coord2);
-
-		if(PyList_Append(py_triang, py_point) == -1)
-			return NULL;
-		Py_DECREF(py_point);
-		py_point = PyList_New(0);
-
-		//Insert triang.b
-		coord1 = PyInt_FromLong(triang.b.x);
-		coord2 = PyInt_FromLong(triang.b.y);
-
-		if(PyList_Append(py_point, coord1) == -1) //Append increases reference count
-			return NULL;
-		Py_DECREF(coord1);
-
-		if(PyList_Append(py_point, coord2) == -1) //Append increases reference count
-			return NULL;
-		Py_DECREF(coord2);
-
-		if(PyList_Append(py_triang, py_point) == -1)
-			return NULL;
-		Py_DECREF(py_point);
-		py_point = PyList_New(0);
-
-		//Insert triang.c
-		coord1 = PyInt_FromLong(triang.c.x);
-		coord2 = PyInt_FromLong(triang.c.y);
-
-		if(PyList_Append(py_point, coord1) == -1) //Append increases reference count
-			return NULL;
-		Py_DECREF(coord1);
-
-		if(PyList_Append(py_point, coord2) == -1) //Append increases reference count
-			return NULL;
-		Py_DECREF(coord2);
-
-		if(PyList_Append(py_triang, py_point) == -1)
-			return NULL;
-		Py_DECREF(py_point);
-
-		//Append triangle to py_A
-		if(PyList_Append(py_A, py_triang) == -1)
-			return NULL;
-		Py_DECREF(py_triang);
-	}
-
-	for (auto triang : B)
-	{
-		PyObject* py_triang = PyList_New(0);
-		PyObject* py_point = PyList_New(0);
-
-		PyObject* coord1 = PyInt_FromLong(triang.a.x);
-		PyObject* coord2 = PyInt_FromLong(triang.a.y);
-
-		//Insert triang.a
-		if(PyList_Append(py_point, coord1) == -1) //Append increases reference count
-			return NULL;
-		Py_DECREF(coord1);
-
-		if(PyList_Append(py_point, coord2) == -1) //Append increases reference count
-			return NULL;
-		Py_DECREF(coord2);
-
-		if(PyList_Append(py_triang, py_point) == -1)
-			return NULL;
-		Py_DECREF(py_point);
-		py_point = PyList_New(0);
-
-		//Insert triang.b
-		coord1 = PyInt_FromLong(triang.b.x);
-		coord2 = PyInt_FromLong(triang.b.y);
-
-		if(PyList_Append(py_point, coord1) == -1) //Append increases reference count
-			return NULL;
-		Py_DECREF(coord1);
-
-		if(PyList_Append(py_point, coord2) == -1) //Append increases reference count
-			return NULL;
-		Py_DECREF(coord2);
-
-		if(PyList_Append(py_triang, py_point) == -1)
-			return NULL;
-		Py_DECREF(py_point);
-		py_point = PyList_New(0);
-
-		//Insert triang.c
-		coord1 = PyInt_FromLong(triang.c.x);
-		coord2 = PyInt_FromLong(triang.c.y);
-
-		if(PyList_Append(py_point, coord1) == -1) //Append increases reference count
-			return NULL;
-		Py_DECREF(coord1);
-
-		if(PyList_Append(py_point, coord2) == -1) //Append increases reference count
-			return NULL;
-		Py_DECREF(coord2);
-
-		if(PyList_Append(py_triang, py_point) == -1)
-			return NULL;
-		Py_DECREF(py_point);
-
-		//Append triangle to py_B
-		if(PyList_Append(py_B, py_triang) == -1)
-			return NULL;
-		Py_DECREF(py_triang);
-	}
+        if(PyList_Append(py_B, py_triang) == -1)
+            return (PyObject*)NULL;
+        Py_DECREF(py_triang);
+    }
 
 	return Py_BuildValue("OO", py_A, py_B);
 }
 
 extern "C" PyObject* general_position_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
 {
-    //The C++ function prototype is: general_position(vector<punto>& points)
+    //The C++ function prototype is: general_position(vector<Punto>& points)
     PyObject* py_points;
 
     static const char *kwlist[] = {"points", NULL};
 
-    vector<punto> points;
+    vector<Punto> points;
 
     //The arguments must be: a list with the point (a list of two integers),
     //and a list of 3 points representing the triangle
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!:general_position", (char**)kwlist, &PyList_Type, &py_points))
         return NULL;
 
-    if(pyPointsetCPointset(py_points, points) == FAIL)
+    if(pyPointset_CPointset(py_points, points) == FAIL)
         return (PyObject*)NULL;
 
     return Py_BuildValue("i", general_position(points));

@@ -5,7 +5,7 @@ long pivote[2]; //Check this variable
 
 struct candidato
 {
-    punto pt;
+    Punto pt;
     int index;
     bool original;
     bool antipodal;
@@ -204,7 +204,7 @@ int signo(long num) {
 
 //q mas grande 1
 
-vector<candidato> sort_around_point(punto p, const vector<candidato>& points)
+vector<candidato> sort_around_point(Punto p, const vector<candidato>& points)
 {
     /*
      * Sorts a set of points by angle around a point p.
@@ -213,7 +213,7 @@ vector<candidato> sort_around_point(punto p, const vector<candidato>& points)
      * just one vector.
      */
 
-    punto p1(p.x, p.y + 1);
+    Punto p1(p.x, p.y + 1);
     vector<candidato> r, l;
     r.reserve(points.size());
     l.reserve(points.size());
@@ -269,9 +269,9 @@ vector<candidato> sort_around_point(punto p, const vector<candidato>& points)
     return r;
 }
 
-vector<int> count_crossings_candidate_list(int point_index, vector<punto> &candidate_list, vector<punto> &puntos)
+vector<int> count_crossings_candidate_list(int point_index, vector<Punto> &candidate_list, vector<Punto> &puntos)
 {
-    punto p(0,0);
+    Punto p(0,0);
     int pos_point_in_tp = 0;
     int num_cand = candidate_list.size();
     int num_pts = puntos.size();
@@ -325,8 +325,8 @@ vector<int> count_crossings_candidate_list(int point_index, vector<punto> &candi
             int j=0;
             for(int i=0; i<num_pts-1; i++)
             {
-                punto p0 = temp_pts[i].pt;
-                punto p1 = temp_pts[(j+1)%(num_pts-1)].pt;
+                Punto p0 = temp_pts[i].pt;
+                Punto p1 = temp_pts[(j+1)%(num_pts-1)].pt;
 
                 while((turn(p,p0,p1)<=0) && ((j+1)%(num_pts-1)!=i))
                 {

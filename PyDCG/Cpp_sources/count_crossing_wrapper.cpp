@@ -116,8 +116,8 @@ extern "C" PyObject* count_crossings_candidate_list_wrapper(PyObject* self, PyOb
     Py_ssize_t points_size = PyList_Size(py_points);
     Py_ssize_t candidates_size = PyList_Size(py_candidate_list);
 
-    vector<punto> pts;
-    vector<punto> candidates;
+    vector<Punto> pts;
+    vector<Punto> candidates;
     //Py_ssize_t can be bigger than an 2^32, but we don't expect
     //to work with that many points.
     pts.reserve(int(points_size));
