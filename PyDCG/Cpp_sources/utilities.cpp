@@ -50,22 +50,26 @@ int pyPoint_CPoint(PyObject* py_p, Punto& p)
 /**Recieves a C++ point object and returns a python object representing a point (a list of two numbers).*/
 PyObject* CPoint_PyPoint(Punto point)
 {
-    PyObject* py_point = PyList_New(0);
+    Py_ssize_t n = 2;
+    if(point._has_color)
+        n++;
+
+    PyObject* py_point = PyList_New(n);
 
     PyObject* coord = PyInt_FromLong(point.x);
-    if(PyList_Append(py_point, coord) == -1) //Append increases reference count
+    if(PyList_SetItem(py_point, 0, coord) == -1) //Append increases reference count -- Changed to set item, which steals the reference
         return NULL;
-    Py_DECREF(coord);
+    //Py_DECREF(coord);
 
     coord = PyInt_FromLong(point.y);
-    if(PyList_Append(py_point, coord) == -1) //Append increases reference count
+    if(PyList_SetItem(py_point, 1, coord) == -1) //Append increases reference count
         return NULL;
-    Py_DECREF(coord);
+    //Py_DECREF(coord);
 
     if(point._has_color)
     {
         coord = PyInt_FromLong(point.color);
-        if(PyList_Append(py_point, coord) == -1) //Append increases reference count
+        if(PyList_SetItem(py_point, 2, coord) == -1) //Append increases reference count
             return NULL;
         Py_DECREF(coord);
     }
@@ -85,7 +89,7 @@ int pyPointset_CPointset(PyObject* py_pts, vector<Punto>& pts)
         PyObject *point = PyList_GetItem(py_pts, i); //Borrowed Reference
         Punto p;
 
-        if(pyPoint_CPoint(point, p) != SUCCESS) //TODO: Check if itś worth it to unpack x, y nd color to use emplace_back instead of push_back
+        if(pyPoint_CPoint(point, p) != SUCCESS) //TODO: Check if it's worth it to unpack x, y and color to use emplace_back instead of push_back
             return FAIL;
 
         pts.push_back(p);
@@ -97,7 +101,8 @@ int pyPointset_CPointset(PyObject* py_pts, vector<Punto>& pts)
 /**Recieves a C++ vector of points and returns a python object representing a point set (a list of lists of two numbers).*/
 PyObject* CPointset_PyPointset(vector<Punto>& pts)
 {
-    PyObject* py_pts = PyList_New(0);
+    PyObject* py_pts = PyList_New(pts.size());
+    int i = 0;
     for(auto point : pts)
     {
         PyObject* py_point = CPoint_PyPoint(point);
@@ -105,9 +110,8 @@ PyObject* CPointset_PyPointset(vector<Punto>& pts)
         if(py_point == NULL)
             return NULL;
 
-        if(PyList_Append(py_pts, py_point) == -1) //Append increases reference count
+        if(PyList_SetItem(py_pts, i++, py_point) == -1) //Append increases reference count
             return NULL;
-        Py_DECREF(py_point);
     }
     return py_pts;
 }

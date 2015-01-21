@@ -50,7 +50,7 @@ PyObject* count_convex_rholes_wrapper(PyObject* self, PyObject* args, PyObject *
     PyObject* py_mono = NULL;
 
     int r;
-    int mono = 0;
+    bool mono = false;
     vector<Punto> pts;
 
     static const char *kwlist[] = {"points", "r", "mono", NULL};
@@ -61,7 +61,7 @@ PyObject* count_convex_rholes_wrapper(PyObject* self, PyObject* args, PyObject *
         return (PyObject*)NULL;                                                     //This cast ^ is stupid. I just put to avoid the annoying warnings that appear if
                                                                          //kwlist isn't declared const
     if(py_mono == Py_True)
-        mono = 1;
+        mono = true;
 
     if(pyPointset_CPointset(py_pts, pts) == FAIL)
         return (PyObject*)NULL;
@@ -279,12 +279,12 @@ extern "C" PyObject* count_empty_triangles_p_wrapper(PyObject* self, PyObject* a
     static const char *kwlist[] = {"p", "points", NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!O!:count_convex_rholes", (char**)kwlist, &PyList_Type, &py_p, &PyList_Type, &py_pts))
-        return NULL;
-
-    if(pyPointset_CPointset(py_pts, pts) == FAIL)
         return (PyObject*)NULL;
 
     if (pyPoint_CPoint(py_p, p) == FAIL)
+        return (PyObject*)NULL;
+
+    if(pyPointset_CPointset(py_pts, pts) == FAIL)
         return (PyObject*)NULL;
 
     int A, B;
@@ -318,8 +318,10 @@ extern "C" PyObject* report_empty_triangles_p_wrapper(PyObject* self, PyObject* 
 
     report_empty_triangles_p(p, pts, A, B);
 
-    PyObject* py_A = PyList_New(0);
-    PyObject* py_B = PyList_New(0);
+    PyObject* py_A = PyList_New(A.size());
+    PyObject* py_B = PyList_New(B.size());
+
+    int i = 0;
 
     for (auto triang : A)
     {
@@ -327,10 +329,11 @@ extern "C" PyObject* report_empty_triangles_p_wrapper(PyObject* self, PyObject* 
         if(py_triang == NULL)
             return (PyObject*)NULL;
 
-        if(PyList_Append(py_A, py_triang) == -1)
+        if(PyList_SetItem(py_A, i++, py_triang) == -1)
             return (PyObject*)NULL;
-        Py_DECREF(py_triang);
     }
+
+    i = 0;
 
     for (auto triang : B)
     {
@@ -338,12 +341,11 @@ extern "C" PyObject* report_empty_triangles_p_wrapper(PyObject* self, PyObject* 
         if(py_triang == NULL)
             return (PyObject*)NULL;
 
-        if(PyList_Append(py_B, py_triang) == -1)
+        if(PyList_SetItem(py_B, i++, py_triang) == -1)
             return (PyObject*)NULL;
-        Py_DECREF(py_triang);
     }
 
-	return Py_BuildValue("OO", py_A, py_B);
+	return Py_BuildValue("NN", py_A, py_B);
 }
 
 extern "C" PyObject* general_position_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
