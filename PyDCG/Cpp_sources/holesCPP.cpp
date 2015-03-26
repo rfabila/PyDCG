@@ -24,6 +24,7 @@
 #include <utility>
 #include <deque>
 #include <unordered_map>
+#include <unordered_set>
 #include <iostream>
 
 using std::vector;
@@ -33,10 +34,10 @@ using std::list;
 
 //-------------------------------------------------------------
 
-static vector<punto> _default;
+static vector<Punto> _default;
 
-void sort_around_point(punto p, const vector<punto>& points, vector<punto>& r,
-                       vector<punto>& l = _default, bool join = true)
+void sort_around_point(Punto p, const vector<Punto>& points, vector<Punto>& r,
+                       vector<Punto>& l = _default, bool join = true)
 {
 	/*
 	 * Sorts a set of points by angle around a point p.
@@ -45,7 +46,7 @@ void sort_around_point(punto p, const vector<punto>& points, vector<punto>& r,
 	 * just one vector.
 	 */
 
-	punto p1(p.x, p.y + 1);
+	Punto p1(p.x, p.y + 1);
 	r.reserve(points.size());
 	l.reserve(points.size());
 
@@ -61,7 +62,7 @@ void sort_around_point(punto p, const vector<punto>& points, vector<punto>& r,
 			r.push_back(q);
 	}
 
-	sort(l.begin(), l.end(), [&p](punto r, punto q)->bool
+	sort(l.begin(), l.end(), [&p](Punto r, Punto q)->bool
 			{
 				if(turn(p, r, q) < 0)
 					return true;
@@ -69,7 +70,7 @@ void sort_around_point(punto p, const vector<punto>& points, vector<punto>& r,
 			}
 	);
 
-	sort(r.begin(), r.end(), [&p](punto r, punto q)->bool
+	sort(r.begin(), r.end(), [&p](Punto r, Punto q)->bool
 			{
 				if(turn(p, r, q) < 0)
 					return true;
@@ -93,7 +94,7 @@ void sort_around_point(punto p, const vector<punto>& points, vector<punto>& r,
 		if (concave)
 		{
 			int start = (i + 1) % r.size();
-			vector<punto> tmp(r);
+			vector<Punto> tmp(r);
 
 			for (i = 0; i < tmp.size(); i++)
 				r[i] = tmp[(start + i) % r.size()];
@@ -114,7 +115,7 @@ vector<vector<pair<vector<int>, vector<int> > > > compute_visibility_graph(const
 	//G contains the visibility graphs associated to each point
 	vector<vector<pair<vector<int>, vector<int> > > > G;
 	vector<pair<vector<int>, vector<int> > > vis_graph;
-	vector<punto> right_points;
+	vector<Punto> right_points;
 	vector<std::deque<int> > Q;
 
 	std::function<void(int,int)> proceed=[&](int i, int j){
@@ -143,14 +144,14 @@ vector<vector<pair<vector<int>, vector<int> > > > compute_visibility_graph(const
 	return G;
 }
 
-vector<pair<vector<int>, vector<int> > > visibility_graph_around_p(punto p, const vector<punto>& points, bool debug) {
+vector<pair<vector<int>, vector<int> > > visibility_graph_around_p(Punto p, const vector<Punto>& points, bool debug) {
 	/* Computes the visibility graph of the point set
 	 * polygon formed by the points ordered around p
 	 * in ccw order. Each edge is oriented so p is at
 	 * the left.
 	 * The point set must not include p.
 	 */
-	vector<punto> sorted_points, l;
+	vector<Punto> sorted_points, l;
 
 	sort_around_point(p, points, sorted_points, l, false);
 
@@ -186,7 +187,7 @@ vector<pair<vector<int>, vector<int> > > visibility_graph_around_p(punto p, cons
 	//We check whether p is a convex_hull point
 	for (int i = 0, s = (int)sorted_points.size(); i < s; i++)
 		if (turn(p, sorted_points[i], sorted_points[(i + 1) % s]) >= 0) {
-			vector<punto> new_sorted_points(sorted_points.size());
+			vector<Punto> new_sorted_points(sorted_points.size());
 			for (int j = 0; j < s; j++)
 				new_sorted_points[j] = sorted_points[(i + 1 + j)% s];
 			sorted_points = new_sorted_points;
@@ -227,9 +228,9 @@ vector<pair<vector<int>, vector<int> > > visibility_graph_around_p(punto p, cons
  * Triángulos
  */
 
-bool pointInTriang(punto p, triangulo triang)
+bool pointInTriang(Punto p, triangulo triang)
 {
-	//Funci�n para decidir si un punto p est� en el interior de un tri�ngulo
+	//Funci�n para decidir si un Punto p est� en el interior de un tri�ngulo
 	int sign1 = turn(triang.a, p, triang.b);
 	int sign2 = turn(triang.b, p, triang.c);
 	int sign3 = turn(triang.c, p, triang.a);
@@ -243,16 +244,16 @@ bool pointInTriang(punto p, triangulo triang)
 		return (sign2 < 0 && sign3 < 0);
 }
 
-bool pointsInTriang(const vector<punto>& points, triangulo triang)
+bool pointsInTriang(const vector<Punto>& points, triangulo triang)
 {
-	//verifica si algun punto del arreglo esta contenido en el triangulo
+	//verifica si algun Punto del arreglo esta contenido en el triangulo
 	for(auto it=points.begin(); it!=points.end(); it++)
 		if(pointInTriang(*it, triang))
 			return true;
 	return false;
 }
 
-int slowcountemptyTriang(const vector<punto>& points)
+int slowcountemptyTriang(const vector<Punto>& points)
 {
 	//cuenta el numero de triangulos vacios en points (tiempo O(n^4))
 	int num=0;
@@ -264,7 +265,7 @@ int slowcountemptyTriang(const vector<punto>& points)
 	return num;
 }
 
-int countEmptyTriangsVertex(const vector<punto>& rpoints) {
+int countEmptyTriangsVertex(const vector<Punto>& rpoints) {
 	int triangs = 0;
 	vector<std::queue<int> > q(rpoints.size(), std::queue<int>());
 
@@ -284,7 +285,7 @@ int countEmptyTriangsVertex(const vector<punto>& rpoints) {
 	return triangs;
 }
 
-int countEmptyTriangs(const vector<punto>& points)
+int countEmptyTriangs(const vector<Punto>& points)
 {
 	vector<puntos_ordenados> ordpoints;
 	orderandsplit(points, ordpoints);
@@ -294,9 +295,9 @@ int countEmptyTriangs(const vector<punto>& points)
 	return triangs;
 }
 
-vector<vector<punto> > report_empty_triangles(const vector<punto>& points)
+vector<vector<Punto> > report_empty_triangles(const vector<Punto>& points)
 {
-	vector<vector<punto> > triangles;
+	vector<vector<Punto> > triangles;
 	vector<puntos_ordenados> sorted_points;
 	orderandsplit(points, sorted_points);
 	auto G = compute_visibility_graph(sorted_points);
@@ -305,12 +306,12 @@ vector<vector<punto> > report_empty_triangles(const vector<punto>& points)
 		auto& right_points = sorted_points[p].r;
 		for(unsigned int q=0; q<right_points.size(); q++)
 			for(auto& r:G[p][q].first)
-				triangles.emplace_back(vector<punto>({points[p], right_points[r], right_points[q]}));
+				triangles.emplace_back(vector<Punto>({points[p], right_points[r], right_points[q]}));
 	}
 	return triangles;
 }
 
-int slow_count_empty_triangles_containing_p(punto p, const vector<punto>& points)
+int slow_count_empty_triangles_containing_p(Punto p, const vector<Punto>& points)
 {
 	/* Counts the number of empty triangles in points that
 	 * contain p in their interior
@@ -328,7 +329,7 @@ int slow_count_empty_triangles_containing_p(punto p, const vector<punto>& points
 	return r;
 }
 
-int count_empty_triangles_around_p(punto p, const vector<punto>& points)
+int count_empty_triangles_around_p(Punto p, const vector<Punto>& points)
 {
 	/*Counts the number of empty triangles of
 	 * points union p which contain p as a vertex.
@@ -342,14 +343,14 @@ int count_empty_triangles_around_p(punto p, const vector<punto>& points)
 	return triangs;
 }
 
-void slow_count_empty_triangles_p(punto p, const vector<punto>& points, int& A, int& B)
+void slow_count_empty_triangles_p(Punto p, const vector<Punto>& points, int& A, int& B)
 {
 	/*Slow version of count empty_triangles_p	 */
 	B=slow_count_empty_triangles_containing_p(p, points);
 	A=count_empty_triangles_around_p(p, points);
 }
 
-void count_empty_triangles_p(punto p, const vector<punto>& points, int& A, int& B) {
+void count_empty_triangles_p(Punto p, const vector<Punto>& points, int& A, int& B) {
 	/*
 	 * Returns (A,B), where A is the number of empty triangles
 	 * that contain p as a vertex and B the number of triangles
@@ -357,7 +358,7 @@ void count_empty_triangles_p(punto p, const vector<punto>& points, int& A, int& 
 	 */
 	auto G = visibility_graph_around_p(p,
 			points);
-	vector<punto> sorted_points;
+	vector<Punto> sorted_points;
 	sort_around_point(p, points, sorted_points);
 
 	A = 0;
@@ -386,11 +387,16 @@ void count_empty_triangles_p(punto p, const vector<punto>& points, int& A, int& 
 	B /= 3;
 }
 
-struct trio
+struct trio //TODO: Check if this is worth it
 {
 	int a;
 	int b;
 	int c;
+
+	bool operator==(const trio& o) const
+    {
+        return (a == o.a && b == o.b && c == o.c);
+    }
 };
 
 void sort_trio(trio &t)
@@ -412,14 +418,21 @@ void sort_trio(trio &t)
 	}while(swapped);
 }
 
-pair<list<triangulo>, std::unordered_set<triangulo, triangHash> > report_empty_triangles_p(punto p, const vector<punto>& points)
+void report_empty_triangles_p(Punto p, const vector<Punto>& points, vector<vector<Punto> >& A, vector<vector<Punto> >& B)
 {
 	auto G = visibility_graph_around_p(p, points);
-	vector<punto> sorted_points;
+	vector<Punto> sorted_points;
 	sort_around_point(p, points, sorted_points);
 
-	list<triangulo > A;
-	std::unordered_set<triangulo, triangHash> B;
+	//TODO: Check this hash function
+	class triHash{
+    public:
+        size_t operator()(const trio triang) const{
+            return (triang.a << 22) ^ (triang.b << 12 ^ triang.c);
+        }
+    };
+
+	std::unordered_set<trio, triHash> B_idx;
 
 	for(unsigned int q = 0; q < sorted_points.size(); q++)
 	{
@@ -427,16 +440,14 @@ pair<list<triangulo>, std::unordered_set<triangulo, triangHash> > report_empty_t
 		auto& outgoing = G[q].second;
 
 		for(auto r: incoming)
-			A.emplace_back(p, sorted_points[q], sorted_points[r]);
+			A.emplace_back(vector<Punto>({p, sorted_points[q], sorted_points[r]}));
 
 		unsigned int j = 0;
 		for(unsigned int i = 0; i < incoming.size(); i++)
 		{
 			while(j < outgoing.size() && turn(sorted_points[incoming[i]],
 			                                  sorted_points[q], sorted_points[outgoing[j]]) > 0)
-			{
 				j++;
-			}
 
 			if(j < outgoing.size())
 			{
@@ -447,16 +458,17 @@ pair<list<triangulo>, std::unordered_set<triangulo, triangHash> > report_empty_t
 					{
 						trio aux = {incoming[i], int(q), outgoing[k]};
 						sort_trio(aux);
-						B.emplace(sorted_points[aux.a], sorted_points[aux.b], sorted_points[aux.c]);
+						auto res = B_idx.insert(aux);
+						if(res.second == true)
+                            B.emplace_back(vector<Punto>({sorted_points[aux.a], sorted_points[aux.b], sorted_points[aux.c]}));
 					}
 				}
 			}
 		}
 	}
-	return make_pair(A, B);
 }
 
-int count_empty_triangles_for_each_p(vector<punto> points)
+int count_empty_triangles_for_each_p(vector<Punto> points)
 {
 	/*Sums the the number of empty triangles
 	 *containing each vertex and divides by 3*/
@@ -464,7 +476,7 @@ int count_empty_triangles_for_each_p(vector<punto> points)
 	for(unsigned int i=0; i<points.size(); i++)
 	{
 		std::swap(points[i], points[0]);
-		triangs+=count_empty_triangles_around_p(points[0], vector<punto>(points.begin()+1, points.end()));
+		triangs+=count_empty_triangles_around_p(points[0], vector<Punto>(points.begin()+1, points.end()));
 	}
 	return triangs;
 }
@@ -473,7 +485,7 @@ int count_empty_triangles_for_each_p(vector<punto> points)
  * rholes
  */
 
-int count_convex_rholes(const vector<punto> &points, int r, bool mono)
+int count_convex_rholes(const vector<Punto> &points, int r, bool mono)
 {
 	/*
 	 * Counts the number of rholes in points, as described
@@ -493,7 +505,7 @@ int count_convex_rholes(const vector<punto> &points, int r, bool mono)
 
 	for(unsigned int p=0, s=points.size(); p<s; p++)
 	{
-		vector<punto> &right_points=sorted_points[p].r;
+		vector<Punto> &right_points=sorted_points[p].r;
 		mapa L;
 //		int tam=0;
 //		for(auto &par : G[p])
@@ -533,7 +545,7 @@ int count_convex_rholes(const vector<punto> &points, int r, bool mono)
 		int color=0;
 		if(mono)
 			color=points[p].color;
-		vector<punto> &right_points=sorted_points[p].r;
+		vector<Punto> &right_points=sorted_points[p].r;
 		mapa &L=L_array[p];
 
 		//We create the sets holding the convex chains
@@ -625,13 +637,13 @@ int count_convex_rholes(const vector<punto> &points, int r, bool mono)
 	return total;
 }
 
-std::deque<vector<punto> > report_convex_rholes(const vector<punto>& points, int r, bool mono)
+std::deque<vector<Punto> > report_convex_rholes(const vector<Punto>& points, int r, bool mono)
 {
 	/*
 	 * Reports the number of rholes in points, as described
 	 * in "Search for Empty Convex Polygons"
 	 */
-	std::deque<vector<punto> > report;
+	std::deque<vector<Punto> > report;
 //	int total = 0;
 	vector<puntos_ordenados> sorted_points;
 	orderandsplit(points, sorted_points);
@@ -688,12 +700,12 @@ std::deque<vector<punto> > report_convex_rholes(const vector<punto>& points, int
 		if (mono)
 			color = points[p].color;
 
-		vector<punto> right_points = sorted_points[p].r;
+		vector<Punto> right_points = sorted_points[p].r;
 		std::unordered_map<pair<int, int>, int, pairHash> L = L_array[p];
 
 		//We create the sets holding the convex chains
 
-		std::unordered_map<pair<int, int>, vector<vector<punto> >, pairHash> C;
+		std::unordered_map<pair<int, int>, vector<vector<Punto> >, pairHash> C;
 
 		for (unsigned int q = 0, rs = right_points.size(); rs > 0 && q < rs - 1; q++)
 		{
@@ -727,25 +739,25 @@ std::deque<vector<punto> > report_convex_rholes(const vector<punto>& points, int
 						if (right_points[q].color == color
 								&& right_points[vo].color == color)
 						{
-							vector<punto> tmplist =
+							vector<Punto> tmplist =
 									{ right_points[vo], right_points[q],
 											points[p] };
 
 							C[make_pair(q, vo)].push_back(tmplist);
 						}
 						else
-							C[make_pair(q, vo)] = vector<vector<punto> >();
+							C[make_pair(q, vo)] = vector<vector<Punto> >();
 					}
 					else
 					{
-						vector<punto> tmplist =
+						vector<Punto> tmplist =
 						{ right_points[vo], right_points[q], points[p] };
 
 						C[make_pair(q, vo)].push_back(tmplist);
 					}
 				}
 				else
-					C[make_pair(q, vo)] = vector<vector<punto> >();
+					C[make_pair(q, vo)] = vector<vector<Punto> >();
 			}
 
 			unsigned int m = 0;
@@ -772,7 +784,7 @@ std::deque<vector<punto> > report_convex_rholes(const vector<punto>& points, int
 							&& L[make_pair(q, outgoing_by_W[t])]
 									>= r - 2 - l)
 					{
-						vector<punto> chprime =
+						vector<Punto> chprime =
 						{ right_points[outgoing_by_W[t]] };
 						chprime.insert(chprime.end(), ch.begin(), ch.end());
 						if (l == r - 3)
@@ -806,13 +818,13 @@ std::deque<vector<punto> > report_convex_rholes(const vector<punto>& points, int
 	return report;
 }
 
-//void count_convex_rholes_p(punto p, const std::vector<punto>& points, int r, vector<vector<int> >& resA, vector<vector<int> >& resB, bool mono)
-void count_convex_rholes_p(punto p, const std::vector<punto>& points, int r, int& resA, int& resB, bool mono)
+//void count_convex_rholes_p(Punto p, const std::vector<Punto>& points, int r, vector<vector<int> >& resA, vector<vector<int> >& resB, bool mono)
+void count_convex_rholes_p(Punto p, const std::vector<Punto>& points, int r, int& resA, int& resB, bool mono)
 {
 	resA=0;
 	resB=0;
 	int rA=r, rB=r+1;
-	vector<punto> rp, lp, sorted_points;
+	vector<Punto> rp, lp, sorted_points;
 	rp.reserve(points.size()/2);
 	lp.reserve(points.size()/2);
 	sorted_points.reserve(points.size());
@@ -825,14 +837,14 @@ void count_convex_rholes_p(punto p, const std::vector<punto>& points, int r, int
 	sort_around_point(p, points, rp, lp, false);
 	sort_around_point(p, points, sorted_points);
 
-	for(auto &punto : rp)
-		ir.push_back(std::find(sorted_points.begin(), sorted_points.end(), punto) - sorted_points.begin());
+	for(auto &Punto : rp)
+		ir.push_back(std::find(sorted_points.begin(), sorted_points.end(), Punto) - sorted_points.begin());
 
-	for(auto &punto : lp)
-		il.push_back(std::find(sorted_points.begin(), sorted_points.end(), punto) - sorted_points.begin());
+	for(auto &Punto : lp)
+		il.push_back(std::find(sorted_points.begin(), sorted_points.end(), Punto) - sorted_points.begin());
 
-	punto q(p);
-	punto qp(p);
+	Punto q(p);
+	Punto qp(p);
 
 	for(int ind=ir.size()-1; ind>=0; ind--)
 	{
@@ -917,7 +929,7 @@ void count_convex_rholes_p(punto p, const std::vector<punto>& points, int r, int
 
 	for(int ind=indices.size()-1; ind>=0; ind--)
 	{
-		//v es el índice del punto que se está tratando
+		//v es el índice del Punto que se está tratando
 		auto v = indices[ind];
 		auto pt = sorted_points[v];
 		auto &Si=VG[v].first;
@@ -1163,7 +1175,7 @@ void count_convex_rholes_p(punto p, const std::vector<punto>& points, int r, int
 
 	for(int ind=indices.size()-1; ind>=0; ind--)
 	{
-		//v es el índice del punto que se está tratando
+		//v es el índice del Punto que se está tratando
 		auto v = indices[ind];
 		auto pt = sorted_points[v];
 		auto &Si=VG[v].first;

@@ -39,40 +39,41 @@ static const short LEFT = -1;
 static const short RIGHT = 1;
 static const short COLLINEAR = 0;
 
-struct punto
+struct Punto
 {
 	long long x, y;
 	int color;
-	punto();
-	punto(long long, long long);
-	punto(long long, long long, int);
-	bool operator==(const punto&) const;
-	bool operator!=(const punto&) const;
-	bool operator<(const punto& rhs) const;
-	bool operator>(const punto& rhs) const;
+	bool _has_color;
+	Punto();
+	Punto(long long, long long);
+	Punto(long long, long long, int);
+	bool operator==(const Punto&) const;
+	bool operator!=(const Punto&) const;
+	bool operator<(const Punto& rhs) const;
+	bool operator>(const Punto& rhs) const;
 };
 
 struct triangulo
 {
-	punto a, b, c;
+	Punto a, b, c;
 	triangulo();
-	triangulo(punto, punto, punto);
+	triangulo(Punto, Punto, Punto);
 	bool operator==(const triangulo&) const;
 	bool operator!=(const triangulo&) const;
 };
 
 struct puntos_ordenados
 {
-	punto p;
-	std::vector<punto> r;
-	std::vector<punto> l;
+	Punto p;
+	std::vector<Punto> r;
+	std::vector<Punto> l;
 	puntos_ordenados();
-	puntos_ordenados(punto, std::vector<punto>, std::vector<punto>);
+	puntos_ordenados(Punto, std::vector<Punto>, std::vector<Punto>);
 };
 
-int turn(const punto&, const punto&, const punto&);
-void orderandsplit(const std::vector<punto>&, std::vector<puntos_ordenados>&);
-int general_position(std::vector<punto>&);
+int turn(const Punto&, const Punto&, const Punto&);
+void orderandsplit(const std::vector<Punto>&, std::vector<puntos_ordenados>&);
+int general_position(std::vector<Punto>&);
 
 int turn(long p0[], long p1[], long p2[]);
 int cmp_points(const void *qp, const void *rp);

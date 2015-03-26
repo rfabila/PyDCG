@@ -1013,6 +1013,7 @@ def profile(n=50, w=1000, functions=None, fileName="profiler_res"):
 
 
 def getRandomWalkDFS2(p, pts, length=10, maxDepth=2000):
+    """Recursive version. Itś a generator"""
     ordered, indices = orderAllPoints(p, pts)
     upper, lower, counters = getPointRegion(p, ordered, indices)
     U, L = getRegionR(upper, lower)
@@ -1167,6 +1168,7 @@ def getRandomWalkDFS2(p, pts, length=10, maxDepth=2000):
     return regions, visitedPolygons
     
 def getRandomWalkDFS(p, pts, length=10):
+    """The non-recursive version, it's a generator"""
     ordered, indices = orderAllPoints(p, pts)
     upper, lower, counters = getPointRegion(p, ordered, indices)
     U, L = getRegionR(upper, lower)
@@ -1359,8 +1361,8 @@ def getRandomWalkDFS(p, pts, length=10):
 #p = [-9326, -111]
 #walk, visited = getRandomWalkDFS(p, pts, 17)
 
-def getRandomWalkN2(pts):
-    p = [random.randint(-100000000, 100000000), random.randint(-100000000, 100000000)]
+def getRandomWalkN2(p, pts, length=10):
+#    p = [random.randint(-100000000, 100000000), random.randint(-100000000, 100000000)]
     
     upper = datastructures.dynamic_half_hull(datastructures.UPPER)
     lower = datastructures.dynamic_half_hull(datastructures.LOWER)
@@ -1433,6 +1435,8 @@ def getRandomWalkN2(pts):
             if triang not in visitedPolygons:
                 visitedPolygons.add(triang)
                 yield poly
+                if len(visitedPolygons) > length:
+                    break
                 S.append( region( U, L, [p1,p2], side) )
 #                print "level", len(S)
             else:
@@ -1571,8 +1575,8 @@ def getRandomWalkPent(pts):
 #            print " "*len(S), "pop!"
             S.pop()
             
-def getRandomWalkN2Graham(pts):
-    p = [random.randint(-100000000, 100000000), random.randint(-100000000, 100000000)]
+def getRandomWalkN2Graham(p, pts, length=10):
+#    p = [random.randint(-100000000, 100000000), random.randint(-100000000, 100000000)]
     
     upper = []
     lower = []
@@ -1662,6 +1666,8 @@ def getRandomWalkN2Graham(pts):
             if triang not in visitedPolygons:
                 visitedPolygons.add(triang)
                 yield poly
+                if len(visitedPolygons) > length:
+                    break
                 S.append( region( U, L, [p1,p2], side) )
 #                print "level", len(S)
             else:
