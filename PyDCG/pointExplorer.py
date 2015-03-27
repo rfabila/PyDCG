@@ -1295,7 +1295,7 @@ def getRandomWalkDFS(p, pts, length=10):
                 S.append( region( U, L, [p1,p2], side, (ant1, suc1), (ant2, suc2), lines1, lines2 ) )
 #                print "level", len(S)
                 if regions >= length:
-                    print "found enough regions"
+                   # print "found enough regions"
                     break
             else:
 #                print " "*len(S), "already visited"
