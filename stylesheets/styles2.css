@@ -92,6 +92,7 @@ padding: 5px 10px;
 height: 20px;
 }
 #mainNav li a:hover{
+border-left:5.5px solid #000000;
 background-color: #FFFFFF;
 color: #000000;
 }
@@ -134,3 +135,10 @@ footer
     padding: 50px 0px 0px 5px;
 }
 
+#content
+{
+margin-left: 300px;
+margin-top: 10px;
+text-align: left;
+width:      650px;
+}
