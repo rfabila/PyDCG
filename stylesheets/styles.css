@@ -7,6 +7,16 @@ body {
   font-weight:300;
 }
 
+#titulo {
+  float: left;
+  width:460px;
+}
+
+#content {
+float: left;
+width: 460px;
+}
+
 h1, h2, h3, h4, h5, h6 {
   color:#222;
   margin:0 0 20px;
@@ -99,15 +109,15 @@ img {
 
 
 header {
-  width:270px;
-  float:left;
+  width:960px;
+  float:none;
   position:fixed;
 }
 
 header ul.down {
   list-style:none;
   height:40px;
-  
+  float: left;
   padding:0;
   
   background: #eee;
@@ -161,6 +171,7 @@ header ul a strong {
   display:block;
   color:#222;
 }
+
 
 section {
   width:500px;
@@ -221,6 +232,7 @@ footer {
   }
 }
 
+ 
 @media print, screen and (max-width: 720px) {
   body {
     word-wrap:break-word;
@@ -234,6 +246,8 @@ footer {
     position:static;
   }
   
+ 
+
   pre, code {
     word-wrap:normal;
   }
@@ -249,10 +263,19 @@ footer {
   }
 }
 
+ 
+
 @media print {
   body {
     padding:0.4in;
     font-size:12pt;
     color:#444;
   }
+}
+
+#logo
+{
+  width:200px;
+  float: left;
+  position: relative;
 }
