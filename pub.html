@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Pydcg</title>
+    <title>PyDCG</title>
 
     <link rel="stylesheet" href="stylesheets/styles2.css">
     <link rel="stylesheet" href="stylesheets/pygment_trac.css">
@@ -51,16 +51,17 @@
 
   <ul>
 	<li><b>crossing</b></li>
-	<p>Let \( S \) be set of \( n \) points in the plane. Join every pair of points with a line segment
-	count the number of pairs of these segments that cross. This is the
+	<p>Let \( S \) be a set of \( n \) points in the plane. Join every pair of points with a line segment and
+	count the number of pairs of segments that cross. This is the
 	<i><a href="http://mathworld.wolfram.com/RectilinearCrossingNumber.html">rectilinear crossing number</a></i>
-	of this set.
-	Let \( \overline{cr}(n) \) be the minimum of the crossing number over all pointsets of
+	of \( S \).
+	Let \( \overline{cr}(n) \) be the minimum of this value over all sets of
 	\( n \) points in
 	general position in the plane.
-	<a href="http://www.ist.tugraz.at/aichholzer/research/rp/triangulations/crossing/">Here</a>
-	is the rectilinear crossing number project page, which was our inspiration.
-	The crossing module contains various functions
+	The <a href="http://www.ist.tugraz.at/aichholzer/research/rp/triangulations/crossing/">
+	rectilinear crossing number project page</a>, keeps track of the progress in determining
+    the rectilinar crossing number.
+	PyDCG has a crossing module that contains various functions
 	for playing with the rectilinear crossing number. </p>
 	<ul>
 	  <li><a href=h2ttp://jgaa.info/getPaper?id=328">Computational search of small point sets
@@ -69,25 +70,27 @@
 	  <p> In that paper we used the crossing module to find set of 75 points with only 450492 crossings.
 	  There exists a <a href="http://arxiv.org/abs/0805.0016">construction </a> that given a point
 	  set with few
-	  crossing creates larger and larger sets with few crossings. We were able to break the asymptotic
-	  upper bound. It stands at \( \overline{cr}(n) \le 0.380473 \binom{n}{4}+\Theta (n^3) \) (for now....).</p>
+	  crossing creates larger and larger sets with few crossings. With our set of 75 points
+		were able to break the asymptotic upper bound. As of today,
+		it stands at \( \overline{cr}(n) \le 0.380473 \binom{n}{4}+\Theta (n^3) \).</p>
 	  <li><a href="files/frank.pdf">Algoritmo amortizado para el número de cruces rectilíneos
 	  sobre gráficas completas (in Spanish).</a></li>
 	  <i> Frank Duque.</i>
 	  <p>
-	  Frank's Master's thesis. He designed and implemented an algorithm so that given a set of \(n\) points
-	  \(S\), a point \(q \in S \) and another set \(C\) of \(m\) candidate points computes the crossing number of
+	  Frank's Master's thesis. It details an algorithm that receives a set of \(n\) points
+	  \(S\), a point \(q \in S \), and a set \(C\) of \(m\) candidate points.
+	  The algorithm computes the crossing number of
 	  \( S-q+p\) for each \(p \in C \) in \(O((n+m)^2)\) (actually the implementation
 	  runs in \(O((n+m)^2 \log (n+m))\) time). If \(m=\Theta(n)\) this is \(O(n)\) per candidate
 	  point. The idea was to find a "good" replacement for \(q\) in order to improve the crossing
 	  number of \(S\). We found a lot of new sets but none was good enough to give a new asymptotic
-	  upper bound. He also found and implemented and algorithm that computes the crossing number
+	  upper bound. The thesis also contains an algorithm that computes the crossing number
 	  of every set of the form \(S-p\) with \(p \in S\) in \(O(n^2)\) total time
-	  (again the implementation runs in \(O(n^2 \log n)\) time).</p>
+	  (again the implementation runs in \(O(n^2 \log n)\) time); the idea is to use this algorithm
+	  to use a good set to find good smaller sets. Both algorithms are in the crossing module.</p>
 	</ul>
     <li><b>holes</b></li>
 	<p>
-	  As always let \( S \) is a set of \( n \) points in general position in the plane.
 	  An \(r\)-hole of \(S\) is a subset \(H\) of \(S\), of \(r\) points,
 	  that is in convex position and contains
 	  no other point of \(S\) in its convex hull. Holes are related to the
@@ -100,30 +103,36 @@
 		  <i>David P. Dobkin, Herbert Edelsbrunner and Mark H. Overmars</i>
 		  <p>In that paper the authors give an algorithm to compute the number of \(r\)-holes
 		  in a given point set in time proportional to the number of these holes.
-		  <a href="https://github.com/csaorl">Carlos</a>
-		  in his Bachelor's <a href="files/carlos.pdf">thesis</a> implemented
-		  this algorithm and is available in the crossing module.</p>
 		</li>
+		<li>
 		<a href="files/carlos.pdf">Un algoritmo para contar polígonos convexos
-		vacíos en conjuntos de puntos en el plano (in Spanish).</a>
+		vacíos en conjuntos de puntos en el plano (in Spanish).</a></li>
 		<i>Carlos Hidalgo-Toscano.</i>
-		<a href="https://github.com/csaorl">Carlos's</a> Bachelor's thesis. As mentioned
-		above he implemented an algorithm to count the number of holes in a point set.
-		He also implemented the following algorithm that: given a point \(q\) not in \(S\)
+		<p><a href="https://github.com/csaorl">Carlos's</a> Bachelor's thesis; it details
+		  the implementation of the above algorithm. The following algorithm
+		  is also described: given a point \(q\) not in \(S\)
 		and a point \(p\) computes the number of holes in \(S-p+q\). This is done
 		in time proportional to the number of holes that contain \(p\) and \(q\).
-		He also implemented chromatic versions of these algorithms. 
+		Both algorithms are implemented in the holes module.</p>
 	  </ul>
   <li><b>points</b></li>
   <p>This module implements various point set generators. It also gives wrappers to
   the <a href="http://www.ist.tugraz.at/aichholzer/research/rp/triangulations/ordertypes/">Order
   Type Database.</a></p>
   <ul>
+	<li><a href="http://link.springer.com/article/10.1023%2FA%3A1021231927255">
+	Enumerating order types for small point sets with applications.</a>
+	O. Aichholzer, F. Aurenhammer, and H. Krasser. </li>
+	<p>The order type is a notion of combinatorial equivalence of point sets. The order
+	type database contains a representative of each equivalence class for \( n=1,\dots,11 \).
+	The points module provides acces to this database.</p>
+	
 	<li><a href="http://arxiv.org/abs/1305.6693"> Drawing the double circle on
 	a grid of minimum size.</a>
 	<i>Sergey Bereg, Ruy Fabila-Monroy, David Flores-Peñaloza, Mario Lopez, Pablo Pérez-Lantero</i>
 	
-	<p>We describe an algorithm to generate the double circle; it runs in linear time.</p>
+	<p>We describe an algorithm to generate the double circle; it runs in linear time. This generator
+	  is available in the points module.</p>
 	</li>
   </ul>
   </ul>

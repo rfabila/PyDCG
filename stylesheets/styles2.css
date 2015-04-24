@@ -56,7 +56,9 @@ overflow: auto;
 #index #indexLink,
 #doc   #docLink,
 #pub   #pubLink,
-#contrib #contribLink
+#contrib #contribLink,
+#over  #overLink,
+#install #installLink
 {
 background-color: #FFFFFF;
 color: #000000;
