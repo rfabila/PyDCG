@@ -62,6 +62,7 @@ overflow: auto;
 {
 background-color: #FFFFFF;
 color: #000000;
+border-left:5.5px solid #000000;
 }
 
 
@@ -79,6 +80,21 @@ margin: 0;
 padding: 0;
 }
 
+#mainNav ul ul{
+    /*display:none;  */     
+}
+
+
+#mainNav ul ul li a{
+    /*display:none;*/
+    background-color:#FFFFFF;
+    color: #000000;
+    
+    
+}
+#mainNav ul li:hover>ul{
+    display:block;
+}
 
 #mainNav li a{
 border-left:5.5px solid #FFFFFF;
@@ -93,10 +109,26 @@ color: #FFFFFF;
 padding: 5px 10px;
 height: 20px;
 }
+
+
 #mainNav li a:hover{
 border-left:5.5px solid #000000;
 background-color: #FFFFFF;
 color: #000000;
+}
+
+#modules li a:hover{
+    border-left:5.5px solid #FFFFFF;
+    background-color: #000000;
+    color: #FFFFFF;
+    
+}
+
+#modules li ul li a:hover
+{
+    border-left:5.5px solid #000000;
+    background-color: #FFFFFF;
+    color: #000000;
 }
 #down
 {
