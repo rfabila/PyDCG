@@ -11,16 +11,9 @@ Contents:
 .. toctree::
    :maxdepth: 2
    
-   combinatorics
+   install
    crossing
-   datastructures
-   geometricbasics
-   geometricbasicsCpp
-   holesCpp
-   line
    points
-   visualizer
-   visualizer2
 
 Indices and tables
 ==================
