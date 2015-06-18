@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Crossing module &mdash; PyDCG 0.1.0 documentation</title>
+    <title>crossing &mdash; PyDCG 0.1.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -25,8 +25,8 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="top" title="PyDCG 0.1.0 documentation" href="index.html" />
-    <link rel="next" title="Points module" href="points.html" />
-    <link rel="prev" title="Installation" href="install.html" /> 
+    <link rel="next" title="Datastructures module" href="datastructures.html" />
+    <link rel="prev" title="Datastructures module" href="datastructures.html" /> 
   </head>
   <body>
     <div class="related">
@@ -42,10 +42,10 @@
           <a href="np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="points.html" title="Points module"
+          <a href="datastructures.html" title="Datastructures module"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="install.html" title="Installation"
+          <a href="datastructures.html" title="Datastructures module"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">PyDCG 0.1.0 documentation</a> &raquo;</li> 
       </ul>
@@ -56,8 +56,51 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="crossing-module">
-<h1>Crossing module<a class="headerlink" href="#crossing-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-crossing">
+<span id="crossing"></span><h1>crossing<a class="headerlink" href="#module-crossing" title="Permalink to this headline">¶</a></h1>
+<p>Module used to count the number of crossings in the complete
+geometric graph</p>
+<dl class="function">
+<dt id="crossing.count_crossings">
+<tt class="descclassname">crossing.</tt><tt class="descname">count_crossings</tt><big>(</big><em>pts</em><big>)</big><a class="headerlink" href="#crossing.count_crossings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the he number of crossings in the complete
+geometric graph with vertex set pts. Runs in O(n^2logn) time.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crossing.count_crossings_candidate_list_py">
+<tt class="descclassname">crossing.</tt><tt class="descname">count_crossings_candidate_list_py</tt><big>(</big><em>point_index</em>, <em>candidate_list</em>, <em>pts</em><big>)</big><a class="headerlink" href="#crossing.count_crossings_candidate_list_py" title="Permalink to this definition">¶</a></dt>
+<dd><p>Let k=len(candidate_list), n=len(pts). Returns the
+best candidate for pts[point_index] in time
+O(n^2logn)+O(k*nlogn).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crossing.count_halving_lines">
+<tt class="descclassname">crossing.</tt><tt class="descname">count_halving_lines</tt><big>(</big><em>pts</em><big>)</big><a class="headerlink" href="#crossing.count_halving_lines" title="Permalink to this definition">¶</a></dt>
+<dd><p>Counts the number of $lfoor n/2 
+floor$ k-edges</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crossing.count_k_edges">
+<tt class="descclassname">crossing.</tt><tt class="descname">count_k_edges</tt><big>(</big><em>pts</em>, <em>k</em><big>)</big><a class="headerlink" href="#crossing.count_k_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of k edges in the point set pts</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crossing.cr_remove_point">
+<tt class="descclassname">crossing.</tt><tt class="descname">cr_remove_point</tt><big>(</big><em>pts</em><big>)</big><a class="headerlink" href="#crossing.cr_remove_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>For every point pts[i] in the point set pts, returns an array whose
+i-th element is the crossing number of pts-pts[i]. In runs in O(n^2 log n) time.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crossing.k_edges_vector">
+<tt class="descclassname">crossing.</tt><tt class="descname">k_edges_vector</tt><big>(</big><em>pts</em><big>)</big><a class="headerlink" href="#crossing.k_edges_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the vector of the number of k edges in the point set pts</p>
+</dd></dl>
+
 </div>
 
 
@@ -70,11 +113,11 @@
               <img class="logo" src="_static/logo.png" alt="Logo"/>
             </a></p>
   <h4>Previous topic</h4>
-  <p class="topless"><a href="install.html"
-                        title="previous chapter">Installation</a></p>
+  <p class="topless"><a href="datastructures.html"
+                        title="previous chapter">Datastructures module</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="points.html"
-                        title="next chapter">Points module</a></p>
+  <p class="topless"><a href="datastructures.html"
+                        title="next chapter">Datastructures module</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/crossing.txt"
@@ -110,10 +153,10 @@
           <a href="np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="points.html" title="Points module"
+          <a href="datastructures.html" title="Datastructures module"
              >next</a> |</li>
         <li class="right" >
-          <a href="install.html" title="Installation"
+          <a href="datastructures.html" title="Datastructures module"
              >previous</a> |</li>
         <li><a href="index.html">PyDCG 0.1.0 documentation</a> &raquo;</li> 
       </ul>

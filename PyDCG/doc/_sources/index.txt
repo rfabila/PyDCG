@@ -12,7 +12,11 @@ Contents:
    :maxdepth: 2
    
    install
+   geometricbasics
+   datastructures
+   convexhull
    crossing
+   datastructures
    points
 
 Indices and tables

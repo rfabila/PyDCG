@@ -18,7 +18,11 @@ import sys, os
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.insert(0, os.path.abspath('.'))
 
-sys.path.insert(0, os.path.abspath('../../PyDCG'))
+
+#sys.path.insert(0, os.path.abspath('../../PyDCG'))
+#sys.path.insert(0, os.path.abspath('../build/lib.linux-x86_64-2.7/PyDCG'))
+#ughhh!! ugly but worked.
+sys.path.insert(0,'/usr/local/lib/python2.7/dist-packages/PyDCG')
 
 # -- General configuration -----------------------------------------------------
 
