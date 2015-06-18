@@ -1,0 +1,224 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Datastructures module &mdash; PyDCG 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyDCG 0.1.0 documentation" href="index.html" />
+    <link rel="next" title="Points module" href="points.html" />
+    <link rel="prev" title="crossing" href="crossing.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="points.html" title="Points module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="crossing.html" title="crossing"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">PyDCG 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-datastructures">
+<span id="datastructures-module"></span><h1>Datastructures module<a class="headerlink" href="#module-datastructures" title="Permalink to this headline">¶</a></h1>
+<dl class="data">
+<dt id="datastructures.LOWER">
+<tt class="descclassname">datastructures.</tt><tt class="descname">LOWER</tt><em class="property"> = 4</em><a class="headerlink" href="#datastructures.LOWER" title="Permalink to this definition">¶</a></dt>
+<dd><p>Module implementing various data structures</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="datastructures.Treap">
+<em class="property">class </em><tt class="descclassname">datastructures.</tt><tt class="descname">Treap</tt><big>(</big><em>compare=&lt;function &lt;lambda&gt; at 0x7fbd33e4e0c8&gt;</em>, <em>max_size=1000</em><big>)</big><a class="headerlink" href="#datastructures.Treap" title="Permalink to this definition">¶</a></dt>
+<dd><p>An implementation of a treap. Note that
+lower priority elements are at the top.
+Loosely based on the description in &#8220;Randomized Algorithms&#8221;
+by Motwani and Raghavan. All mistakes are mine</p>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="datastructures.Treap.join">
+<tt class="descname">join</tt><big>(</big><em>T2</em><big>)</big><a class="headerlink" href="#datastructures.Treap.join" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the join of self and T2, destroys
+the heap property of both in the proccess. It
+assumes T1&lt;=T2</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datastructures.Treap.max_tree">
+<tt class="descname">max_tree</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#datastructures.Treap.max_tree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the maximum value
+at the tree hanging from node
+as a root</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datastructures.Treap.min_tree">
+<tt class="descname">min_tree</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#datastructures.Treap.min_tree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the minimum value
+at the tree hanging from node
+as a root</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datastructures.Treap.move_node_to_root">
+<tt class="descname">move_node_to_root</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#datastructures.Treap.move_node_to_root" title="Permalink to this definition">¶</a></dt>
+<dd><p>Moves the node to the root, but
+breaks the heap property in the proccess.
+Afterwards a splitting a this vertex is trivial</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datastructures.Treap.paste">
+<tt class="descname">paste</tt><big>(</big><em>node</em>, <em>T2</em><big>)</big><a class="headerlink" href="#datastructures.Treap.paste" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a new treap conaining self, the node and the
+treap T2. The original treaps, self and T2 no longer
+satisfy the heap property.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datastructures.Treap.predecessor">
+<tt class="descname">predecessor</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#datastructures.Treap.predecessor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the predecessor of a node</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datastructures.Treap.restore_heap">
+<tt class="descname">restore_heap</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#datastructures.Treap.restore_heap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restores the heap property by
+rotating the node upwards if necessary</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datastructures.Treap.restore_heap_downwards">
+<tt class="descname">restore_heap_downwards</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#datastructures.Treap.restore_heap_downwards" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restores the heap property by rotating
+the node downwards if necessary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datastructures.Treap.split">
+<tt class="descname">split</tt><big>(</big><em>key</em><big>)</big><a class="headerlink" href="#datastructures.Treap.split" title="Permalink to this definition">¶</a></dt>
+<dd><p>Splits the treap at the given key
+value. Note that the old treap no longer
+satisfies the heap property; should
+be destroyed but it is difficult and
+undesirable to do so in Python.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datastructures.Treap.split_at_node">
+<tt class="descname">split_at_node</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#datastructures.Treap.split_at_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Splits the treap a the given node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datastructures.Treap.successor">
+<tt class="descname">successor</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#datastructures.Treap.successor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the succesor of node</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="crossing.html"
+                        title="previous chapter">crossing</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="points.html"
+                        title="next chapter">Points module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/datastructures.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="points.html" title="Points module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="crossing.html" title="crossing"
+             >previous</a> |</li>
+        <li><a href="index.html">PyDCG 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Ruy Fabila-Monroy and Carlos Hidalgo-Toscano.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

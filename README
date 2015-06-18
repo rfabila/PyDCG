@@ -1,0 +1,53 @@
+=====
+PyDCG
+=====
+
+Source distribution for the package PyDCG, which includes discrete and 
+computational geometry tools.
+
+There are 2 options to install it:
+
+1. Using distutils: untar (unzip) contents and run 
+
+      python setup.py install
+    
+   inside the created folder. To specify an install directory, use 
+   the --prefix option:
+
+   python setup.py install --prefix=/path/to/installation/folder
+   
+   To uninstall, simply delete the folders PyDCG-0.0.1 crated in the 
+   instalation directory.
+   
+2. Using pip: run
+
+      pip install PyDCG-0.0.1.zip
+      
+   To uninstall, run
+   
+      pip uninstall PyDCG
+      
+   NOTE: There is currently a bug when installing with pip, the instalator
+   doesn't show the question 'Download point sets? (~600 Mb) Y/N ' but it 
+   does wait for the answer. Just type Y or N to continue the installation.
+    
+A C++ compiler with C++11 support  (e.g. GCC 4.7) is required since the package
+includes extensions written in the new standard.
+
+The name of the package is PyDCG, the modules it contains at the time
+are: 
+
+- combinatorics
+- crossing
+- crossingCpp
+- datastructures
+- geometricbasics
+- geometricbasicsCpp
+- holes
+- holesCpp
+- line
+- points
+- visualizer
+- visualizer2
+
+Please refer to the docs folder for the documentation on each module.

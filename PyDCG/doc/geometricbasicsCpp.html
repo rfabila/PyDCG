@@ -1,0 +1,162 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>GeometricbasicsCpp module &mdash; PyDCG 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyDCG 0.1.0 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">PyDCG 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-geometricbasicsCpp">
+<span id="geometricbasicscpp-module"></span><h1>GeometricbasicsCpp module<a class="headerlink" href="#module-geometricbasicsCpp" title="Permalink to this headline">¶</a></h1>
+<p>Extension written in C++ with basic geometric functions.</p>
+<dl class="function">
+<dt id="geometricbasicsCpp.turn">
+<tt class="descclassname">geometricbasicsCpp.</tt><tt class="descname">turn</tt><big>(</big><em>p</em>, <em>q</em>, <em>r</em><big>)</big><a class="headerlink" href="#geometricbasicsCpp.turn" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Determines whether <cite>p</cite>, <cite>q</cite> and <cite>r</cite> are collinear or form a left or </dt>
+<dd>right turn.</dd>
+</dl>
+<p>This function counts how many convex <cite>r</cite>-holes are in <cite>points</cite> (the 
+point set may be colored). It is an implementation of the algorithm 
+presented in &#8220;Searching for Empty Convex Polygons&#8221; <a href="#id2"><span class="problematic" id="id3"><span id="id1"></span>[1]_</span></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>p</strong> : list</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>A point is represented as a list of 3 integers: the </dt>
+<dd><p class="first last">first two are the coordinates of the point, the third</p>
+</dd>
+</dl>
+<p>one is the color. The color is optional.</p>
+</div></blockquote>
+<p><strong>q</strong> : Analogous to <cite>p</cite></p>
+<blockquote>
+<div><p>r : Analogous to <cite>p</cite></p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>t</strong> : int</p>
+<blockquote class="last">
+<div><p>-1 if <cite>p</cite>, <cite>q</cite> and <cite>r</cite> form a left turn,
+-0 if <cite>p</cite>, <cite>q</cite> and <cite>r</cite> are collinear,</p>
+<blockquote>
+<div><p>1 if <cite>p</cite>, <cite>q</cite> and <cite>r</cite> form a right turn,</p>
+</div></blockquote>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>The coordinates of the points should be less than or equal to <span class="math">\(2^{30}\)</span> to
+prevent overflow on the C++ side.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">geometricbasicsCpp</span> <span class="kn">as</span> <span class="nn">gb</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">    &gt;&gt;&gt; q=[1,0]</span>
+<span class="go">    &gt;&gt;&gt; p=[1,1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gb</span><span class="o">.</span><span class="n">turn</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+<span class="go">-1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/geometricbasicsCpp.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">PyDCG 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Ruy Fabila-Monroy and Carlos Hidalgo-Toscano.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

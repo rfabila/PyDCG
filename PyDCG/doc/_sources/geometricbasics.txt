@@ -1,0 +1,8 @@
+geometricbasics
+-------------------------
+
+.. automodule :: geometricbasics
+    :members:
+
+
+   
