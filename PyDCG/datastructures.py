@@ -642,7 +642,7 @@ class dynamic_half_hull(object):
                         self.left_rotation(grandpa)   #v's parent became v's rson
                     else:
                         self.right_rotation(grandpa)  #v's parent became v's lson
-                    if sibling.parent == grandpa:
+                    if sibling.parent == grandpa: #TODO: DUH!
                         v = sibling
 
             Q1, Q2, Q3, Q4, J = dynamic_half_hull.bridge(
@@ -955,8 +955,11 @@ def in_order_priorities(node):
 ######################### TESTS #####################################
 
 
-def randPoint(k=1000000):
-    return [random.randint(-k, k), random.randint(-k, k)]
+def randPoint(k=1000000, color=False):
+    p = [random.randint(-k, k), random.randint(-k, k)]
+    if color:
+        p.append(random.randint(0,1))
+    return p
 
 
 def time_test(n=100, k=100000, skip=1, fileName="tests.txt"):

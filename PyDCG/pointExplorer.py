@@ -1307,6 +1307,10 @@ def getRandomWalkDFS(p, pts, length=10):
             
             if triang not in visitedPolygons:
                 visitedPolygons.add(triang)
+                auxu, auxl = upper.toList(), lower.toList()
+                if len(auxu)+len(auxl) > len(poly):
+                    print "Envelope sizes:", len(auxu)+len(auxl)
+                    print "Cell size", len(poly)
                 yield poly
                 regions += 1
 #                regions.append(poly)
@@ -1315,7 +1319,7 @@ def getRandomWalkDFS(p, pts, length=10):
                 S.append( region( U, L, [p1,p2], side, (ant1, suc1), (ant2, suc2), lines1, lines2 ) )
 #                print "level", len(S)
                 if regions >= length:
-                    print "found enough regions"
+                    #print "found enough regions"
                     break
             else:
 #                print " "*len(S), "already visited"

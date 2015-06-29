@@ -23,7 +23,7 @@ from collections import deque
 import utilities
 from utilities import cppWrapper
 
-if not utilities.__config['PURE_PYTHON']:
+if utilities.load_extensions:
     import holesCpp
 
 def count_four_islands(pts,colored=False):
@@ -792,7 +792,7 @@ def count_convex_rholes(points, r, mono=False, speedup=True):
     try:
         return holesCpp.count_convex_rholes(points, r, mono)
     except OverflowError:
-        return count_convex_rholes_p_py(points, r, mono)
+        return count_convex_rholes_py(points, r, mono)
 
 
 def report_empty_triangles_py(points):
