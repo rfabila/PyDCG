@@ -1,4 +1,4 @@
-Crossing module
+crossing
 -------------------------
 
 .. automodule :: crossing

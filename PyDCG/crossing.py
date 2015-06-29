@@ -80,7 +80,7 @@ if utilities.load_extensions: #TODO: Make this a package global variable and upd
 #    return bind_cfunc
 
 def count_k_edges(pts,k):
-    """Returns the number of k edges in pts"""
+    """Returns the number of k edges in the point set pts"""
     n=len(pts)
     tmp_pts=[[0,0] for i in range(n-1)]
     k_edges=0
@@ -106,7 +106,7 @@ def count_k_edges(pts,k):
     return k_edges
 
 def k_edges_vector(pts):
-    """Returns the number of k edges in pts"""
+    """Returns the vector of the number of k edges in the point set pts"""
     n=len(pts)
     V=[0 for i in range(n-1)]
     tmp_pts=[[0,0] for i in range(n-1)]
@@ -137,7 +137,7 @@ def count_halving_lines(pts):
 
 def count_crossings(pts):
     """Returns the he number of crossings in the complete
-    geometric graph with vertex set pts. Runs in O(n^2logn) time"""
+    geometric graph with vertex set pts. Runs in O(n^2logn) time."""
     n=len(pts)
     tmp_pts=[[0,0] for i in range(n-1)]
     cr=0
@@ -316,3 +316,98 @@ def count_crossings_candidate_list(point_index,candidate_list,pts, speedup=True)
         return crossingCpp.count_crossings_candidate_list(point_index,candidate_list,pts)
     except: #TODO: This should catcj only OverflowError
         return count_crossings_candidate_list_py(point_index,candidate_list,pts)
+    
+#----Removal Functions
+#Added them from Frank's Thesis code.
+#Ruy
+
+def cr_remove_point(pts):
+    """For every point pts[i] in the point set pts, returns an array whose
+    i-th element is the crossing number of pts-pts[i]. In runs in O(n^2 \log n) time.
+    """
+    lista_cr=[0 for p in pts]
+    n=len(pts)
+    
+    tmp_pts=[[0,0] for i in range(n-1)]
+    cr=0
+    for i in range(n):
+        sum_nis_p=0
+        #pivote
+        p=pts[i]
+        #We copy the points distinct from p to tmp_pts
+        for j in range(0,i):
+            tmp_pts[j]=[pts[j][0], pts[j][1], j]            
+        for j in range(i+1,n):
+            tmp_pts[j-1]=[pts[j][0], pts[j][1], j]    
+        tmp_pts=sort_around_point(p,tmp_pts)
+        
+        #Calculo de los nis
+        j=0
+        nis=[0 for k in tmp_pts]
+        for k in range(len(tmp_pts)):
+            while (turn(p,tmp_pts[k],tmp_pts[(j+1)%(n-1)])<=0 and
+                    (j+1)%(n-1)!=k):
+                j=j+1
+                    
+            nis[k]=(j-k)%(n-1)
+       
+        #cuentas 2
+        
+        crp=0
+        for k in range(len(tmp_pts)):
+            cr=cr+nis[k]*(nis[k]-1)/2 #para calcular el cr base
+            crp=crp+nis[k]*(nis[k]-1)/2
+        lista_cr[i]=lista_cr[i]-2*crp
+            
+        j=n-2
+        su=0
+        con=0
+        for k in range(len(tmp_pts)):
+            k2=n-2-k
+            if con==1:
+                su=su+nis[k2]-1
+                
+            while (turn(p,tmp_pts[k2],tmp_pts[(j-1)%(n-1)])>=0 and
+                    (j-1)%(n-1)!=k2):
+                su=su-nis[(j-1)%(n-1)]+1
+                j=j-1
+            lista_cr[tmp_pts[k2][2]]=lista_cr[tmp_pts[k2][2]]+su  
+            if j>=k2:
+                j=k2-1
+                con=0
+            else:
+                con=1
+        """
+        
+        #cuentas 3  #esto es lento pero funciona
+        
+        crp=0
+        for k in range(len(tmp_pts)):
+            cr=cr+nis[k]*(nis[k]-1)/2 #para calcular el cr base
+            crp=crp+nis[k]*(nis[k]-1)/2
+        lista_cr[i]=lista_cr[i]-2*crp
+        #print "cr p"+str(crp)    
+
+        
+        for k in range(len(tmp_pts)):
+            su=0
+            k2=n-2-k
+            j=k2
+            while (turn(p,tmp_pts[k2],tmp_pts[(j-1)%(n-1)])>=0 and
+                    (j-1)%(n-1)!=k2):
+                su=su-nis[(j-1)%(n-1)]+1
+                j=j-1
+            lista_cr[tmp_pts[k2][2]]=lista_cr[tmp_pts[k2][2]]+su            
+        """
+        
+        
+        
+    #print lista_cr    
+        
+
+    #total=n*(n-1)*(n-2)*(n-3)/8
+    total2=(n-1)*(n-2)*(n-3)*(n-4)/8
+    
+    #print "base  "+str(cr-total) +"  vs  "+  str(count_crossings(pts))
+        
+    return [x+(cr -total2) for x in lista_cr]
