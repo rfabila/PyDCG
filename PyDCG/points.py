@@ -308,3 +308,33 @@ def overmars_sets():
         P.append(pts)
         file.close()
     return P
+
+#Point set zoo functions. This are the best sets that optimize a certain parameter.
+def read_species(name):
+    file_pts=open("poin_sets/"+name+".pkl","r")
+    D=pickle.load(file_pts)
+    file_pts.close()
+    return D
+    
+
+def best_specimen(name,n):
+    D=read_species(name)
+    return D[n]["pts"]
+    
+#functions for specific species
+
+def best_rectilinear_crossing_number_pts(n):
+    return best_specimen("rectilinear_crossing_number",n)
+
+def best_empty_convex_pentagons_pts(n):
+    return best_specimen("empty_convex_pentagons",n)
+
+def best_empty_triangles_pts(n):
+    return best_specimen("empty_triangles",n)
+
+def best_empty_convex_quadrilaterals_pts(n):
+    return best_specimen("empty_convex_quadrilaterals",n)
+
+def best_empty_convex_hexagons_pts(n):
+    return best_specimen("empty_convex_hexagons",n)
+    
