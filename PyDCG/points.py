@@ -352,8 +352,7 @@ def best_empty_convex_hexagons_pts(n):
     return best_specimen("empty_convex_hexagons",n)
 
 #submitting functions
-def _submit_point_set(pts,species,f,comment=" ",user_id=None):
-
+def _pack_sp(pts,species,comment="",user_id=None):
     if not geometricbasics.general_position(pts):
         #this should probably be an exception
         print "Point set not in general position!! I ain't sending nothing."
@@ -361,7 +360,6 @@ def _submit_point_set(pts,species,f,comment=" ",user_id=None):
         return None
     sp={}
     sp['comment']=comment
-    sp['val']=f(pts)
     sp['pts']=pts
     date_discovered=datetime.datetime.today()
     sp['date_discovered']=date_discovered
@@ -373,13 +371,34 @@ def _submit_point_set(pts,species,f,comment=" ",user_id=None):
         user_id=config.get('user info','user_id')
         print user_id
     sp['user_id']=user_id
-    sp['species']=species
+    return sp
 
+def _submit_point_set_list(P,species,comment=" ",user_id=None):
+    os.system("mkdir temp_subs")
+    for pts in P:
+        sp=_pack_sp(pts,species,comment=comment,user_id=user_id)
+        #to avoid collisions
+        date_discovered=datetime.datetime.today()
+        idx=''.join(random.choice(string.ascii_letters + string.digits) for _ in range(10))
+        name=str(len(pts))+"_"+species+"_"+str(date_discovered.date())+"_"+idx+".sp"
+        name="temp_subs/"+name
+        print name
+        file_sp=open(name,"w")
+        file_sp.close()
+    com="scp temp_subs/* naturalist@monk.math.cinvestav.mx:~/naturalist/captured_specimens/"
+    os.system(com)
+    os.system("rm temp_subs/*")
+    os.system("rmdir temp_subs")
+        
+
+def _submit_point_set(pts,species,comment=" ",user_id=None):
+    sp=_pack_sp(pts,species,comment=comment,user_id=user_id)
     #to avoid collisions
-    idx=s=''.join(random.choice(string.ascii_letters + string.digits) for _ in range(10))
+    date_discovered=datetime.datetime.today()
+    idx=''.join(random.choice(string.ascii_letters + string.digits) for _ in range(10))
     name=str(len(pts))+"_"+species+"_"+str(date_discovered.date())+"_"+idx+".sp"
     file_sp=open(name,"w")
-    pickle.dump(sp,file_sp)
+    pickle.dump((species,sp),file_sp)
     file_sp.close()
     com="scp "+name+" naturalist@monk.math.cinvestav.mx:~/naturalist/captured_specimens/"
     os.system(com)
@@ -388,18 +407,18 @@ def _submit_point_set(pts,species,f,comment=" ",user_id=None):
 
 #submitting functions for specific species
 def submit_rectilinear_crossing_number(pts,user_id=None,comment=None):
-    _submit_point_set(pts,"rectilinear_crossing_number",crossing.count_crossings,comment=comment,user_id=user_id)
+    _submit_point_set(pts,"rectilinear_crossing_number",comment=comment,user_id=user_id)
 
 def submit_empty_convex_pentagons(pts,user_id=None,comment=None):
-    _submit_point_set(pts,"empty_convex_pentagons",holes.count_convex_rholes_maker(5),comment=comment,user_id=user_id)
+    _submit_point_set(pts,"empty_convex_pentagons",comment=comment,user_id=user_id)
 
 def submit_empty_triangles(pts,user_id=None,comment=None):
-    _submit_point_set(pts,"empty_triangles",holes.countEmptyTriangs,comment=comment,user_id=user_id)
+    _submit_point_set(pts,"empty_triangles",comment=comment,user_id=user_id)
 
 def submit_empty_convex_quadrilaterals(pts,user_id=None,comment=None):
-    _submit_point_set(pts,"empty_convex_quadrilaterals",holes.count_convex_rholes_maker(4),comment=comment,user_id=user_id)
+    _submit_point_set(pts,"empty_convex_quadrilaterals",comment=comment,user_id=user_id)
 
 def submit_empty_convex_hexagons(pts,user_id=None,comment=None):
-    _submit_point_set(pts,"empty_convex_hexagons",holes.count_convex_rholes_maker(6),comment=comment,user_id=user_id)
+    _submit_point_set(pts,"empty_convex_hexagons",comment=comment,user_id=user_id)
 
 
