@@ -775,11 +775,10 @@ def count_convex_rholes_py(points,r,mono=False):
                                     C[(q,outgoing_by_W[t])].append(chprime)
                             else:
                                 C[(q,outgoing_by_W[t])].append(chprime)
-                        t=t+1
                             
     return total
     
-def count_convex_rholes(points, r, mono=False, speedup="try"):        
+def count_convex_rholes(points, r, mono=False, speedup=True):        
     return cppWrapper(count_convex_rholes_py,
                       None if utilities.__config['PURE_PYTHON'] else holesCpp.count_convex_rholes,
                       speedup,
@@ -1137,9 +1136,9 @@ def count_deg_triang_degs(points):
     return (I,J)
     
 
-def count_convex_rholes_maker(r, colored=False):
+def count_convex_rholes_maker(r, colored=False,speed_up=True):
     def f(pts):
-        return count_convex_rholes(pts,r,mono=colored)
+        return count_convex_rholes(pts,r,mono=colored,speed_up=speed_up)
     return f
 
 def count_convex_rholes_p_maker(r, mono=False):
