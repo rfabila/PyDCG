@@ -1136,9 +1136,9 @@ def count_deg_triang_degs(points):
     return (I,J)
     
 
-def count_convex_rholes_maker(r, colored=False,speed_up=True):
+def count_convex_rholes_maker(r, colored=False,speedup=True):
     def f(pts):
-        return count_convex_rholes(pts,r,mono=colored,speed_up=speed_up)
+        return count_convex_rholes(pts,r,mono=colored,speedup=speedup)
     return f
 
 def count_convex_rholes_p_maker(r, mono=False):
