@@ -291,7 +291,7 @@ def countEmptyTriangs_py(points):
     
 def countEmptyTriangs(points, speedup=True):        
     if utilities.__config['PURE_PYTHON'] or not speedup:
-        return countEmptyTriangs(points)
+        return countEmptyTriangs_py(points)
     return holesCpp.countEmptyTriangs(points)
 
 def slow_count_empty_triangles_p(p,points):
