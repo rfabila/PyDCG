@@ -21,28 +21,28 @@
 #include "geometricbasicsCpp.h"
 //long pivote[2];
 
-//Definiciones de la clase punto
+//Definiciones de la clase Punto
 
-punto::punto() : x(0), y(0), color(0)
+Punto::Punto() : x(0), y(0), color(0), _has_color(false)
 {}
 
-punto::punto(long long x, long long y) : x(x), y(y), color(0)
+Punto::Punto(long long x, long long y) : x(x), y(y), color(0), _has_color(false)
 {}
 
-punto::punto(long long x, long long y, int c) : x(x), y(y), color(c)
+Punto::Punto(long long x, long long y, int c) : x(x), y(y), color(c), _has_color(true)
 {}
 
-bool punto::operator==(const punto& q) const
+bool Punto::operator==(const Punto& q) const
 {
 	return (x==q.x && y == q.y);
 }
 
-bool punto::operator!=(const punto& q) const
+bool Punto::operator!=(const Punto& q) const
 {
 	return !(*this==q);
 }
 
-bool punto::operator<(const punto& rhs) const
+bool Punto::operator<(const Punto& rhs) const
 {
 	if(this->x == rhs.x)
 		return this->y < rhs.y;
@@ -50,7 +50,7 @@ bool punto::operator<(const punto& rhs) const
 		return this->x < rhs.x;
 }
 
-bool punto::operator>(const punto& rhs) const
+bool Punto::operator>(const Punto& rhs) const
 {
 	return rhs < *this;
 }
@@ -62,7 +62,7 @@ bool punto::operator>(const punto& rhs) const
 triangulo::triangulo() : a(0,0), b(1,0), c(0,1)
 {}
 
-triangulo::triangulo(punto va, punto vb, punto vc) : a(va), b(vb), c(vc)
+triangulo::triangulo(Punto va, Punto vb, Punto vc) : a(va), b(vb), c(vc)
 {}
 
 bool triangulo::operator==(const triangulo& q) const
@@ -80,12 +80,12 @@ bool triangulo::operator!=(const triangulo& q) const
 //Definiciones para puntos_ordenados
 puntos_ordenados::puntos_ordenados() : p(), r(), l() { }
 
-puntos_ordenados::puntos_ordenados(punto p, vector<punto> r, vector<punto> l) : p(p), r(r), l(l)
+puntos_ordenados::puntos_ordenados(Punto p, vector<Punto> r, vector<Punto> l) : p(p), r(r), l(l)
 {}
 
 //-------------------------------------------------------------
 
-int turn(const punto& p0, const punto& p1, const punto& p2)
+int turn(const Punto& p0, const Punto& p1, const Punto& p2)
 {
 	//Function to check whether the segments p0p1 and p1p2 make
 	//a LEFT or RIGHT turn at p1 or are COLLINEAR
@@ -104,19 +104,19 @@ int turn(const punto& p0, const punto& p1, const punto& p2)
 	return COLLINEAR;
 }
 
-void orderandsplit(const vector<punto>& points, vector<puntos_ordenados> &orderedpoints)
+void orderandsplit(const vector<Punto>& points, vector<puntos_ordenados> &orderedpoints)
 {
 	/*
 	 * For each p in points, sorts the remaining elements
 	 * that lie to the left and right of p, respectively, ccw.
 	 * The result is stored in orderedpoints.
 	 */
-	vector<punto> l, r;
+	vector<Punto> l, r;
 	r.reserve(points.size());
 	l.reserve(points.size());
 	for(auto &p : points)
 	{
-		punto p1(p.x, p.y+1);
+		Punto p1(p.x, p.y+1);
 
 		for(auto &q : points)
 			if(q!=p)
@@ -131,13 +131,13 @@ void orderandsplit(const vector<punto>& points, vector<puntos_ordenados> &ordere
 					r.push_back(q);
 			}
 
-		sort(l.begin(), l.end(), [&p](punto r, punto q)->bool{
+		sort(l.begin(), l.end(), [&p](Punto r, Punto q)->bool{
 			if(turn(p, r, q)<0)
 				return true;
 			return false;
 		});
 
-		sort(r.begin(), r.end(), [&p](punto r, punto q)->bool{
+		sort(r.begin(), r.end(), [&p](Punto r, Punto q)->bool{
 			if(turn(p, r, q)<0)
 				return true;
 			return false;
@@ -150,7 +150,7 @@ void orderandsplit(const vector<punto>& points, vector<puntos_ordenados> &ordere
 	}
 }
 
-int slow_generalposition(vector<punto>& pts)
+int slow_generalposition(vector<Punto>& pts)
 {
 	/*
 	 * Verifies if the points are in general position. Returns
@@ -173,7 +173,7 @@ int slow_generalposition(vector<punto>& pts)
 	return col;
 }
 
-int general_position(vector<punto>& points)
+int general_position(vector<Punto>& points)
 {
 	vector<puntos_ordenados> ord_points;
 	orderandsplit(points, ord_points);
@@ -181,12 +181,12 @@ int general_position(vector<punto>& points)
 
 	for(auto& p : ord_points)
 	{
-		punto point(p.p);
+		Punto point(p.p);
 		auto rpoints=p.r;
 
 		for(unsigned int i=0, s=rpoints.size(); s>0 && i<s-1; i++)
 		{
-			vector<punto> temp = {point, rpoints[i], rpoints[i+1]};
+			vector<Punto> temp = {point, rpoints[i], rpoints[i+1]};
 			col+=slow_generalposition(temp);
 		}
 	}
