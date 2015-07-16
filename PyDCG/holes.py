@@ -775,6 +775,7 @@ def count_convex_rholes_py(points,r,mono=False):
                                     C[(q,outgoing_by_W[t])].append(chprime)
                             else:
                                 C[(q,outgoing_by_W[t])].append(chprime)
+                        t=t+1
                             
     return total
     
