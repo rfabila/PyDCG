@@ -291,7 +291,7 @@ def countEmptyTriangs_py(points):
     
 def countEmptyTriangs(points, speedup=True):        
     if utilities.__config['PURE_PYTHON'] or not speedup:
-        return countEmptyTriangs(points)
+        return countEmptyTriangs_py(points)
     return holesCpp.countEmptyTriangs(points)
 
 def slow_count_empty_triangles_p(p,points):
@@ -779,7 +779,7 @@ def count_convex_rholes_py(points,r,mono=False):
                             
     return total
     
-def count_convex_rholes(points, r, mono=False, speedup="try"):        
+def count_convex_rholes(points, r, mono=False, speedup=True):        
     return cppWrapper(count_convex_rholes_py,
                       None if utilities.__config['PURE_PYTHON'] else holesCpp.count_convex_rholes,
                       speedup,
@@ -1137,9 +1137,9 @@ def count_deg_triang_degs(points):
     return (I,J)
     
 
-def count_convex_rholes_maker(r, colored=False):
+def count_convex_rholes_maker(r, colored=False,speedup=True):
     def f(pts):
-        return count_convex_rholes(pts,r,mono=colored)
+        return count_convex_rholes(pts,r,mono=colored,speedup=speedup)
     return f
 
 def count_convex_rholes_p_maker(r, mono=False):
