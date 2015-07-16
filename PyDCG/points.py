@@ -384,6 +384,7 @@ def _submit_point_set_list(P,species,comment=" ",user_id=None):
         name="temp_subs/"+name
         print name
         file_sp=open(name,"w")
+        pickle.dump((species,sp),file_sp)
         file_sp.close()
     com="scp temp_subs/* naturalist@monk.math.cinvestav.mx:~/naturalist/captured_specimens/"
     os.system(com)
