@@ -586,4 +586,13 @@ def random_squared_Horton_set(n):
     H2=[[p[1],p[0]] for p in H2]
     return minkowski_sum(H1,H2)
 
+def _canonic_tree(k):
+    val=False
+    if k<=0:
+        return [val,None,None]
+    
+    T1=_canonic_tree(k-1)
+    T2=_canonic_tree(k-1)
+    return [val,T1,T2]
+
 
