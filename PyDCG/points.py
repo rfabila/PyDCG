@@ -421,5 +421,178 @@ def submit_empty_convex_quadrilaterals(pts,user_id=None,comment=None):
 
 def submit_empty_convex_hexagons(pts,user_id=None,comment=None):
     _submit_point_set(pts,"empty_convex_hexagons",comment=comment,user_id=user_id)
+    
+#SQUARED HORTON SET FUNCTIONS
+
+def random_tree(k):
+    """Creates a random tree for the creation of the random Horton set."""
+    
+    if random.randint(0,1)==0:
+            val=True
+    else:
+        val=False
+    
+    if k<=0:
+        return [val,None,None]
+    
+    T1=random_tree(k-1)
+    T2=random_tree(k-1)
+    return [val,T1,T2]
+
+def canonic_tree(k):
+    val=False
+    if k<=0:
+        return [val,None,None]
+    
+    T1=canonic_tree(k-1)
+    T2=canonic_tree(k-1)
+    return [val,T1,T2]
+    
+    
+def _horton_tree(k,tree):
+    """Returns the Horton set of 2^k points."""
+    
+    if k<=0:
+        return [[0,0]]
+    
+    if k<=1:
+        g_k=0
+        f_k=0
+        
+    else:
+        f_k=2**((k*(k-1)/2)-1)
+        if k<=2:
+            f_k_1=0
+        else:
+            f_k_1=2**(((k-1)*(k-2)/2)-1)
+        g_k=f_k-f_k_1
+        g_k=g_k**2
+        
+    if tree[0]:
+        g_k=-g_k
+
+    
+    H_even=_horton_tree(k-1,tree[1])
+    H_odd=_horton_tree(k-1,tree[2])
+    H_even=[[2*x[0],x[1]] for x in H_even]
+    H_odd=[[2*x[0]+1,x[1]+g_k] for x in H_odd]
+    H=[]
+    for i in range(len(H_even)):
+        H.append(H_even[i])
+        H.append(H_odd[i])
+        
+    return H
+
+def _check_hortoness(pts):
+
+    if len(pts)<=2:
+        return True
+    
+    H_even=[]
+    H_odd=[]
+    n=len(pts)
+    
+    for i in range(n):
+        if i%2==0:
+            H_even.append(pts[i])
+        else:
+            H_odd.append(pts[i])
+    
+    sign=geometricbasics.turn(H_even[0],H_even[1],H_odd[0])
+    for i in range(len(H_even)):
+        for j in range(i+1,len(H_even)):
+            for k in range(len(H_odd)):
+                sign2=geometricbasics.turn(H_even[i],H_even[j],H_odd[k])
+                if sign*sign2<=0:
+                    print (H_even[i],H_even[j],H_odd[k])
+                    return False
+                    
+    sign=geometricbasics.turn(H_odd[0],H_odd[1],H_even[0])
+    for i in range(len(H_odd)):
+        for j in range(i+1,len(H_odd)):
+            for k in range(len(H_even)):
+                sign2=geometricbasics.turn(H_odd[i],H_odd[j],H_even[k])
+                if sign*sign2<=0:
+                    print (H_odd[i],H_odd[j],H_even[k])
+                    return False
+                
+    if check_hortoness(H_even) and check_hortoness(H_odd):
+        return True
+    else:
+        return False
+
+def minkowski_sum(P,Q):
+    M=[]
+    for p in P:
+        for q in Q:
+            M.append([p[0]+q[0],p[1]+q[1]])
+    return M
+
+def _get_CX(pts):
+    """Constructs the X component for the minkowski sum from the given point set"""
+    
+    max_y=max(pts,key=lambda x:x[1])
+    min_y=min(pts,key=lambda x:x[1])
+    h=abs(max_y[1]-min_y[1])
+    return (10*len(pts)*h+1)/2
+
+def _get_CY(pts):
+    """Constructs the Y component for the minkowski sum from the given point set"""
+    
+    max_y=max(pts,key=lambda x:x[1])
+    min_y=min(pts,key=lambda x:x[1])
+    h=abs(max_y[1]-min_y[1])
+    k=0
+    n=len(pts)
+    while n>1:
+        n=n/2
+        k=k+1
+    n=len(pts)
+    return ((20*n*((n+1)**(k+1)))*h+1)/2
+
+def _squared_Horton_set_from_trees(k,T1,T2):
+    H1=_horton_tree(k,T1)
+    H2=_horton_tree(k,T2)
+    CX=_get_CX(H1)
+    CY=_get_CY(H2)
+    H1=[[CX*CY*x[0],CY*x[1]] for x in H1]
+    H2=[[CX*CY*x[0],CX*x[1]] for x in H2]
+    #reflect points
+    H2=[[p[1],p[0]] for p in H2]
+    
+    return minkowski_sum(H1,H2)
+
+
+
+def random_squared_Horton_set(n):
+    """Returns a random squared horton_set of size nxn"""
+    k=1
+    m=n
+    while m>1:
+        m=m/2
+        k=k+1
+        
+    T1=random_tree(k)
+    T2=random_tree(k)
+    H1=_horton_tree(k,T1)
+    H2=_horton_tree(k,T2)
+    CX=_get_CX(H1)
+    CY=_get_CY(H2)
+    H1=[[CX*CY*x[0],CY*x[1]] for x in H1]
+    H2=[[CX*CY*x[0],CX*x[1]] for x in H2]
+    H1=H1[:n]
+    H2=H2[:n]
+    #H2=reflect_pts(H2)
+    H2=[[p[1],p[0]] for p in H2]
+    return minkowski_sum(H1,H2)
+
+def _canonic_tree(k):
+    val=False
+    if k<=0:
+        return [val,None,None]
+    
+    T1=_canonic_tree(k-1)
+    T2=_canonic_tree(k-1)
+    return [val,T1,T2]
 
 

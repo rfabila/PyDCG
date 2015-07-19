@@ -30,7 +30,7 @@ LEFT = -1
 COLLINEAR = 0
 RIGHT = 1
 
-if not utilities.__config['PURE_PYTHON']:
+if utilities.load_extensions:
     import geometricbasicsCpp as gbCpp
 
 
@@ -57,6 +57,7 @@ def sorted(p, pts):
 
 def sort_around_point_py(p, points, join=True, checkConcave=True):
     """Python version of sort_around_point"""
+    #print "recieved ", p
     p1 = [p[0], p[1] + 1]
     r=[]
     l=[]

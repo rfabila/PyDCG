@@ -35,7 +35,11 @@ using std::vector;
 const int FAIL = 0;
 const int SUCCESS = 1;
 
-int pyPointCPoint(PyObject* py_p, punto& p)
+//TODO: I should write another function that transforms C++ vectors of polygons, there's too much repeated code in the wrappers
+
+/**Converts py_p, python object representing a point (a list of two numbers) to p, a C++ point object.
+   The size of the python list must be 2 or 3.*/
+int pyPoint_CPoint(PyObject* py_p, Punto& p)
 {
     Py_ssize_t size_pt = PyList_Size(py_p);
     if(size_pt > 3 || size_pt < 2)
@@ -43,17 +47,19 @@ int pyPointCPoint(PyObject* py_p, punto& p)
         PyErr_SetString(PyExc_ValueError, "Wrong number of values representing a point, must be 2 or 3.");
         return FAIL;
     }
-    if(size_pt == 3)
-        p.color = (int)PyInt_AsLong(PyList_GetItem(py_p, 2)); //Borrowed References
 
     p.x = PyInt_AsLong(PyList_GetItem(py_p, 0)); //Borrowed References
+    p.y = PyInt_AsLong(PyList_GetItem(py_p, 1)); //Borrowed References
+    if(size_pt == 3)
+    {
+        p.color = (int)PyInt_AsLong(PyList_GetItem(py_p, 2)); //Borrowed References
+        p._has_color = true;
+    }
+
     if(PyErr_Occurred() != NULL)
         return FAIL;
 
-    p.y = PyInt_AsLong(PyList_GetItem(py_p, 1)); //Borrowed References
-    if(PyErr_Occurred() != NULL)
-        return FAIL;
-    if(p.x > max_val || p.y > max_val || p.x < -max_val || p.y < -max_val)
+    if(abs(p.x) > max_val || abs(p.y) > max_val)
     {
         PyErr_SetString(PyExc_OverflowError, max_val_error);
         return FAIL;
@@ -61,75 +67,71 @@ int pyPointCPoint(PyObject* py_p, punto& p)
     return SUCCESS;
 }
 
-int pyPointsetCPointset(PyObject* py_pts, vector<punto>& pts)
+/**Recieves a C++ point object and returns a python object representing a point (a list of two numbers).*/
+PyObject* CPoint_PyPoint(Punto point)
+{
+    Py_ssize_t n = 2;
+    if(point._has_color)
+        n++;
+
+    PyObject* py_point = PyList_New(n);
+
+    PyObject* coord = PyInt_FromLong(point.x);
+    if(PyList_SetItem(py_point, 0, coord) == -1) //Append increases reference count -- Changed to set item, which steals the reference
+        return NULL;
+    //Py_DECREF(coord);
+
+    coord = PyInt_FromLong(point.y);
+    if(PyList_SetItem(py_point, 1, coord) == -1) //Append increases reference count
+        return NULL;
+    //Py_DECREF(coord);
+
+    if(point._has_color)
+    {
+        coord = PyInt_FromLong(point.color);
+        if(PyList_SetItem(py_point, 2, coord) == -1) //Append increases reference count
+            return NULL;
+        Py_DECREF(coord);
+    }
+
+    return py_point;
+}
+
+/**Converts py_pts, python object representing a point set (a list of lists of two numbers) to pts, a C++ vector of points.
+   The size of the python list must be 2 or 3.*/
+int pyPointset_CPointset(PyObject* py_pts, vector<Punto>& pts)
 {
     Py_ssize_t points_size = PyList_Size(py_pts);
     pts.reserve(int(points_size));
 
     for(Py_ssize_t i=0; i < points_size; i++)
     {
-        PyObject *punto = PyList_GetItem(py_pts, i); //Borrowed Reference
+        PyObject *point = PyList_GetItem(py_pts, i); //Borrowed Reference
+        Punto p;
 
-        Py_ssize_t n_coords = PyList_Size(punto);
-        long long x, y;
-        int color = 0;
+        if(pyPoint_CPoint(point, p) != SUCCESS) //TODO: Check if it's worth it to unpack x, y and color to use emplace_back instead of push_back
+            return FAIL;
 
-        if(n_coords == 3)
-            color = (int)PyInt_AsLong(PyList_GetItem(punto, 2)); //Borrowed Reference
-        else if(n_coords > 3 || n_coords < 2)
-        {
-            PyErr_SetString(PyExc_ValueError, "Wrong number of values representing a point, must be 2 or 3.");
-            return FAIL;
-        }
-
-        x = PyInt_AsLong(PyList_GetItem(punto, 0)); //Borrowed References
-        if(PyErr_Occurred() != NULL)
-            return FAIL;
-        y = PyInt_AsLong(PyList_GetItem(punto, 1)); //Borrowed References
-        if(PyErr_Occurred() != NULL)
-            return FAIL;
-        if(x > max_val || y > max_val || x < -max_val || y < -max_val)
-        {
-            PyErr_SetString(PyExc_OverflowError, max_val_error);
-            return FAIL;
-        }
-        pts.emplace_back(x, y, color);
+        pts.push_back(p);
     }
     return SUCCESS;
 }
 
-PyObject* CPointPyPoint(punto point)
+
+/**Recieves a C++ vector of points and returns a python object representing a point set (a list of lists of two numbers).*/
+PyObject* CPointset_PyPointset(vector<Punto>& pts)
 {
-    PyObject* py_point = PyList_New(0);
-
-    PyObject* coord = PyInt_FromLong(point.x);
-    if(PyList_Append(py_point, coord) == -1) //Append increases reference count
-        return NULL;
-    Py_DECREF(coord);
-
-    coord = PyInt_FromLong(point.y);
-    if(PyList_Append(py_point, coord) == -1) //Append increases reference count
-        return NULL;
-    Py_DECREF(coord);
-
-    coord = PyInt_FromLong(point.color);
-    if(PyList_Append(py_point, coord) == -1) //Append increases reference count
-        return NULL;
-    Py_DECREF(coord);
-
-    return py_point;
-}
-
-PyObject* CPointsetPyPointset(vector<punto>& pts)
-{
-    PyObject* py_pts = PyList_New(0);
+    PyObject* py_pts = PyList_New(pts.size());
+    int i = 0;
     for(auto point : pts)
     {
-        PyObject* py_point = CPointPyPoint(point);
+        PyObject* py_point = CPoint_PyPoint(point);
 
-        if(PyList_Append(py_pts, py_point) == -1)
+        if(py_point == NULL)
             return NULL;
-        Py_DECREF(py_point);
+
+        if(PyList_SetItem(py_pts, i++, py_point) == -1) //Append increases reference count
+            return NULL;
     }
     return py_pts;
 }

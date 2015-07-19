@@ -28,4 +28,4 @@ void imprime_piv_pts(long pi[], long pts[][2], int n);
 void imprimepts(long pts[][2], int n);
 int signo(long num);
 
-vector<int> count_crossings_candidate_list(int, vector<punto>&, vector<punto>&);
+vector<int> count_crossings_candidate_list(int, vector<Punto>&, vector<Punto>&);
