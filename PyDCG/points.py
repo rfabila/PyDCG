@@ -315,6 +315,16 @@ def overmars_sets():
         file.close()
     return P
 
+def koshelev_set():
+    """Returns the two-colored set of 46 points with no monochromatic convex four holes
+       found by Koshelev."""
+    prefix = os.path.join(os.path.dirname(__file__), "point_sets/")
+    file_name=prefix+"koshelev.pkl"
+    file_pts=open(file_name,"r")
+    pts=pickle.load(file_pts)
+    file_pts.close()
+    return pts
+
 #Point set zoo functions. This are the best sets that optimize a certain parameter.
 #The format is {n:{"val":xxxx},{"pts",xxxx},{"user",xxxx},{"comment",}}
 def read_species(name):
