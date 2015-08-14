@@ -39,4 +39,12 @@ def signature(pts):
         for j in xrange(i+1,n):
             s=s+str(M[i][j])+"|"
     return hashlib.md5(s).hexdigest()
+
+def remove_duplicates(P):
+    """Given a set of pointsets, removes any duplicates"""
+    D={}
+    for pts in P:
+        D[signature(pts)]=pts
+    return D.values()
+    
         
