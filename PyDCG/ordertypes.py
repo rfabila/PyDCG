@@ -1,5 +1,6 @@
 import geometricbasics
 import hashlib
+import convexhull
 
 def points_index(pts):
     """Returns a dictionary with the indices of the points in pts"""
@@ -31,7 +32,8 @@ def lambda_matrix(pts):
     return M
 
 def signature(pts):
-    """Obtains a hash from the lambda matrix. Useful for checking for repetitions"""
+    """Obtains a hash from the lambda matrix. Useful for checking for repetitions.
+       Runs in O(n^2 \log n) time."""
     M=lambda_matrix(pts)
     s=""
     n=len(pts)
@@ -39,6 +41,25 @@ def signature(pts):
         for j in xrange(i+1,n):
             s=s+str(M[i][j])+"|"
     return hashlib.md5(s).hexdigest()
+
+def unique_signature(pts):
+    """Similar to signature, it produces a string associated to the point set,
+       but it is independent of the labelling of the point set.
+       It runs in O(n^3 \logn) time"""
+    pts=[x[:] for x in pts]
+    D=points_index(pts)
+    ch=convexhull.CH(pts)
+    S=[]
+    for p in ch:
+        idx=D[tuple(p)]
+        pts2=pts[:idx]
+        pts2.extend(pts[idx+1:])
+        pts2=geometricbasics.sort_around_point(p,pts2)
+        pts2.append(p)
+        S.append(signature(pts2))
+    print S
+    return min(S)
+
 
 def remove_duplicates(P):
     """Given a set of pointsets, removes any duplicates"""
