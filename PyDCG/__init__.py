@@ -34,3 +34,4 @@ import convexhull
 import pointExplorer
 import utilities
 import extendSet
+import ordertypes
