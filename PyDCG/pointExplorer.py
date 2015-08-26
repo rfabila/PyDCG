@@ -887,7 +887,7 @@ def getCenter(polygon):
                 return candidate
     return None
 
-def getPolSegs(polygon):
+def getPolSegs(polygon, w=3):
     colors = ["green", "red", "blue", "black", "orange", "brown", "cyan"]
     color = random.choice(colors)
     pol = []
@@ -895,7 +895,7 @@ def getPolSegs(polygon):
     for i in range(len(polygon)):
         p1 = [float(polygon[i % n][0]), float(polygon[i % n][1])]
         p2 = [float(polygon[(i + 1) % n][0]), float(polygon[(i + 1) % n][1])]
-        seg = [p1, p2, color, 3]
+        seg = [p1, p2, color, w]
         pol.append(seg)
     return pol
 
