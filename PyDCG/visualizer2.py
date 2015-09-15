@@ -251,7 +251,7 @@ class Vis:
                                                                  x1+self.t/2,
                                                                  y1+self.t/2,
                                                                  fill=s[2],
-                                                                 width=3))#TODO: restore this part, it was width=s[3])
+                                                                 width=[3]))#TODO: restore this part, it was width=s[3])
             else:
                 self.drawnsegments.append(self.paper.create_line(x0+self.t/2,
                                                                  y0+self.t/2,
