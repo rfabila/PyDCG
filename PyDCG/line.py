@@ -122,6 +122,16 @@ class Line:
     def __str__(self):
         return "m="+self.m.__str__()+",b="+self.b.__str__()
     
+    def vertical_distance(self,p):
+        """Computes the vertical distance from point p to the line."""
+        y=self.m*p[0]+self.b
+        return abs(p[1]-y)
+    
+    def horizontal_distance(self,p):
+        """Computes the horizontal distance from point p to the line."""
+        x=(p[1]-self.b)/self.m
+        return abs(p[0]-x)
+    
 class Ray(Line):
     """An infinite ray, with apex p and passing through
         q."""
