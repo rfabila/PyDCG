@@ -605,4 +605,82 @@ def _canonic_tree(k):
     T2=_canonic_tree(k-1)
     return [val,T1,T2]
 
+#ERDOS-SZEKERES constructions
+
+def P_r(r):
+    """Constructs the point set detailed in the paper "Point Sets with Small Integer Coordinates and
+    Small Convex Polygons", by Frank Duque, Ruy Fabila-Monroy and Carlos Hidalgo-Toscano.
+    This sets has $2^r$ points and every $k$-cup or $k$-cap has at most $r+1$ vertices. It's largest
+    coordinate has size $n^{log_2(5)}$. It also contains the set X_{k,l} defined by Erdos and
+    Szekeres as a subset."""
+    if r==0:
+        return [[0,0]]
+    if r==1:
+        return [[0,0],[3,6]]
+    dx=2*(3**(r-1))
+    dy=4*(5**(r-1))
+    L=P_r(r-1)
+    R=[[x[0]+dx,x[1]+dy] for x in L]
+    L.extend(R)
+    return L
+
+def _origin_squares(r):
+    """Auxiliary function used to construct the set by Erdos and Szekeres.
+       It creates the points by which we translate copies of X_{k,l},"""
+    s=3*(r-1)
+    V=[[s-i,-i] for i in range(3,s,3)]
+    origins=[[0,0]]
+    for v in V:
+        u=origins[-1]
+        u=[u[0]+v[0],u[1]+v[1]]
+        origins.append(u)
+    
+    n=5**(r+1)+1
+    
+    origins=[[n*x[0],n*x[1]] for x in origins]
+        
+    return origins
+
+def _X_kl_array(s):
+    """Auxiliary function to construct the sets described by Erdos and Szkeres with no k_cup or k_cap.
+       It returns an array that contains each set $X_{i,j}$ with $i+j\le k+l$."""
+    P=[[None for i in range(s+1)] for j in range(s+1)]
+    
+    for i in range(3):
+        for j in range(s+1):
+            P[i][j]=[[0,0]]
+            
+    for j in range(3):
+        for i in range(s+1):
+            P[i][j]=[[0,0]]
+            
+    for t in range(3,s+1):
+        for i in range(3,t-2):
+            j=t-i
+            r=i+j-1
+            L=[x[:] for x in P[i-1][j]]
+            dx=2*(3**(r-1))
+            dy=4*(5**(r-1))
+            R=[[x[0]+dx,x[1]+dy] for x in P[i][j-1]]
+            L.extend(R)
+            P[i][j]=L
+            
+    return P
+            
+                
+def X(k,l):
+    P=_X_kl_array(k+l)
+    return P[k][l]
+
+def ES(r):
+    """Constructs the set of $2^{r-2}$ points described by Erdos and Szkeres with
+    no $r$-gon."""
+    origins=_origin_squares(r)
+    P=_X_kl_array(r+2)
+    Q=[]
+    for i in range(r-1):
+        o=origins[i]
+        pts=[[x[0]+o[0],x[1]+o[1]] for x in P[r-i][i+2]]
+        Q.extend(pts)
+    return Q
 

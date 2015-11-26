@@ -105,6 +105,19 @@ def count_k_edges(pts,k):
         
     return k_edges
 
+def _slow_k_edges_vector(pts):
+    V=[0 for i in range(len(pts)-1)]
+    for i in range(len(pts)):
+        for j in range(i+1,len(pts)):
+            k=0
+            for p in pts:
+                if turn(pts[i],pts[j],p)==-1:
+                   k=k+1
+            V[k]=V[k]+1
+            V[len(pts)-2-k]+=1
+    return V
+
+
 def k_edges_vector(pts):
     """Returns the vector of the number of k edges in the point set pts"""
     n=len(pts)
@@ -115,6 +128,8 @@ def k_edges_vector(pts):
         #pivote
         p=pts[i]
         #We copy the points distinct from p to tmp_pts
+        #print "k_vector"
+        #print pts
         for j in range(0,i):
             tmp_pts[j]=pts[j][:]
         for j in range(i+1,n):
@@ -133,7 +148,13 @@ def k_edges_vector(pts):
 
 def count_halving_lines(pts):
     """Counts the number of $\lfoor n/2 \rfloor$ k-edges"""
-    return count_k_edges(pts,(n-2)/2)
+    n=len(pts)
+    #print "halving lines", n
+    #print pts
+    V=k_edges_vector(pts)
+    if n%2==0:
+        return V[n/2-1]/2
+    return V[(n-1)/2]
 
 def count_crossings(pts):
     """Returns the he number of crossings in the complete

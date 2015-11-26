@@ -20,6 +20,7 @@
 import random
 import math
 import time
+import crossing
 #import holes
 
 def kirkpatrick_cooling(start_temp,alpha):
@@ -104,6 +105,57 @@ def simmulated_annealing(n=10,pts=[],run_time=10,k=10000000,k_f=kirkpatrick_cool
             p[0]=q[0]
             p[1]=q[1]
         
+    return pts
+
+
+
+
+def greedy(n,pts=[],k=1000000,run_time=10,f=crossing.count_crossings,t=1000000,minimize=True,cmp_f=None):
+    """A greedy strategy. It moves one point at a time if the set improves or states
+    the same it keeps the point at its new locaction.
+    It starts with a random point on an kxk grid. The t controls the median
+    of the movement of the point. """
+    
+    for i in range(n-len(pts)):
+        pts.append([random.randint(-k,k),random.randint(-k,k)])
+        
+    start_time=time.time()
+    current_val=f(pts)
+    print current_val
+    while time.time()-start_time<run_time:
+        idxp=random.randint(0,n-1)
+        p=pts[idxp]
+        q=p[:]
+        rand_move(p,t)
+        temp_val=f(pts)
+        
+        if minimize:
+            if temp_val<=current_val:
+                if temp_val<current_val:
+                    current_val=temp_val
+                    print current_val
+                elif cmp_f!=None:
+                    prev_pts=[x[:] for x in pts]
+                    prev_pts[idxp]=q
+                    D=cmp_f(pts,prev_pts)
+                    if D>-1:
+                        pts[idxp]=q
+            else:
+                pts[idxp]=q
+        else:
+            if temp_val>=current_val:
+                if temp_val>current_val:
+                    current_val=temp_val
+                    print current_val
+                elif cmp_f!=None:
+                    prev_pts=[x[:] for x in pts]
+                    prev_pts[idxp]=q
+                    D=cmp_f(pts,prev_pts)
+                    if D<1:
+                        pts[idxp]=q
+            else:
+                pts[idxp]=q
+                
     return pts
     
 #def simmulated_annealing_onepoint(n=10,pts=[],run_time=10,k=10000000,k_f=kirkpatrick_cooling(10000000,0.99),
