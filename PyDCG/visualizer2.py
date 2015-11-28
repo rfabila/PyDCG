@@ -29,7 +29,7 @@ import line
 class Vis:
     
     def __init__(self, h=500, w=500, points=[],lines=[],segments=[],center=None,
-                 deltazoom=Fraction(1,10),t=3,zoom=None,pic_button=False,paper_side=BOTTOM,pack=True):
+                 deltazoom=Fraction(1,10),t=3,zoom=None,pic_button=False,paper_side=BOTTOM,pack=True,show_grid=False):
         self.root=Tk()
         self.paper=Canvas(self.root,background="white",
                           height=h,
@@ -50,6 +50,7 @@ class Vis:
         else:
             self.zoom=self.compute_zoom(h,w)
         
+        self.show_grid=show_grid
         self.lines=lines
         self.segments=segments
         self.h=h
@@ -127,10 +128,37 @@ class Vis:
         return [x,y]
 
     def draw(self):
-      self.drawLines()
-      self.drawSegments()
-      self.drawPoints()
-      self.first_time=False
+        
+        self.destroysegments()
+        
+        if self.show_grid:
+            self.draw_grid()
+            
+        self.drawLines()
+        self.drawSegments()
+        self.drawPoints()
+        self.first_time=False
+    
+    def draw_grid(self):
+        
+        grid_segments=[]
+        
+        x1 = min(self.points, key=lambda p: p[0])[0] - 1
+        x2 = max(self.points, key=lambda p: p[0])[0] + 1
+
+        y1 = min(self.points, key=lambda p: p[1])[1] - 1 
+        y2 = max(self.points, key=lambda p: p[1])[1] + 1
+                
+        for i in range(x1,x2+1):
+            grid_segments.append([[i,y1],[i,y2]])
+            
+        for i in range(y1,y2+1):
+            grid_segments.append([[x1,i],[x2,i]])
+            
+        for s in grid_segments:
+            p = self.convert_to_screen_coords(s[0])
+            q = self.convert_to_screen_coords(s[1])
+            self.drawnsegments.append(self.paper.create_line(p[0],p[1],q[0],q[1],fill="light gray"))
         
     def drawLines(self):
         self.destroylines()
@@ -239,7 +267,7 @@ class Vis:
                     
                     
     def drawSegments(self):
-        self.destroysegments()
+        
         for s in self.segments:
             #[x0,y0]=self.convert_to_screen_coords(self.points[s[0]]) #TODO: restore this part
             #[x1,y1]=self.convert_to_screen_coords(self.points[s[1]])
