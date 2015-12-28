@@ -361,6 +361,10 @@ def best_empty_convex_hexagons_pts(n):
     """Returns the best known example for empty convex hexagons."""
     return best_specimen("empty_convex_hexagons",n)
 
+def best_halving_lines_pts(n):
+    """Returns the best known example for halving lines."""
+    return best_specimen("halving_lines",n)
+
 #submitting functions
 def _pack_sp(pts,species,comment="",user_id=None):
     if not geometricbasics.general_position(pts):
@@ -431,6 +435,9 @@ def submit_empty_convex_quadrilaterals(pts,user_id=None,comment=None):
 
 def submit_empty_convex_hexagons(pts,user_id=None,comment=None):
     _submit_point_set(pts,"empty_convex_hexagons",comment=comment,user_id=user_id)
+    
+def submit_halving_lines(pts,user_id=None,comment=None):
+    _submit_point_set(pts,"halving_lines",comment=comment,user_id=user_id)
     
 #SQUARED HORTON SET FUNCTIONS
 

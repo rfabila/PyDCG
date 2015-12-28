@@ -29,7 +29,7 @@ import line
 class Vis:
     
     def __init__(self, h=500, w=500, points=[],lines=[],segments=[],center=None,
-                 deltazoom=Fraction(1,10),t=3,zoom=None,pic_button=False,paper_side=BOTTOM,pack=True,show_grid=False):
+                 deltazoom=Fraction(1,10),t=3,zoom=None,pic_button=False,paper_side=BOTTOM,pack=True,show_grid=False,grid_color="light gray"):
         self.root=Tk()
         self.paper=Canvas(self.root,background="white",
                           height=h,
@@ -51,6 +51,7 @@ class Vis:
             self.zoom=self.compute_zoom(h,w)
         
         self.show_grid=show_grid
+        self.grid_color=grid_color
         self.lines=lines
         self.segments=segments
         self.h=h
@@ -158,7 +159,7 @@ class Vis:
         for s in grid_segments:
             p = self.convert_to_screen_coords(s[0])
             q = self.convert_to_screen_coords(s[1])
-            self.drawnsegments.append(self.paper.create_line(p[0],p[1],q[0],q[1],fill="light gray"))
+            self.drawnsegments.append(self.paper.create_line(p[0],p[1],q[0],q[1],fill=self.grid_color))
         
     def drawLines(self):
         self.destroylines()
