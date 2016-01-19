@@ -23,7 +23,7 @@ from collections import deque
 import utilities
 from utilities import cppWrapper
 
-if utilities.load_extensions:
+if utilities.__load_extensions:
     import holesCpp
 
 def count_four_islands(pts,colored=False):
@@ -787,7 +787,7 @@ def count_convex_rholes_py(points,r,mono=False):
     return total
     
 def count_convex_rholes(points, r, mono=False, speedup=True):
-    if utilities.__config['PURE_PYTHON'] or not speedup:
+    if not utilities.__load_extensions or not speedup:
         return count_convex_rholes_py(points, r, mono)
     try:
         return holesCpp.count_convex_rholes(points, r, mono)

@@ -30,7 +30,7 @@ LEFT = -1
 COLLINEAR = 0
 RIGHT = 1
 
-if utilities.load_extensions:
+if utilities.__load_extensions:
     import geometricbasicsCpp as gbCpp
 
 

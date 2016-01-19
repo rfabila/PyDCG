@@ -33,7 +33,7 @@ __config_file = open(os.path.join(os.path.dirname(__file__),
 __config = pickle.load(__config_file)
 __config_file.close()
 
-load_extensions = os.name != 'nt' and not __config['PURE_PYTHON']
+__load_extensions = os.name != 'nt' and not __config['PURE_PYTHON']
 
 def safe_val(n):
     """True if the it is safe to speed up with the given integer."""

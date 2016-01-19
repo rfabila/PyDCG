@@ -26,7 +26,7 @@ from functools import wraps #TODO: Update the way the C++ functions are called
 import os
 import utilities
 
-if utilities.load_extensions: #TODO: Make this a package global variable and update all modules
+if utilities.__load_extensions: #TODO: Make this a package global variable and update all modules
     import crossingCpp
 
 #__config_file=open(os.path.join(os.path.dirname(__file__), "config/config.cfg"), "r")
