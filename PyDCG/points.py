@@ -30,6 +30,11 @@ import ConfigParser
 import random
 import string
 import holes
+import kgons
+import line
+import fractions
+
+sqrt_3=fractions.Fraction(173205,100000)
 
 def horton_set(n):
     """Returns a set of n points with the same order type
@@ -614,41 +619,49 @@ def _canonic_tree(k):
 
 #ERDOS-SZEKERES constructions
 
-def P_r(r):
-    """Constructs the point set detailed in the paper "Point Sets with Small Integer Coordinates and
-    Small Convex Polygons", by Frank Duque, Ruy Fabila-Monroy and Carlos Hidalgo-Toscano.
-    This sets has $2^r$ points and every $k$-cup or $k$-cap has at most $r+1$ vertices. It's largest
-    coordinate has size $n^{log_2(5)}$. It also contains the set X_{k,l} defined by Erdos and
-    Szekeres as a subset."""
-    if r==0:
-        return [[0,0]]
-    if r==1:
-        return [[0,0],[3,6]]
-    dx=2*(3**(r-1))
-    dy=4*(5**(r-1))
-    L=P_r(r-1)
-    R=[[x[0]+dx,x[1]+dy] for x in L]
+def _split_index(k,l):
+    idx=math.factorial(k+l-5)/(math.factorial(l-2)*(math.factorial(k-3)))
+    return (idx-1,idx)
+
+def _separate_sets(L,R,k,l,dx):
+    
+    max_dy=1
+    #print "separating",k,l,dx
+    if len(L)>=2:
+        (i,j)=_split_index(k-1,l)
+        lx=R[-1][0]
+        ly=R[-1][1]
+        ll=line.Line(p=L[i],q=L[j], inf_precision=True)
+        dy=int(ll.m*(lx+dx)+ll.b-ly+1)
+        #print "L", i,j
+        #print "dy",dy
+        if dy>max_dy:
+            max_dy=dy
+    
+    R=[[x[0]+dx,x[1]] for x in R]
+    
+    if len(R)>=2:
+        (i,j)=_split_index(k,l-1)
+        ll=line.Line(p=R[i],q=R[j], inf_precision=True)
+        dy=abs(ll.b)+1
+        #print dy
+        dy=int(dy)
+        #print dy
+        #print R[i], R[j]
+        #print L[0]
+        #print "R", i,j
+        #print "dy",dy
+        if dy>max_dy:
+            max_dy=dy
+    
+    R=[[x[0],x[1]+max_dy] for x in R]
+    L=[x[:] for x in L]
     L.extend(R)
     return L
 
-def _origin_squares(r):
-    """Auxiliary function used to construct the set by Erdos and Szekeres.
-       It creates the points by which we translate copies of X_{k,l},"""
-    s=3*(r-1)
-    V=[[s-i,-i] for i in range(3,s,3)]
-    origins=[[0,0]]
-    for v in V:
-        u=origins[-1]
-        u=[u[0]+v[0],u[1]+v[1]]
-        origins.append(u)
-    
-    n=5**(r+1)+1
-    
-    origins=[[n*x[0],n*x[1]] for x in origins]
-        
-    return origins
 
-def _X_kl_array(s):
+
+def _X_kl_array(s,test=False):
     """Auxiliary function to construct the sets described by Erdos and Szkeres with no k_cup or k_cap.
        It returns an array that contains each set $X_{i,j}$ with $i+j\le k+l$."""
     P=[[None for i in range(s+1)] for j in range(s+1)]
@@ -660,34 +673,101 @@ def _X_kl_array(s):
     for j in range(3):
         for i in range(s+1):
             P[i][j]=[[0,0]]
+    
+    P[3][3]=[[0,0], [1,0]]
             
     for t in range(3,s+1):
         for i in range(3,t-2):
+            #print "%%%%%"
             j=t-i
-            r=i+j-1
-            L=[x[:] for x in P[i-1][j]]
-            dx=2*(3**(r-1))
-            dy=4*(5**(r-1))
-            R=[[x[0]+dx,x[1]+dy] for x in P[i][j-1]]
-            L.extend(R)
-            P[i][j]=L
-            
-    return P
-            
+            #print i,j
+            if P[i][j]==None:
+                L=[x[:] for x in P[i-1][j]]
+                R=[x[:] for x in P[i][j-1]]
                 
+                if t!=s:
+                    dx=(L[-1][0]+R[-1][0])/2+1
+                    #print dx
+                    dx=sqrt_3*dx+L[-1][0]
+                    #print float(dx)
+                    dx=int(dx)
+                    #print dx
+                else:
+                    #print "t=",s
+                    #print i,j
+                    dx=1+L[-1][0]
+                    #print dx
+                    
+                pts=_separate_sets(L,R,i,j,dx)
+                
+                if test:
+                    if not geometricbasics.general_position(pts):
+                        print "GENERAL POSITION FAILED!"
+                        print i,j
+                    if (kgons.max_cup(pts)!=i-1 or
+                        kgons.max_cap(pts)!=j-1):
+                        print "CAPS and CUPS FAILED!"
+                        print i,j
+                        
+                P[i][j]=pts
+                
+    return P
+
+def _get_origins(lstP):
+    """Auxiliary function used to construct the set by Erdos and Szekeres.
+       It creates the points by which we translate copies of X_{k,l},"""
+    V=[]
+    v=[0,0]
+    for i in range(1,len(lstP)):
+       # print "corner",v
+        v=[v[0]-1,v[1]-1]
+        tx=lstP[i][-1][0]
+        ty=lstP[i][-1][1]
+        v=[v[0]-tx,v[1]-ty]
+        #print "origin",v
+        V.append(v)
+        tx=lstP[i-1][-1][0]
+        ty=lstP[i-1][-1][1]
+        v=[v[0]-tx,v[1]-ty]
+        
+    
+    #print V
+    
+    dx=-v[0]+1
+    V=[[x[0]+dx,x[1]-1] for x in V]
+    
+    origins=[[0,0]]
+    for v in V:
+        u=origins[-1]
+        u=[u[0]+v[0],u[1]+v[1]]
+        origins.append(u)
+    
+    #print V
+    #print origins
+    
+    return origins
 def X(k,l):
+    """Returns the set $X_{k,l}$ described by Erdos and Szekers. It does not contain
+    a k-cup nor a l-cap"""
     P=_X_kl_array(k+l)
     return P[k][l]
 
 def ES(r):
-    """Constructs the set of $2^{r-2}$ points described by Erdos and Szkeres with
+    """Constructs the set of $2^{r-2}$ points described by Erdos and Szekeres with
     no $r$-gon."""
-    origins=_origin_squares(r)
     P=_X_kl_array(r+2)
+    lstP=[P[r-i][i+2] for i in range(r)]
+    #print [x[-1] for x in lstP]
+    origins=_get_origins(lstP)
     Q=[]
+    T=[]
     for i in range(r-1):
         o=origins[i]
         pts=[[x[0]+o[0],x[1]+o[1]] for x in P[r-i][i+2]]
         Q.extend(pts)
+        T.append(pts)
+    #print T
     return Q
+    
 
+#
