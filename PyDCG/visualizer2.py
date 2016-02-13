@@ -29,7 +29,8 @@ import line
 class Vis:
     
     def __init__(self, h=500, w=500, points=[],lines=[],segments=[],center=None,
-                 deltazoom=Fraction(1,10),t=3,zoom=None,pic_button=False,paper_side=BOTTOM,pack=True,show_grid=False,grid_color="light gray"):
+                 deltazoom=Fraction(1,10),t=3,zoom=None,pic_button=False,paper_side=BOTTOM,
+                 pack=True,show_grid=False,grid_color="light gray",move_points_button=False):
         self.root=Tk()
         self.paper=Canvas(self.root,background="white",
                           height=h,
@@ -49,6 +50,12 @@ class Vis:
             self.zoom=zoom
         else:
             self.zoom=self.compute_zoom(h,w)
+        
+        self.grabbed=False
+        self.grabbed_point=None
+        self.max_distance=49
+        
+        self.state="view"
         
         self.show_grid=show_grid
         self.grid_color=grid_color
@@ -70,32 +77,89 @@ class Vis:
         self.first_time=True
         self.draw()
     
-        if pic_button:
+        if pic_button or move_points_button:
             frame=Frame(self.root)
             frame.pack(side=TOP)
+            
+    
+        if pic_button:
             photocam=PhotoImage(file=os.path.join(os.path.dirname(__file__), "Icons/camera.gif"))
             picboton=Button(frame,image=photocam,command=self.take_picture)
             picboton.pack(side=LEFT)
             picboton.image = photocam
+        
+        if move_points_button:
+            hand=PhotoImage(file=os.path.join(os.path.dirname(__file__), "Icons/hand.gif"))
+            picboton=Button(frame,image=hand,command=self.move_points)
+            picboton.pack()
+            picboton.image = hand
+        
         if pack:
             self.paper.pack(fill=BOTH,expand=YES,side=paper_side)
     
+    def move_points(self):
+        if self.state!="move point":
+            self.state="move point"
+        else:
+            self.state="view"
+    
+    def closest_point(self,point):
+        """Returns the index point of the set current point set closest to the given point."""
+        q=0
+        min=(self.points[q][0]-point[0])**2+(self.points[q][1]-point[1])**2
+        
+        for p in range(len(self.points)):
+            new_min=(self.points[p][0]-point[0])**2+(self.points[p][1]-point[1])**2
+            if new_min<min:
+                min=new_min
+                q=p
+        return q
+    
+    # def compute_zoom_2(self,h,w):
+    #     zoom=Fraction(1,1)
+    #     h=h/2
+    #     w=w/2
+    #     for p in self.points:
+    #         x=p[0]
+    #         y=p[1]
+    #         x=max(abs(x-self.center[0]),1)
+    #         y=max(abs(-(y-self.center[1])),1)
+    #         z1=Fraction(w,2*x)
+    #         z2=Fraction(h,2*y)
+    #         if zoom>z1:
+    #             zoom=z1
+    #         if zoom>z2:
+    #             zoom=z2
+    #     return zoom
+    
     def compute_zoom(self,h,w):
         zoom=Fraction(1,1)
-        h=h/2
-        w=w/2
-        for p in self.points:
-            x=p[0]
-            y=p[1]
-            x=max(abs(x-self.center[0]),1)
-            y=max(abs(-(y-self.center[1])),1)
-            z1=Fraction(w,2*x)
-            z2=Fraction(h,2*y)
-            if zoom>z1:
-                zoom=z1
-            if zoom>z2:
-                zoom=z2
-        return zoom
+        if len(self.points)==0:
+            return zoom
+        X=[p[0] for p in self.points]
+        Y=[p[1] for p in self.points]
+        max_x=max(X)
+        min_x=min(X)
+        max_y=max(Y)
+        min_y=min(Y)
+        
+        w_pts=max_x-min_x
+        if w_pts<0:
+            w_pts=w_pts*-1
+        if w_pts==0:
+            w_pts=2
+        
+        h_pts=max_y-min_y
+        if h_pts<0:
+            h_pts=h_pts*-1
+        
+        if h_pts==0:
+            h_pts=2
+            
+        z1=Fraction(w,2*w_pts)
+        z2=Fraction(h,2*h_pts)
+        return min(z1,z2)
+            
     
     def compute_center(self):
         if len(self.points)==0:
@@ -322,8 +386,34 @@ class Vis:
         self.drawnlines=[]
             
     def leftclick(self, event):
-        global start
-        start=[int(self.paper.canvasx(event.x)),int(self.paper.canvasy(event.y))]
+        if self.state=="view":
+            global start
+            start=[int(self.paper.canvasx(event.x)),int(self.paper.canvasy(event.y))]
+        elif self.state=="move point" and len(self.points)>0:
+            point=self.convert_from_screen_coordinates([self.paper.canvasx(event.x),
+                                self.paper.canvasy(event.y)])
+            q=self.closest_point(point)
+            distance=(point[0]-self.points[q][0])**2+(point[1]-self.points[q][1])**2
+            if distance*self.zoom<=self.max_distance:
+               print q
+               self.grabbed=True
+               self.grabbed_point=q
+               print self.grabbed_point
+            else:
+                self.grabbed=None
+            
+    def convert_from_screen_coordinates(self,point):
+        x=int(point[0])
+        y=int(point[1])
+        x=x-self.paper.winfo_width()/2
+        y=y-self.paper.winfo_height()/2
+        x=x/self.zoom
+        y=y/self.zoom
+        x=x+self.center[0]
+        y=-y+self.center[1]
+        x=int(round(x))
+        y=int(round(y))
+        return [x,y]
     
     def doublezoomin(self):
         self.setzoom(2*self.zoom)
@@ -342,10 +432,18 @@ class Vis:
         self.doublezoomin()
         
     def release(self,event):
-        global end
-        end=[int(self.paper.canvasx(event.x)),int(self.paper.canvasy(event.y))]
-        v=[-(end[0]-start[0]),(end[1]-start[1])]
-        self.moveCenter([v[0],v[1]])
+        if self.state=="view":
+            global end
+            end=[int(self.paper.canvasx(event.x)),int(self.paper.canvasy(event.y))]
+            v=[-(end[0]-start[0]),(end[1]-start[1])]
+            self.moveCenter([v[0],v[1]])
+        elif self.state=="move point" and self.grabbed:
+            point=self.convert_from_screen_coordinates([self.paper.canvasx(event.x),
+                                                        self.paper.canvasy(event.y)])
+            if self.grabbed:
+                self.points[self.grabbed_point][0]=point[0]
+                self.points[self.grabbed_point][1]=point[1]
+                self.draw()
     
     def zoomout(self,event):
         if self.zoom >= 1.0:
