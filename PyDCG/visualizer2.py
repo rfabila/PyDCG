@@ -33,7 +33,7 @@ class Vis:
     def __init__(self, h=500, w=500, points=[],lines=[],segments=[],center=None,
                  deltazoom=Fraction(1,10),t=3,zoom=None,pic_button=False,paper_side=BOTTOM,
                  pack=True,show_grid=False,grid_color="light gray",move_points_button=False,polygons=[],
-                 add_point_button=False,delete_point_button=False,update_objects=None):
+                 add_point_button=False,delete_point_button=False,update_objects=None,keyboard_events=[]):
         self.root=Tk()
         self.paper=Canvas(self.root,background="white",
                           height=h,
@@ -111,6 +111,13 @@ class Vis:
             boton=Button(frame,image=del_pic,command=self.change_state("delete point"))
             boton.pack(side=LEFT)
             boton.image = del_pic
+            
+        for Keyboard in keyboard_events:
+            def f(event):
+                Keyboard[1](self)(event)
+                self.draw()
+            #needed to do it this way in order to be able to redraw   
+            self.root.bind(Keyboard[0],f)
             
         
         if pack:
