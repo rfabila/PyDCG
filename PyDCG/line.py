@@ -21,6 +21,7 @@
 
 from fractions import *
 import geometricbasics
+import holes
 
 def dual_point_to_line(point):
     l=Line(p=[0,point[1]],q=[1,point[0]+point[1]])
@@ -163,16 +164,57 @@ class LineSegment(Line):
         self.inf_precision=inf_precision
         
     def point_in_self(self,r):
+        if Line.point_in_self(self,r):
+            if self.m==None:
+                Y=[self.p[1],self.q[1],r[1]]
+                #print "Y",Y
+                if max(Y)==r[1] or min(Y)==r[1]:
+                    return False
+                else:
+                    return True
+            else:
+                X=[self.p[0],self.q[0],r[0]]
+                #print "X",X
+                if max(X)==r[0] or min(X)==r[0]:
+                    return False
+                else:
+                    return True 
+        else:
+            return False
+
+#This should inherit from ConvexPolygon and ConvexPolygon should be a class!
+class Triangle:
+    #change de constructor to receive a set of points
+    def __init__(self,pts,fill="red",outline="grey"):
+        self.fill=fill
+        self.outline=outline
+        if len(pts)==4:
+            self.bounded=False
+            self.vertices=[pts[1],pts[2]]
+            r1=Ray(p=pts[1],q=pts[0])
+            r2=Ray(p=pts[2],q=pts[3])
+            self.rays=[r1,r2]
+            self.base=LineSegment(self.vertices[0],self.vertices[1])
         
-        ray_self=Ray(p=self.p,q=self.q,inf_precision=self.inf_precision)
-        if ray_self.point_in_self(r):
-            q_trans=[self.q[0]-self.p[0],self.q[1]-self.p[1]]
-            r_trans=[r[0]-self.p[0],r[1]-self.p[1]]
-            if (abs(r_trans[0])<=abs(q_trans[0]) and
-                abs(r_trans[1])<=abs(q_trans[1])):
-                return True
-        return False
+        else:
+            self.bounded=True
+            self.vertices=pts
+            
+    def point_in_interior(self,p):
+        if self.bounded:
+            return holes.pointInTriang(p,self.vertices)
+        else:
+            if (geometricbasics.turn(self.vertices[0],self.vertices[1],p)==-1 and
+                geometricbasics.turn(self.rays[0].apex,self.rays[0].q,p)==1 and
+                geometricbasics.turn(self.rays[1].apex,self.rays[1].q,p)==-1):
+                    return True
+            return False
+                
+            
+        
+            
     
+
 def ConvexPolygon():
     
     def __init__(self,points=[],bounded=True,inf_precision=True):

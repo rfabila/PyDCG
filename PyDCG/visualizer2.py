@@ -24,13 +24,16 @@ from tkFileDialog import *
 from fractions import *
 import os
 import line
+import geometricbasics
+import convexhull
 
 
 class Vis:
     
     def __init__(self, h=500, w=500, points=[],lines=[],segments=[],center=None,
                  deltazoom=Fraction(1,10),t=3,zoom=None,pic_button=False,paper_side=BOTTOM,
-                 pack=True,show_grid=False,grid_color="light gray",move_points_button=False):
+                 pack=True,show_grid=False,grid_color="light gray",move_points_button=False,polygons=[],
+                 add_point_button=False,delete_point_button=False,update_objects=None):
         self.root=Tk()
         self.paper=Canvas(self.root,background="white",
                           height=h,
@@ -57,10 +60,12 @@ class Vis:
         
         self.state="view"
         
+        self.update_objects=update_objects
         self.show_grid=show_grid
         self.grid_color=grid_color
         self.lines=lines
         self.segments=segments
+        self.polygons=polygons
         self.h=h
         self.w=w
         self.t=t
@@ -68,6 +73,7 @@ class Vis:
         self.drawnpoints=[]
         self.drawnlines=[]
         self.drawnsegments=[]
+        self.drawnpolygons=[]
         self.paper.bind("<Button-1>", self.leftclick)
         self.paper.bind("<ButtonRelease-1>", self.release)
         self.paper.bind("<Double-Button-1>", self.doubleclickleft)
@@ -90,16 +96,43 @@ class Vis:
         
         if move_points_button:
             hand=PhotoImage(file=os.path.join(os.path.dirname(__file__), "Icons/hand.gif"))
-            picboton=Button(frame,image=hand,command=self.move_points)
-            picboton.pack()
-            picboton.image = hand
+            boton=Button(frame,image=hand,command=self.change_state("move point"))
+            boton.pack(side=LEFT)
+            boton.image = hand
+            
+        if add_point_button:
+            add_pic=PhotoImage(file=os.path.join(os.path.dirname(__file__), "Icons/add.png"))
+            boton=Button(frame,image=add_pic,command=self.change_state("add point"))
+            boton.pack(side=LEFT)
+            boton.image = add_pic
+            
+        if delete_point_button:
+            del_pic=PhotoImage(file=os.path.join(os.path.dirname(__file__), "Icons/gtk-remove.png"))
+            boton=Button(frame,image=del_pic,command=self.change_state("delete point"))
+            boton.pack(side=LEFT)
+            boton.image = del_pic
+            
         
         if pack:
             self.paper.pack(fill=BOTH,expand=YES,side=paper_side)
     
+    def change_state(self,state):
+        def f():
+            if self.state!=state:
+                self.state=state
+            else:
+                self.state="view"
+        return f
+    
     def move_points(self):
         if self.state!="move point":
             self.state="move point"
+        else:
+            self.state="view"
+    
+    def add_point(self):
+        if self.state!="add point":
+            self.state="add point"
         else:
             self.state="view"
     
@@ -170,7 +203,7 @@ class Vis:
         min_x=min(X)
         max_y=max(Y)
         min_y=min(Y)
-        return [Fraction((max_x+min_x)/2,1),Fraction((max_y+min_y)/2,1)]
+        return [Fraction((max_x+min_x),2),Fraction((max_y+min_y),2)]
         
     
     def convert_to_screen_coords(self,point):
@@ -194,6 +227,9 @@ class Vis:
 
     def draw(self):
         
+        if self.update_objects!=None:
+            self.update_objects(self)
+        
         self.destroysegments()
         
         if self.show_grid:
@@ -201,9 +237,81 @@ class Vis:
             
         self.drawLines()
         self.drawSegments()
+        self.drawPolygons()
         self.drawPoints()
         self.first_time=False
     
+    def drawPolygons(self):
+        self.destroypolygons()
+        
+        for P in self.polygons:
+            if P.bounded:
+                vertices=[self.convert_to_screen_coords(p) for p in P.vertices]
+                Q=self.paper.create_polygon(vertices,fill=P.fill,outline=P.outline)
+                self.drawnpolygons.append(Q)
+            else:
+                if self.first_time:
+                    width=self.w
+                    height=self.h
+                else:
+                    width=self.paper.winfo_width()
+                    height=self.paper.winfo_height()
+                real_width=(Fraction(width,1)/self.zoom)/2
+                real_height=(Fraction(height,1)/self.zoom)/2
+        
+                lu_corner=[-real_width,real_height]
+                ld_corner=[-real_width,-real_height]
+                ru_corner=[real_width,real_height]
+                rd_corner=[real_width,-real_height]
+        
+                #translation
+                lu_corner=[lu_corner[0]+self.center[0],lu_corner[1]+self.center[1]]
+                ld_corner=[ld_corner[0]+self.center[0],ld_corner[1]+self.center[1]]
+                ru_corner=[ru_corner[0]+self.center[0],ru_corner[1]+self.center[1]]
+                rd_corner=[rd_corner[0]+self.center[0],rd_corner[1]+self.center[1]]
+        
+                corners=[lu_corner,ld_corner,ru_corner,rd_corner]
+        
+                l_line=line.Line(p=lu_corner,q=ld_corner)
+                r_line=line.Line(p=ru_corner,q=rd_corner)
+                t_line=line.Line(p=lu_corner,q=ru_corner)
+                d_line=line.Line(p=ld_corner,q=rd_corner)
+                
+                S=[l_line,r_line,t_line,d_line]
+                vertices=[P.vertices[0],P.vertices[1]]
+            
+                for s in S:
+                    p=P.rays[0].intersection(s)
+                    if p!=None:
+                        vertices.append(p)
+                            
+                for s in S:
+                    p=P.rays[1].intersection(s)
+                    if p!=None:
+                        vertices.append(p)
+                        
+                for s in S:
+                    p=P.base.intersection(s)
+                    if p!=None:
+                        vertices.append(p)
+                
+                for s in corners:
+                    if P.point_in_interior(s):
+                        vertices.append(s)
+                
+                vertices=convexhull.CH(vertices)
+                    
+                o=[Fraction(P.vertices[0][0]+P.vertices[1][0],2),
+                    Fraction(P.vertices[0][1]+P.vertices[1][1],2)]
+                vertices=geometricbasics.sort_around_point(o,vertices)
+                vertices=[self.convert_to_screen_coords(x) for x in vertices]
+                Q=self.paper.create_polygon(vertices,fill=P.fill,outline=P.outline)
+                self.drawnpolygons.append(Q)
+                
+                
+                
+                
+                
     def draw_grid(self):
         
         grid_segments=[]
@@ -380,6 +488,11 @@ class Vis:
             self.paper.delete(p)
         self.drawnpoints=[]
         
+    def destroypolygons(self):
+        for p in self.drawnpolygons:
+            self.paper.delete(p)
+        self.drawnpolygons=[]
+        
     def destroylines(self):
         for l in self.drawnlines:
             self.paper.delete(l)
@@ -395,12 +508,27 @@ class Vis:
             q=self.closest_point(point)
             distance=(point[0]-self.points[q][0])**2+(point[1]-self.points[q][1])**2
             if distance*self.zoom<=self.max_distance:
-               print q
+               #print q
                self.grabbed=True
                self.grabbed_point=q
-               print self.grabbed_point
+               #print self.grabbed_point
             else:
                 self.grabbed=None
+        
+        elif self.state=="add point":
+            point=self.convert_from_screen_coordinates([self.paper.canvasx(event.x),
+                                self.paper.canvasy(event.y)])
+            self.points.append(point)
+            self.draw()
+        elif self.state=="delete point":
+            point=self.convert_from_screen_coordinates([self.paper.canvasx(event.x),
+                                self.paper.canvasy(event.y)])
+            q=self.closest_point(point)
+            distance=(point[0]-self.points[q][0])**2+(point[1]-self.points[q][1])**2
+            if distance*self.zoom<=self.max_distance:
+                self.points.pop(q)
+                self.draw()
+            
             
     def convert_from_screen_coordinates(self,point):
         x=int(point[0])
@@ -447,7 +575,7 @@ class Vis:
     
     def zoomout(self,event):
         if self.zoom >= 1.0:
-            self.setzoom(self.zoom-self.deltazoom)
+            self.setzoom(self.zoom-self.deltazoom*self.zoom)
         else:
             zoominv=1/self.zoom
             newzoominv=zoominv+self.deltazoom*zoominv
