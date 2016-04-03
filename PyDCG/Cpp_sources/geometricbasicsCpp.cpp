@@ -6,7 +6,7 @@
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation version 2. 
+   the Free Software Foundation version 2.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,7 +19,6 @@
 */
 
 #include "geometricbasicsCpp.h"
-//long pivote[2];
 
 //Definiciones de la clase Punto
 
@@ -85,23 +84,207 @@ puntos_ordenados::puntos_ordenados(Punto p, vector<Punto> r, vector<Punto> l) : 
 
 //-------------------------------------------------------------
 
-int turn(const Punto& p0, const Punto& p1, const Punto& p2)
+int turn(const long long p[2], const long long q[2], const long long r[2])
 {
-	//Function to check whether the segments p0p1 and p1p2 make
-	//a LEFT or RIGHT turn at p1 or are COLLINEAR
-	BIG_INT p0x, p1x, p2x, p0y, p1y, p2y;
-	p0x = BIG_INT(p0.x);
-	p1x = BIG_INT(p1.x);
-	p2x = BIG_INT(p2.x);
-	p0y = BIG_INT(p0.y);
-	p1y = BIG_INT(p1.y);
-	p2y = BIG_INT(p2.y);
-	BIG_INT t=((p2x-p0x)*(p1y-p0y))-((p1x-p0x)*(p2y-p0y));
-	if(t>0)
+    BIG_INT px, py, qx, qy, rx, ry, t;
+
+	px = BIG_INT(p[0]);
+	qx = BIG_INT(q[0]);
+	rx = BIG_INT(r[0]);
+	py = BIG_INT(p[1]);
+	qy = BIG_INT(q[1]);
+	ry = BIG_INT(r[1]);
+
+	t = ((rx - px) * (qy - py)) - ((qx - px) * (ry - py));
+
+    if(t>0)
 		return RIGHT;
 	else if(t<0)
 		return LEFT;
 	return COLLINEAR;
+}
+
+int turn(const Punto& p, const Punto& q, const Punto& r)
+{
+	//Function to check whether the segments p0p1 and p1p2 make
+	//a LEFT or RIGHT turn at p1 or are COLLINEAR
+	long long ap[2] = {p.x, p.y}, aq[2] = {q.x, q.y}, ar[2] = {r.x, r.y};
+	return turn(ap, aq, ar);
+}
+
+bool eqPoints(const long long p[2], const long long q[2])
+{
+    return p[0] == q[0] and p[1] == q[1];
+}
+
+void sort_around_point2(long long const *p, long long** const pts, int n)
+{
+	/*
+	 * Sorts a set of points by angle around a point p.
+	 * If join == false, returns a vector with the points at the right of p
+	 * and a vector with the points at the left of p. Otherwise it returns
+	 * just one vector.
+	 */
+
+	long long p1[2] = {p[0], p[1] + 1};
+	long long** res;
+	res = new long long*[n];
+	for(int i=0; i<n; i++)
+        res[i] = new long long[2];
+    int nr=0, nl=n-1, nsame=0;
+
+	for (int i=0; i<n; i++)
+	{
+	    if(eqPoints(pts[i], p))
+            nsame++;
+		else if (turn(p, p1, pts[i]) == RIGHT)
+        {
+            res[nr][0] = pts[i][0];
+            res[nr++][1] = pts[i][1];
+        }
+        else if (turn(p, p1, pts[i]) == LEFT)
+        {
+            res[nl][0] = pts[i][0];
+            res[nl--][1] = pts[i][1];
+        }
+		else if (p[1] >= pts[i][1])
+        {
+            res[nl][0] = pts[i][0];
+            res[nl--][1] = pts[i][1];
+        }
+		else
+        {
+            res[nr][0] = pts[i][0];
+            res[nr++][1] = pts[i][1];
+        }
+	}
+    nl++;
+
+	std::stable_sort(res+nl, res+n, [&p](long long r[2], long long q[2])->bool
+			{
+				if(turn(p, r, q) < 0)
+					return true;
+				return false;
+			}
+	);
+
+	std::stable_sort(res, res+nr, [&p](long long r[2], long long q[2])->bool
+			{
+				if(turn(p, r, q) < 0)
+					return true;
+				return false;
+			}
+	);
+
+	int i=0, j=0;
+	while(i < nsame)
+	{
+	    pts[i][0] = p[0];
+	    pts[i++][1] = p[1];
+	}
+
+	while(j < nr)
+    {
+        pts[i][0] = res[j][0];
+	    pts[i++][1] = res[j++][1];
+    }
+    j=nl;
+
+    while(j < n)
+    {
+        pts[i][0] = res[j][0];
+	    pts[i++][1] = res[j++][1];
+    }
+
+    int start = -1;
+    for(int i=0; i<n-1; i++)
+    {
+        if(turn(pts[i], p, pts[i+1]) < 0)
+        {
+            start = i;
+            break;
+        }
+    }
+
+    if(start > -1)
+    {
+        std::reverse(pts+nsame, pts+start+1);
+        std::reverse(pts+start+1, pts+n);
+        std::reverse(pts+nsame, pts+n);
+    }
+    for(int i=0; i<n; i++)
+        delete[] res[i];
+    delete[] res;
+    return;
+}
+
+void sort_around_point(long long const *op, long long** const pts, int n)
+{
+    struct cmp
+    {
+        long long p[2];
+        cmp(const long long parg[2])
+        {
+            p[0] = parg[0];
+            p[1] = parg[1];
+        }
+        bool operator () (const long long q[2], const long long r[2])
+        {
+            if(eqPoints(p, q) and !eqPoints(p, r))
+                return true;
+            long long qxcoord = q[0]-p[0], rxcoord = r[0]-p[0];
+
+            //One point to the left and one to the right of p, the one to the right goes first
+            if((qxcoord > 0 and rxcoord < 0) or (qxcoord < 0 and rxcoord > 0))
+                return q[0] > p[0] ? true : false;
+            //At least one point with same x-coordinate than p
+            else if(qxcoord == 0 or rxcoord == 0)
+            {
+                //Exactly one point with same x-coordinate than p, and that point is below p. The one below p goes last
+                if(q[0] != r[0])
+                {
+                    if(q[0] == p[0] and q[1] < p[1])
+                        return false;
+                    if(r[0] == p[0] and r[1] < p[1])
+                        return true;
+                }
+                else
+                {
+                    long long qycoord = q[1]-p[1], rycoord = r[1]-p[1];
+                    //Two with same x-coordinate than p, one above and one below. The one below p goes last
+                    if((qycoord > 0 and rycoord < 0) or (qycoord < 0 and rycoord > 0))
+                        return q[1] < p[1] ? false : true;
+                }
+            }
+        int t = turn(p, q, r);
+        return t < 0 ? true : false;
+        }
+    };
+
+    std::stable_sort(pts, pts+n, cmp(op));
+
+    int start = -1;
+    for(int i=0; i<n-1; i++)
+    {
+        if(turn(pts[i], op, pts[i+1]) < 0)
+        {
+            start = i;
+            break;
+        }
+    }
+
+    if(start > -1)
+    {
+        int difs = 0;
+
+        while(eqPoints(pts[difs], op))
+            difs++;
+
+        std::reverse(pts+difs, pts+start+1);
+        std::reverse(pts+start+1, pts+n);
+        std::reverse(pts+difs, pts+n);
+    }
+    return;
 }
 
 void orderandsplit(const vector<Punto>& points, vector<puntos_ordenados> &orderedpoints)
@@ -193,64 +376,9 @@ int general_position(vector<Punto>& points)
 	return col;
 }
 
-int turn(long p0[], long p1[], long p2[])
-{
-    //printf("([%ld,%ld],[%ld,%ld],[%ld,%ld])",p0[0],p0[1],p1[0],p1[1],p2[0],p2[1]);
-    BIG_INT p00 = (BIG_INT) p0[0], p01 = (BIG_INT) p0[1], p10 = (BIG_INT) p1[0],
-                                         p11 = (BIG_INT) p1[1], p20 = (BIG_INT) p2[0], p21 = (BIG_INT) p2[1];
-    BIG_INT tempres;
-    tempres = ((p20 - p00) * (p11 - p01)) - ((p10 - p00) * (p21 - p01));
-    //tempres=((p2[0]-p0[0])*(p1[1]-p0[1]))-((p1[0]-p0[0])*(p2[1]-p0[1]));
-    //printf("tempres=%" PRId64 "\n",tempres);
-    if (tempres > 0)
-        return 1;
-    if (tempres < 0)
-        return -1;
-    return 0;
-}
-
-
-
-void reverse_in_place(long pts[][2], int start, int end)
-{
-    int m = (end + 1 - start) / 2;
-    int i;
-    long tmp[2];
-    for (i = 0; i < m; i++)
-    {
-        tmp[0] = pts[start + i][0];
-        tmp[1] = pts[start + i][1];
-        pts[start + i][0] = pts[end - i][0];
-        pts[start + i][1] = pts[end - i][1];
-        pts[end - i][0] = tmp[0];
-        pts[end - i][1] = tmp[1];
-    }
-}
-
-int concave(long p[2], long pts[][2], int n)
-{
-    int i;
-    for (i = 0; i < n; i++)
-        if (turn(pts[i], p, pts[(i + 1) % n]) < 0)
-            return i;
-    return -1;
-}
-
-void shift(long pts[][2], int s, int n)
-{
-    if (s > 0)
-    {
-        reverse_in_place(pts, 0, s - 1);
-        reverse_in_place(pts, s, n - 1);
-        reverse_in_place(pts, 0, n - 1);
-    }
-}
-
 void print_pts(long pts[][2], int n)
 {
     int i;
     for (i = 0; i < n; i++)
-    {
         printf("[%ld,%ld]\n", pts[i][0], pts[i][1]);
-    }
 }

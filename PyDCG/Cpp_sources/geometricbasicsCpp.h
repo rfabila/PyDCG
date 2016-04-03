@@ -6,7 +6,7 @@
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation version 2. 
+   the Free Software Foundation version 2.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -71,17 +71,12 @@ struct puntos_ordenados
 	puntos_ordenados(Punto, std::vector<Punto>, std::vector<Punto>);
 };
 
+int turn(const long long p0[], const long long p1[], const long long p2[]);
 int turn(const Punto&, const Punto&, const Punto&);
 void orderandsplit(const std::vector<Punto>&, std::vector<puntos_ordenados>&);
 int general_position(std::vector<Punto>&);
 
-int turn(long p0[], long p1[], long p2[]);
-int cmp_points(const void *qp, const void *rp);
-void sort_around_point(long p[2], long pts[][2], int n);
-
-void reverse_in_place(long pts[][2], int start, int end);
-int concave(long p[2], long pts[][2], int n);
-void shift(long pts[][2], int s, int n);
-void print_pts(long pts[][2], int n);
+void sort_around_point(long long const*, long long** const, int);
+//void sort_around_point2(long long const*, long long** const, int);
 
 #endif /* GEOMETRICBASICSCPP_H_ */

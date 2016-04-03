@@ -6,7 +6,7 @@
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation version 2. 
+   the Free Software Foundation version 2.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,10 +22,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-long range_crossing(long pts[][2], int n, int range_begin, int range_end);
-long crossing(long pts[][2], int n);
+long long range_crossing(long long **pts, int n, int range_begin, int range_end);
+long long crossing(long long **pts, long long n);
 void imprime_piv_pts(long pi[], long pts[][2], int n);
 void imprimepts(long pts[][2], int n);
-int signo(long num);
 
 vector<int> count_crossings_candidate_list(int, vector<Punto>&, vector<Punto>&);

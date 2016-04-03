@@ -6,7 +6,7 @@
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation version 2. 
+   the Free Software Foundation version 2.
 
    This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,8 +21,6 @@
 #include "count_crossing.h"
 #include "geometricbasicsCpp.h"
 
-long pivote[2]; //Check this variable
-
 struct candidato
 {
     Punto pt;
@@ -35,194 +33,115 @@ struct candidato
     }
 };
 
-//Is this just a wrapper to qsort? Doesn't seem to do anything else.
-void sort_points(long p[2], void *pts, int length) {
-	long pivote[2];
-	pivote[0] = p[0];
-	pivote[1] = p[1];
-	qsort(pts, length, 2 * sizeof(long), cmp_points);
-}
-
-/////////////////////////////////////////////////////////////////////////
-
-
-void sort_around_point(long p[2], long pts[][2], int n)
+long long crossing(long long **pts, long long n)
 {
-    int concave_val;
-    pivote[0] = p[0];
-    pivote[1] = p[1];
-    qsort(pts, n, 2 * sizeof(long), cmp_points);
-    //print_pts(pts,n);
-    //printf("---------------------------\n");
-    concave_val = concave(p, pts, n);
-    if (concave_val != -1)
-    {
-        concave_val = (concave_val + 1) % n;
-        shift(pts, concave_val, n);
-    }
-    //print_pts(pts,n);
-}
-
-int cmp_points(const void *qp, const void *rp)
-{
-    //long qx, qy, rx, ry;
-    long q[2];
-    long r[2];
-    long origin[2] = { 0, 0 };
-    BIG_INT tempres;
-    q[0] = *((const long*) qp) - pivote[0];
-    q[1] = *((const long*) qp + 1) - pivote[1];
-    r[0] = *((const long*) rp) - pivote[0];
-    r[1] = *((const long*) rp + 1) - pivote[1];
-    tempres = ((BIG_INT) r[0]) * ((BIG_INT) q[0]);
-    //Both in the same open semiplane
-    if (tempres > 0)
-        return turn(origin, q, r);
-    //Each in a different open semiplane
-    if (tempres < 0)
-    {
-        if (r[0] < 0)
-            return -1;
-        else
-            return 1;
-    }
-    //Both of them on the Y-axis
-    if (r[0] == q[0])
-    {
-        tempres = ((BIG_INT) r[1]) * ((BIG_INT) q[1]);
-        //One below and one above the X-axis
-        if (tempres < 0)
-            if (r[1] > 0)
-                return 1;
-            else
-                return -1;
-        else
-            return 0;
-    }
-    //only one in the Y-axis
-    if (r[0] == 0)
-        if (r[1] > 0)
-            if (q[0] > 0)
-                return -1;
-            else
-                return 1;
-        else
-            return -1;
-    else if (q[1] > 0)
-        if (r[0] > 0)
-            return 1;
-        else
-            return -1;
-    else
-        return 1;
-}
-
-long crossing(long pts[][2], int n) {
-	long total, cr;
-	total = n * (n - 3) * (n - 2) * (n - 1) / 2;
-	cr = range_crossing(pts, n, 0, n);
-	cr -= total / 4;
-	return cr;
+    long long total, cr;
+    total = (n * (n - 3) * (n - 2) * (n - 1)) / 8;
+    cr = range_crossing(pts, n, 0, n);
+    cr -= total;
+    return cr;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-long range_crossing(long pts[][2], int n, int range_begin, int range_end) {
-	int i, j, k, start, end;//, total; this variable doesn't appear anywhere in the function.
-	long cr = 0;
-	long temp_pts[n - 1][2];
-//imprimepts(pts,n);//////////////////////////////////////////
-	/*int **temp_pts;
-	 temp_pts=(int**)malloc(n*sizeof(int*));
+long long range_crossing(long long **pts, int n, int range_begin, int range_end)
+{
 
-	 for(i=0;i<n;i++)
-	 temp_pts[i]=(int*)malloc(2*sizeof(int));
-	 */
-	cr = 0;
-	//total=(n*(n-3)*(n-2)*(n-1)/2)/10;//el diez es para que sea el mismo resultado que en geometricbasics,revisar este punto
-	//total=n*(n-3)*(n-2)*(n-1)/2;
+    int i, j, k, start, end;
+    long long cr = 0;
+    long long **temp_pts;
+    temp_pts = new long long*[n-1];
+    for(int m = 0; m<n-1; m++)
+        temp_pts[m] = new long long[2];
+    //imprimepts(pts,n);//////////////////////////////////////////
+    /*int **temp_pts;
+     temp_pts=(int**)malloc(n*sizeof(int*));
+
+     for(i=0;i<n;i++)
+     temp_pts[i]=(int*)malloc(2*sizeof(int));
+     */
+    cr = 0;
+    //total=(n*(n-3)*(n-2)*(n-1)/2)/10;//el diez es para que sea el mismo resultado que en geometricbasics,revisar este punto
+    //total=n*(n-3)*(n-2)*(n-1)/2;
 //printf("Esta bien la operacion?\n total=[%d]*[%d-3]*[%d-2]*[%d-1]/2= %d",n,n,n,n,total);
 
 //printf("C TOTAL= %d",total);////
 
-	for (i = range_begin; i < range_end; i++) {
+    for (i = range_begin; i < range_end; i++)
+    {
 ///////////////////////////////
-		//    printf("\nEn la iteracion %d\n",i);
+        //    printf("\nEn la iteracion %d\n",i);
 ///////////////////////////////
-		//copiamos el arreglo de puntos
-		k = 0;
-		for (j = 0; j < n; j++) {
-			if (j != i) {
-				temp_pts[k][0] = pts[j][0];
-				temp_pts[k][1] = pts[j][1];
-				k = k + 1;
-			}
-		}
-		//
-		sort_points(pts[i], temp_pts, n - 1);
+        //copiamos el arreglo de puntos
+        k = 0;
+        for (j = 0; j < n; j++)
+        {
+            if (j != i)
+            {
+                temp_pts[k][0] = pts[j][0];
+                temp_pts[k][1] = pts[j][1];
+                k = k + 1;
+            }
+        }
+        //
+        sort_around_point(pts[i], temp_pts, n - 1);
 ///////////////////////////////////////
 
-		//  imprime_piv_pts(pts[i],temp_pts,n-1);
+        //  imprime_piv_pts(pts[i],temp_pts,n-1);
 //////////////////////////////////////
-		end = 0;
-		for (start = 0; start < n - 1; start++) {
-			int vuelta = turn(pts[i], temp_pts[start],
-					temp_pts[(end + 1) % (n - 1)]);
-			while (vuelta <= 0 && (end + 1) % (n - 1) != start) {
-				//while(turn(pts[i],temp_pts[start],temp_pts[(end+1)%(n-1)])<=0 &&
-				//(end+1)%(n-1)!=start)
+        end = 0;
+        for (start = 0; start < n - 1; start++)
+        {
+            int vuelta = turn(pts[i], temp_pts[start],
+                              temp_pts[(end + 1) % (n - 1)]);
+            while (vuelta <= 0 && (end + 1) % (n - 1) != start)
+            {
+                //while(turn(pts[i],temp_pts[start],temp_pts[(end+1)%(n-1)])<=0 &&
+                //(end+1)%(n-1)!=start)
 
-				end++;
-				vuelta = turn(pts[i], temp_pts[start],
-						temp_pts[(end + 1) % (n - 1)]);
-			}		////////este si se borra el end++ de arriba no
-			//end=end+1
-			k = (end - start + n - 1) % (n - 1);
-			//        printf("\nVuelta= %d\tstart= %d\tend=%d",turn(pts[i],temp_pts[start],temp_pts[(end+1)%(n-1)]),start,end);
+                end++;
+                vuelta = turn(pts[i], temp_pts[start],
+                              temp_pts[(end + 1) % (n - 1)]);
+            }		////////este si se borra el end++ de arriba no
+            //end=end+1
+            k = (end - start + n - 1) % (n - 1);
+            //        printf("\nVuelta= %d\tstart= %d\tend=%d",turn(pts[i],temp_pts[start],temp_pts[(end+1)%(n-1)]),start,end);
 
-			// printf("\nEl valor de k = [%d-%d+%d-1=%d] mod %d= %d\n",end,start,n,end-start+(n-1), n-1, k); ///////////////////
-			//printf("valores antes de calcular cr: \ncr=%lld\nk=%d",cr,k);
-			cr = cr + (k * (k - 1)) / 2;
+            // printf("\nEl valor de k = [%d-%d+%d-1=%d] mod %d= %d\n",end,start,n,end-start+(n-1), n-1, k); ///////////////////
+            //printf("valores antes de calcular cr: \ncr=%lld\nk=%d",cr,k);
+            cr = cr + (k * (k - 1)) / 2;
 
-			//printf("con lo cual el valor de cr es: %lld\n",cr);
-		}
-	}
+            //printf("con lo cual el valor de cr es: %lld\n",cr);
+        }
+    }
 //    printf("\nla operacion final es cr= cr-total/4");
 //    printf("= %d - %d/4=",cr,total);
 //    printf("cr antes de dividir=%lld-%d/4",cr,total);
 //    cr-=total/4;
-	//  printf("\acr=%lld\n",cr);
-	return cr;
+    //  printf("\acr=%lld\n",cr);
+    for(int m = 0; m<n-1; m++)
+        delete[] temp_pts[m];
+    delete[] temp_pts;
+    return cr;
 //cr=0;
 //return cr;
 }
 
-void imprime_piv_pts(long pi[], long pts[][2], int n) {
+void imprime_piv_pts(long pi[], long pts[][2], int n)
+{
 
-	int i;
-	printf("\npivote= (%ld , %ld)\n", pi[0], pi[1]);
-	for (i = 0; i < n; i++)
-		printf("pts[%d]= (%ld , %ld)\n", i, pts[i][0] - pi[0], pts[i][1] - pi[1]);
+    int i;
+    printf("\npivote= (%ld , %ld)\n", pi[0], pi[1]);
+    for (i = 0; i < n; i++)
+        printf("pts[%d]= (%ld , %ld)\n", i, pts[i][0] - pi[0], pts[i][1] - pi[1]);
 }
 
-void imprimepts(long pts[][2], int n) {
-	int i;
-	printf("la lista original de puntos es:\n");
-	for (i = 0; i < n; i++)
-		printf("p(%d)=(%ld,%ld)\n", i, pts[i][0], pts[i][1]);
+void imprimepts(long pts[][2], int n)
+{
+    int i;
+    printf("la lista original de puntos es:\n");
+    for (i = 0; i < n; i++)
+        printf("p(%d)=(%ld,%ld)\n", i, pts[i][0], pts[i][1]);
 }
-
-int signo(long num) {
-	int res = 0;
-
-	if (num < 0)
-		res = -1;
-	else if (num > 0)
-		res = 1;
-
-	return res;
-}
-
-//q mas grande 1
 
 vector<candidato> sort_around_point(Punto p, const vector<candidato>& points)
 {
@@ -256,7 +175,7 @@ vector<candidato> sort_around_point(Punto p, const vector<candidato>& points)
             return true;
         return false;
     }
-    );
+        );
 
     sort(r.begin(), r.end(), [&p](candidato r, candidato q)->bool
     {

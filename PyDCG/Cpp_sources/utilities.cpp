@@ -6,7 +6,7 @@
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation version 2. 
+   the Free Software Foundation version 2.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -97,7 +97,7 @@ PyObject* CPoint_PyPoint(Punto point)
     return py_point;
 }
 
-/**Converts py_pts, python object representing a point set (a list of lists of two numbers) to pts, a C++ vector of points.
+/**Converts py_pts, a python object representing a point set (a list of lists of two numbers) to pts, a C++ vector of points.
    The size of the python list must be 2 or 3.*/
 int pyPointset_CPointset(PyObject* py_pts, vector<Punto>& pts)
 {

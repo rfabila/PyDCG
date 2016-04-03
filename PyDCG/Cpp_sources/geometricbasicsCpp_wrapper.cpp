@@ -6,7 +6,7 @@
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation version 2. 
+   the Free Software Foundation version 2.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -67,22 +67,34 @@ PyObject* turn_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
     PyObject* py_q;
     PyObject* py_r;
 
-    Punto p, q, r;
+    long long p[2], q[2], r[2];
 
     static const char *kwlist[] = {"p", "q", "r", NULL};
-
 
     //The arguments must be: 3 lists representing 3 points (each point is a list of two or three integers)
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!O!O!:turn", (char**)kwlist, &PyList_Type, &py_p, &PyList_Type, &py_q, &PyList_Type, &py_r))
         return NULL;
 
-    if (pyPoint_CPoint(py_p, p) == FAIL || pyPoint_CPoint(py_q, q) == FAIL || pyPoint_CPoint(py_q, q) == FAIL)
+    p[0] = PyInt_AsLong(PyList_GetItem(py_p, 0));
+	p[1] = PyInt_AsLong(PyList_GetItem(py_p, 1));
+	q[0] = PyInt_AsLong(PyList_GetItem(py_q, 0));
+	q[1] = PyInt_AsLong(PyList_GetItem(py_q, 1));
+	r[0] = PyInt_AsLong(PyList_GetItem(py_r, 0));
+	r[1] = PyInt_AsLong(PyList_GetItem(py_r, 1));
+
+    if(PyErr_Occurred() != NULL)
         return (PyObject*)NULL;
+
+    if(abs(p[0]) > max_val || abs(p[1]) > max_val || abs(q[0]) > max_val || abs(q[1]) > max_val || abs(r[0]) > max_val || abs(r[1]) > max_val)
+    {
+        PyErr_SetString(PyExc_OverflowError, max_val_error);
+        return (PyObject*)NULL;
+    }
 
     return Py_BuildValue("i", turn(p,q,r));
 }
 
-/*static const char* sort_around_point_doc =
+static const char* sort_around_point_doc =
 "sort_around_point(p, pts)\n\
     \n\
     Sorts the points in `pts` around point `p`.\n\
@@ -123,20 +135,21 @@ PyObject* turn_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
 PyObject* sort_around_point_wrapper(PyObject* self, PyObject* args, PyObject *keywds) //check this. Thereś another sort_around_point version in holesCpp
 {
     //The C function prototype is:
-    //void sort_around_point(long p[2], long pts[][2], int n);
-	PyObject* py_pts;
-	PyObject* py_p;
-	PyObject* py_join = NULL;
+    //void sort_around_point(const long long* p, long long** const pts, int n);
+	PyObject *py_pts, *py_p;
 
-	static const char *kwlist[] = {"p", "points", "join", NULL}; //TODO: This function doesn't really recieve "join". Unify the different sort_around_point functions that currently exist
+	static const char *kwlist[] = {"p", "points", NULL};
 
 	//The arguments must be: a list representing a point (a list of two or three integers)
-	if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!O!|O!:sort_around_point", (char**)kwlist, &PyList_Type, &py_p, &PyList_Type, &py_pts, &PyBool_Type, &py_join))
+	if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!O!:sort_around_point", (char**)kwlist, &PyList_Type, &py_p, &PyList_Type, &py_pts))
 		return NULL;
 
 	Py_ssize_t pts_size = PyList_Size(py_pts);
-	long (*c_pts)[2] = new long [pts_size] [2];
-	long p[2];
+
+	long long (**c_pts) = new long long* [pts_size];
+	for(int i=0; i<pts_size; i++)
+        c_pts[i] = new long long[2];
+	long long p[2];
 
 	p[0] = PyInt_AsLong(PyList_GetItem(py_p, 0));
 	p[1] = PyInt_AsLong(PyList_GetItem(py_p, 1));
@@ -147,8 +160,7 @@ PyObject* sort_around_point_wrapper(PyObject* self, PyObject* args, PyObject *ke
 		c_pts[i][0] = PyInt_AsLong(PyList_GetItem(temp, 0)); //Borrowed References
 		c_pts[i][1] = PyInt_AsLong(PyList_GetItem(temp, 1)); //Borrowed References
 	}
-
-	sort_around_point(p, c_pts, pts_size);
+    sort_around_point(p, c_pts, pts_size);
 
 	PyObject* res = PyList_New(pts_size);
 
@@ -160,15 +172,17 @@ PyObject* sort_around_point_wrapper(PyObject* self, PyObject* args, PyObject *ke
 		PyList_SetItem(res, i, temp);
 	}
 
-	delete c_pts;
+    for(int i=0; i<pts_size; i++)
+        delete[] c_pts[i];
+	delete[] c_pts;
 
 	return res;
-} //TODO: This function was moved to crossing for the moment since it relies on a global variable 'pivot'
-*/
+}
+
 PyMethodDef geometricbasicsCppMethods[] =
 {
     {"turn", (PyCFunction)turn_wrapper, METH_VARARGS | METH_KEYWORDS, turn_doc},
-    //{"sort_around_point", (PyCFunction)sort_around_point_wrapper, METH_VARARGS | METH_KEYWORDS, sort_around_point_doc},
+    {"sort_around_point", (PyCFunction)sort_around_point_wrapper, METH_VARARGS | METH_KEYWORDS, sort_around_point_doc},
     {NULL, NULL, 0, NULL}
 };
 

@@ -22,9 +22,7 @@
 
 """Implementation of the basic geometric primitives"""
 
-import random
 import utilities
-from utilities import cppWrapper
 
 LEFT = -1
 COLLINEAR = 0
@@ -34,7 +32,7 @@ if utilities.__load_extensions:
     import geometricbasicsCpp as gbCpp
 
 
-def turn(p0, p1, p2):
+def turn_py(p0, p1, p2):
     """Consider the walk form p0 to p1 to p2. Returns
         -1 if it is a turn to the left, 1 if it is to the right
         and 0 otherwise"""
@@ -45,91 +43,114 @@ def turn(p0, p1, p2):
     elif t < 0:
         return LEFT
     return COLLINEAR
+    
+def turn(p, q, r, speedup=True):
+    """Sorts `points` around `p` in CCW order."""
+    if utilities.__config['PURE_PYTHON'] or not speedup:
+        return turn_py(p, q, r)
+    try:
+        return gbCpp.turn(p, q, r)
+    except OverflowError:
+        return turn_py(p, q, r)
 
 
-def sorted(p, pts):
+def isSorted(p, pts):
     """Checks whether the point set is sorted around p"""
     for i in xrange(len(pts) - 1):
         if turn(p, pts[i], pts[i + 1]) > 0:
             return False
     return True
+    
+def sap(p, pts, join=True, checkConcave=True):
+    def comp(q, r):
+        if q == p and r != p:
+            return -1
+        if r == p and q != p:
+            return 1
+        qxcoord = q[0]-p[0]
+        rxcoord = r[0]-p[0]
+        xprod = qxcoord*rxcoord
+        #Special cases:
+        if xprod < 0: # xprod < 0: #One point to the left and one to the right of p, the one to the right goes first
+            return 1 if q[0] < p[0] else -1
+        elif xprod == 0: #At least one point with same x-coordinate than p
+            qycoord = q[1]-p[1]
+            rycoord = r[1]-p[1]
+            if q[0] != r[0]: #Exactly one point with same x-coordinate than p, and that point is below p. The one below p goes last
+                if q[0] == p[0] and q[1] < p[1]:
+                    return 1
+                if r[0] == p[0] and r[1] < p[1]:
+                    return -1
+            elif qycoord*rycoord == 0:#Two with same x-coordinate than p, one above and one below. The one below p goes last
+                return 1 if q[1] < p[1] else -1
+        return turn(p, q, r)
 
+    tpts = sorted(pts, comp)
 
-def sort_around_point_py(p, points, join=True, checkConcave=True):
+    if checkConcave:
+        start = None
+        for i in xrange(len(tpts)-1):
+            if turn(tpts[i], p, tpts[i+1]) < 0:
+                start = i
+                break
+        if start is not None:
+            same = 0
+            while tpts[same] == p:
+                same+=1
+            start += 1
+            tpts = tpts[:same] + tpts[start:len(tpts)] + tpts[same:start]
+        return tpts
+    else:
+        return tpts
+        
+def sort_around_point_py(p, points, join=True):
     """Python version of sort_around_point"""
     #print "recieved ", p
     p1 = [p[0], p[1] + 1]
-    r=[]
-    l=[]
+    r, l = [], []
+    same = 0
     
     for q in points:
-        if turn(p, p1, q) == RIGHT:
+        if q == p:
+            same += 1
+        elif turn(p, p1, q) == RIGHT:
             r.append(q[:])
         elif turn(p, p1, q) == LEFT:
             l.append(q[:])
+        elif p[1] >= q[1]:
+            l.append(q[:])
         else:
-            if p[1] >= q[1]:
-                l.append(q[:])
-            else:
-                r.append(q[:])
+            r.append(q[:])
 
     l.sort(lambda v1, v2: turn(p, v1, v2))
     r.sort(lambda v1, v2: turn(p, v1, v2))
+    r = [p[:] for i in xrange(same)] + r
+    
+    if not join:
+        return r, l
 
-    if join:
-        r.extend(l)
+    r.extend(l)
 
-        if not checkConcave:
-            return r
+    concave = False
+    i = 0
+    for i in xrange(len(r)-1):
+        if turn(r[i], p, r[i + 1]) < 0:
+            concave = True
+            break
+    if concave:
+        start = i + 1
+        r = r[:same] + r[start:len(r)] + r[same:start]
 
-        concave = False
-        i = 0
-        for i in xrange(len(r)):
-            if turn(r[i], p, r[(i + 1) % len(r)]) < 0:
-                concave = True
-                break
-        if concave:
-            start = (i + 1) % len(r)
-            r = [r[(start + i) % len(r)][:] for i in xrange(len(r))]
+    return r
 
-        return r
-    else:
-        return (r, l)
-
-
-def sort_around_point(p, points, join=True, speedup=False):
+def sort_around_point(p, points, join=True, speedup=True):
     """Sorts `points` around `p` in CCW order."""
-    #TODO: This function does not exist in geometricbasicsCpp at the moment. It was moved to 
-    #crossingCpp because of its dependence of 'pivote'. 
-    return cppWrapper(sort_around_point_py,
-                      None,
-                      speedup,
-                      [p],
-                      [points],
-                      p=p, points=points, join=join)
-
-
-def __test_sort_around_point_versions(n=100, k=10000000): #TODO: check in ubuntu if the functions work, if so, delete this
-    """Tests whether the two sort_around_point functions match"""
-    pts = [[random.randint(-k, k), random.randint(-k, k)] for i in range(n)]
-    p = [random.randint(-k, k), random.randint(-k, k)]
-    # p=[0,0]
-#    pts_1=sort_around_point_python(p,pts)
-    pts_1 = sort_around_point(p, pts)
-    pts_2 = sort_around_point(p, pts, speedup=True)
-    j = 1
-    print j
-    while pts_1 == pts_2:
-        pts = [[random.randint(-k, k), random.randint(-k, k)]
-               for i in range(n)]
-        # p=[0,0]
-        p = [random.randint(-k, k), random.randint(-k, k)]
-#        pts_1=sort_around_point_python(p,pts)
-        pts_1 = sort_around_point(p, pts)
-        pts_2 = sort_around_point(p, pts, speedup=True)
-        j += 1
-        print j
-    return (p, pts)
+    if not join or utilities.__config['PURE_PYTHON'] or not speedup:
+        return sort_around_point_py(p, points, join)
+    try:
+        return gbCpp.sort_around_point(p, points)
+    except OverflowError:
+        return sort_around_point_py(p, points, join)
 
 
 def iterate_over_points(pts, f):

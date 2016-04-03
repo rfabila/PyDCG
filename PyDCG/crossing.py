@@ -21,63 +21,10 @@
 geometric graph"""
 
 from geometricbasics import *
-import pickle
-from functools import wraps #TODO: Update the way the C++ functions are called 
-import os
 import utilities
 
 if utilities.__load_extensions: #TODO: Make this a package global variable and update all modules
     import crossingCpp
-
-#__config_file=open(os.path.join(os.path.dirname(__file__), "config/config.cfg"), "r")
-#__config=pickle.load(__config_file)
-#__config_file.close()
-#
-#if not __config['PURE_PYTHON']:
-#    import crossingCpp
-
-#def accelerate(cfunc):
-#    def bind_cfunc(func):
-#        @wraps(func)
-#        def wrapper(*args, **kwargs):
-#            speedup = False
-#            if 'speedup' in kwargs:
-#                speedup = kwargs['speedup']
-#                del kwargs['speedup']
-#                
-#            if speedup == 'try':
-#                speedup = safe_point_set(kwargs.get('points', args[0]))
-#                
-#            if not speedup:
-##                print "Funcion de Python"
-#                return func(*args, **kwargs)
-#            else:
-##                print "Funcion de C++"
-#                return cfunc(*args, **kwargs)
-#        return wrapper
-#    return bind_cfunc
-#
-#def accelerate_list(cfunc):
-#    def bind_cfunc(func):
-#        @wraps(func)
-#        def wrapper(*args, **kwargs):
-#            speedup = False
-#            if 'speedup' in kwargs:
-#                speedup = kwargs['speedup']
-#                del kwargs['speedup']
-#                
-#            if speedup == 'try':
-#                speedup = (utilities.safe_point_set(kwargs.get('pts', args[2])) and
-#                           utilities.safe_point_set(kwargs.get('candidate_list',args[1])))
-#                
-#            if not speedup:
-#                #print "Python"
-#                return func(*args, **kwargs)
-#            else:
-#                #print "C++"
-#                return cfunc(*args, **kwargs)
-#        return wrapper
-#    return bind_cfunc
 
 def count_k_edges(pts,k):
     """Returns the number of k edges in the point set pts"""
@@ -156,7 +103,7 @@ def count_halving_lines(pts):
         return V[n/2-1]/2
     return V[(n-1)/2]
 
-def count_crossings(pts):
+def count_crossings_py(pts):
     """Returns the he number of crossings in the complete
     geometric graph with vertex set pts. Runs in O(n^2logn) time."""
     n=len(pts)
@@ -184,9 +131,14 @@ def count_crossings(pts):
         
     return cr-(total/4)
 
-#The C version is not working properly, I am disabling it for the time being.
-#if not __config['PURE_PYTHON']:
- #   count_crossings = accelerate(crossingCpp.crossing)(count_crossings)
+def count_crossings(pts, speedup=True):
+    """Sorts `points` around `p` in CCW order."""
+    if utilities.__config['PURE_PYTHON'] or not speedup:
+        return count_crossings_py(pts)
+    try:
+        return crossingCpp.count_crossings(pts)
+    except OverflowError:
+        return count_crossings_py(pts)
 
 def count_crossings_candidate_list_py(point_index,candidate_list,pts):
     """Let k=len(candidate_list), n=len(pts). Returns the
@@ -202,7 +154,7 @@ def count_crossings_candidate_list_py(point_index,candidate_list,pts):
         for x in pts_q:
             intervals_q.append([-x[0]+2*q[0],-x[1]+2*q[1], x[2], True, False ])
             intervals_q.append([x[0],x[1], x[2], True, True])
-        intervals_q=sort_around_point(q,intervals_q)
+        intervals_q=sort_around_point(q,intervals_q, speedup=False)
         return intervals_q        
     def remove_j_sortandmark(i,pts,sortandmark=True):
         #Sort a copy the points distinct from p to tmp_pts and appened a position mark
@@ -213,7 +165,7 @@ def count_crossings_candidate_list_py(point_index,candidate_list,pts):
             tmp_pts[j-1]=pts[j][:]
         if sortandmark:    
             q=pts[i]
-            tmp_pts=sort_around_point(q,tmp_pts)            
+            tmp_pts=sort_around_point(q,tmp_pts, speedup=False)            
             for j in range(0,len(pts)-1):
                 tmp_pts[j].append(j)
         return tmp_pts 
@@ -237,7 +189,7 @@ def count_crossings_candidate_list_py(point_index,candidate_list,pts):
         united_pts=gen_antipodal_list(central_point,united_pts)
         united_pts.extend(candidate_list)
         united_pts.append(pts[point_index])
-        united_pts=sort_around_point(central_point,united_pts)
+        united_pts=sort_around_point(central_point,united_pts, speedup=False)
         return united_pts    
     def change_of_cr_for_list(united_pts,candidate_list,position_p,nis):
         #We save in cr_list the change of patrons type A       
@@ -326,16 +278,13 @@ def count_crossings_candidate_list_py(point_index,candidate_list,pts):
         cr_list[i]=cr_list2[i]+2*cr_list3[i]-total
 
     return cr_list
-
-#if not __config['PURE_PYTHON']:
-#    count_crossings_candidate_list = accelerate_list(crossingCpp.count_crossings_candidate_list)(count_crossings_candidate_list)
     
 def count_crossings_candidate_list(point_index,candidate_list,pts, speedup=True):
     if utilities.__config['PURE_PYTHON'] or not speedup:
         count_crossings_candidate_list_py(point_index,candidate_list,pts)
     try:
         return crossingCpp.count_crossings_candidate_list(point_index,candidate_list,pts)
-    except: #TODO: This should catcj only OverflowError
+    except OverflowError:
         return count_crossings_candidate_list_py(point_index,candidate_list,pts)
     
 #----Removal Functions

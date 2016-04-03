@@ -6,7 +6,7 @@
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation version 2. 
+   the Free Software Foundation version 2.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -85,13 +85,17 @@ extern "C" PyObject* crossing_wrapper(PyObject* self, PyObject* args)
     Py_ssize_t points_size = PyList_Size(py_pts);
     //Py_ssize_t can be bigger than an 2^32, but we don't expect
     //to work with that many points.
-    long (*pts)[2] = new long [points_size][2];
+    long long **pts = new long long*[points_size];
+    for(int i=0; i<points_size; i++)
+    {
+        pts[i] = new long long[2];
+    }
 
     for(Py_ssize_t i=0; i < points_size; i++)
     {
         PyObject *point = PyList_GetItem(py_pts, i); //Borrowed Reference
         Py_ssize_t n_coords = PyList_Size(point);
-        long x, y;
+        long long x, y;
 
         if(n_coords > 3 || n_coords < 2)
         {
@@ -115,12 +119,17 @@ extern "C" PyObject* crossing_wrapper(PyObject* self, PyObject* args)
         pts[i][0] = x;
         pts[i][1] = y;
     }
-    int res = crossing(pts, points_size);
+    long long res = crossing(pts, points_size);
+//    auto res = range_crossing(pts, points_size, 0, points_size);
+    for(int i=0; i<points_size; i++)
+    {
+        delete[] pts[i];
+    }
     delete[] pts;
-    return Py_BuildValue("i", res);
+    return Py_BuildValue("l", res);
 }
 //TODO: Añadir docstring de count_crossings_candidate_list
-//TODO: Añadir una función para pasar listas d epython a vectores/arreglos de C++
+
 extern "C" PyObject* count_crossings_candidate_list_wrapper(PyObject* self, PyObject* args)
 {
     //The C++ function prototype is: vector<int> count_crossings_candidate_list(int point_index, vector<punto> &candidate_list, vector<punto> &puntos)
@@ -215,9 +224,9 @@ extern "C" PyObject* count_crossings_candidate_list_wrapper(PyObject* self, PyOb
     return py_res;
 }
 
-extern "C" PyMethodDef crossingCppMethods[] =
+    PyMethodDef crossingCppMethods[] =
 {
-    {"crossing", crossing_wrapper, METH_VARARGS, crossing_doc},
+    {"count_crossings", crossing_wrapper, METH_VARARGS, crossing_doc},
     {"count_crossings_candidate_list", count_crossings_candidate_list_wrapper, METH_VARARGS, ""},
     {NULL, NULL, 0, NULL}
 };
@@ -226,5 +235,5 @@ PyMODINIT_FUNC
 initcrossingCpp(void)
 {
     (void) Py_InitModule3("crossingCpp", crossingCppMethods,
-                          "Extension written in C++ intended to help finding sets with few r-holes.");
+                          "Extension in C++ with functions to find the rectilinear crossing number of a point set.");
 }
