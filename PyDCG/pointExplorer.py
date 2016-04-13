@@ -557,7 +557,7 @@ def randMove(upper, lower, indices, ordered, regionU, regionL, visitedPolygons, 
         triang = getPolygonKey(poly)
         
         if triang in visitedPolygons:
-            print "dup"
+            #print "dup"
             avoidLines.add(edge)
             indices[tuple(p1)][0] = [ant1, suc1]
             indices[tuple(p2)][0] = [ant2, suc2]
@@ -915,13 +915,17 @@ def getRandomWalk(p, pts, steps=10):
 
 
 def generateRandomWalk(p, pts, steps=10):
+    k=0
     ordered, indices = orderAllPoints(p, pts)
     upper, lower, counter = getPointRegion(
         p, ordered, indices)  # TODO: USE COUNTER!!!
     U, L = getRegionR(upper, lower)
     last = None
+    visitedPolygons = set()
     for i in range(steps):
-        last = randMove(upper, lower, indices, ordered, U, L, last)
+        print k
+        k+=1
+        last = randMove(upper, lower, indices, ordered, U, L, visitedPolygons, last)
         yield getPolygon(U, L)
 
 
@@ -1013,7 +1017,7 @@ def profile(n=50, w=1000, functions=None, fileName="profiler_res"):
 
 
 def getRandomWalkDFS2(p, pts, length=10, maxDepth=2000):
-    """Recursive version. Itś a generator"""
+    """Recursive version. It's a generator"""
     ordered, indices = orderAllPoints(p, pts)
     upper, lower, counters = getPointRegion(p, ordered, indices)
     U, L = getRegionR(upper, lower)
@@ -1808,9 +1812,3 @@ def get_all_extensions(pts,debug=False):
 #     for x in P:
 #         D[x]=pts.index([x[0],x[1]])
 #     return D
-
-
-                      
-
-            
-            

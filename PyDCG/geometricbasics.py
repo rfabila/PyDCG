@@ -44,7 +44,7 @@ def turn_py(p0, p1, p2):
         return LEFT
     return COLLINEAR
     
-def turn(p, q, r, speedup=True):
+def turn(p, q, r, speedup=False):
     """Sorts `points` around `p` in CCW order."""
     if utilities.__config['PURE_PYTHON'] or not speedup:
         return turn_py(p, q, r)
