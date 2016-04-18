@@ -222,17 +222,24 @@ class line(object):
            intersect. If self and l are paralell returns None"""
         if self.m == l.m:
             return None
-        return (l.m * self.b - self.m * l.b) / (l.m - self.m)
+        res = (l.m * self.b - self.m * l.b) / (l.m - self.m)
+        res.simplify()
+        return res
 
     def intersection_x_coord(self, l):
         """Returns the x coordinate of the point where self and l
            intersect. If self and l are paralell returns None"""
         if self.m == l.m:
             return None
-        return (self.b - l.b) / (l.m - self.m)
+        res = (self.b - l.b) / (l.m - self.m)
+        res.simplify()
+        return res
 
     def intersection(self, l):
-        return [self.intersection_x_coord(l), self.intersection_y_coord(l)]
+        res = [self.intersection_x_coord(l), self.intersection_y_coord(l)]
+        res[0].simplify()
+        res[1].simplify()
+        return res
 
     def __str__(self):
         return "y = %d/%d x %d/%d" % (self.m.a, self.m.b, self.b.a, self.b.b)
@@ -1695,6 +1702,60 @@ def getRandomWalkN2Graham(p, pts, length=10):
                     lower.append([dualize(edge), edge])
 #            print " "*len(S), "pop!"
             S.pop()
+            
+def generateSpiralWalk(p, pts, length = 10):
+    ordered, indices = orderAllPoints(p, pts)
+    upper, lower, counter = getPointRegion(p, ordered, indices)  # TODO: USE COUNTER!!!
+    U, L = getRegionR(upper, lower)
+    forbiddenEdges = set()
+    current = getPolygon(U, L)
+    n = (len(indices) - 1) * 2
+    yield current
+    length -= 1
+    print "current", current
+    print
+    last = tuple(current[0])
+    print "crossing", last
+    print
+    jump = 0
+    
+    side = None
+    for edge in current:
+        forbiddenEdges.add(tuple(sorted(edge)))
+    
+#    for edge in forbiddenEdges:
+#        print edge
+        
+    while length > 0:
+        if jump < len(U)-1:
+            edge = U[jump][1]
+            side = UP
+        else:
+            edge = L[jump-len(U)][1]
+            side = DOWN
+        p1, p2 = edge.getPoints()
+                
+        line1, line2, U, L = crossEdge(n, p1, p2, side, upper, lower, indices, ordered)
+        print "lens", len(U), len(L)
+        current = getPolygon(U, L)
+        yield current
+        length -=1
+        jump = 0
+        print "current", current
+        print "jump", jump
+        print
+        jump = current.index(list(last))
+        jump += 1 
+#        print current[jump], "vs", last
+#        while tuple(current[jump]) != last:
+#            jump = (jump+1)%len(current)
+#            print tuple(current[jump]), "vs", last, tuple(current[jump]) != last
+        while tuple(current[jump]) in forbiddenEdges:
+            jump = (jump+1)%len(current)
+        last = tuple(current[jump])
+        print "crossing", last
+        print "jump", jump
+        print
 
 def factorial(n):
     res = 1
