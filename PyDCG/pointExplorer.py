@@ -38,7 +38,14 @@ RIGHT = 1
 COLLINEAR = 0
 
 UP = 1
-DOWN = 2
+DOWN = -1
+
+class Polygon(object):
+    def __init__(self, vertices = [], fill = "", outline = "black", bounded = True):
+        self.bounded = bounded
+        self.vertices = [[float(p[0]), float(p[1])] for p in vertices]
+        self.fill = fill
+        self.outline = outline
 
 
 class CollinearPoints(Exception):
@@ -213,6 +220,8 @@ class line(object):
             raise Exception
         self.p = p
         self.q = q
+        if p > q:
+            self.p, self.q = self.q, self.p
         self.m = rational(self.p[1] - self.q[1], self.p[0] - self.q[0], True)
         self.b = self.m * (-self.p[0]) + self.p[1]
         self.b.simplify()
@@ -759,7 +768,7 @@ def updateVis(vis, pts, res, indexp, indexLines, pol=False):
         vis.segments = []
 
 
-def getPolygon(U, L, k=1000000):
+def getPolygon(U, L, k=10000):
     if len(U) == 0 and len(L) == 0:
         raise Exception("Can't form a polygon from empty chains")
         return
@@ -932,7 +941,7 @@ def generateRandomWalk(p, pts, steps=10):
     for i in range(steps):
         print k
         k+=1
-        last = randMove(upper, lower, indices, ordered, U, L, visitedPolygons, last)
+        last = randMove(upper, lower, indices, ordered, U, L, set(), last)
         yield getPolygon(U, L)
 
 
@@ -1023,7 +1032,7 @@ def profile(n=50, w=1000, functions=None, fileName="profiler_res"):
     print "Done. Stats saved in '%s'" % fileName
 
 
-def getRandomWalkDFS2(p, pts, length=10, maxDepth=2000):
+def getRandomWalkDFS2(p, pts, length=10, maxDepth=2000, getPolygon = True):
     """Recursive version. It's a generator"""
     ordered, indices = orderAllPoints(p, pts)
     upper, lower, counters = getPointRegion(p, ordered, indices)
@@ -1178,7 +1187,7 @@ def getRandomWalkDFS2(p, pts, length=10, maxDepth=2000):
         
     return regions, visitedPolygons
     
-def getRandomWalkDFS(p, pts, length=10):
+def getRandomWalkDFS(p, pts, length=10, getPolygons=True):
     """The non-recursive version, it's a generator"""
     ordered, indices = orderAllPoints(p, pts)
     upper, lower, counters = getPointRegion(p, ordered, indices)
@@ -1187,7 +1196,15 @@ def getRandomWalkDFS(p, pts, length=10):
     
     start = getPolygon(U, L)
     regions = 1
-    yield start
+    if getPolygons:
+        yield start
+    else:
+        res = []
+        for l in U:
+            res.append([l[1].p, l[1].q])
+        for l in L:
+            res.append([l[1].p, l[1].q])
+        yield res
     visitedPolygons = set()
     visitedPolygons.add(getPolygonKey(start))
     
@@ -1318,7 +1335,15 @@ def getRandomWalkDFS(p, pts, length=10):
             
             if triang not in visitedPolygons:
                 visitedPolygons.add(triang)
-                yield poly
+                if getPolygons:
+                    yield poly
+                else:
+                    res = []
+                    for l in U:
+                        res.append([l[1].p, l[1].q])
+                    for l in L:
+                        res.append([l[1].p, l[1].q])
+                    yield res
                 regions += 1
 #                regions.append(poly)
 #                print "                               van", len(regions)
@@ -1703,59 +1728,59 @@ def getRandomWalkN2Graham(p, pts, length=10):
 #            print " "*len(S), "pop!"
             S.pop()
             
-def generateSpiralWalk(p, pts, length = 10):
-    ordered, indices = orderAllPoints(p, pts)
-    upper, lower, counter = getPointRegion(p, ordered, indices)  # TODO: USE COUNTER!!!
-    U, L = getRegionR(upper, lower)
-    forbiddenEdges = set()
-    current = getPolygon(U, L)
-    n = (len(indices) - 1) * 2
-    yield current
-    length -= 1
-    print "current", current
-    print
-    last = tuple(current[0])
-    print "crossing", last
-    print
-    jump = 0
-    
-    side = None
-    for edge in current:
-        forbiddenEdges.add(tuple(sorted(edge)))
-    
-#    for edge in forbiddenEdges:
-#        print edge
-        
-    while length > 0:
-        if jump < len(U)-1:
-            edge = U[jump][1]
-            side = UP
-        else:
-            edge = L[jump-len(U)][1]
-            side = DOWN
-        p1, p2 = edge.getPoints()
-                
-        line1, line2, U, L = crossEdge(n, p1, p2, side, upper, lower, indices, ordered)
-        print "lens", len(U), len(L)
-        current = getPolygon(U, L)
-        yield current
-        length -=1
-        jump = 0
-        print "current", current
-        print "jump", jump
-        print
-        jump = current.index(list(last))
-        jump += 1 
-#        print current[jump], "vs", last
-#        while tuple(current[jump]) != last:
+#def generateSpiralWalk(p, pts, length = 10):
+#    ordered, indices = orderAllPoints(p, pts)
+#    upper, lower, counter = getPointRegion(p, ordered, indices)  # TODO: USE COUNTER!!!
+#    U, L = getRegionR(upper, lower)
+#    forbiddenEdges = set()
+#    current = getPolygon(U, L)
+#    n = (len(indices) - 1) * 2
+#    yield current
+#    length -= 1
+#    print "current", current
+#    print
+#    last = tuple(current[0])
+#    print "crossing", last
+#    print
+#    jump = 0
+#    
+#    side = None
+#    for edge in current:
+#        forbiddenEdges.add(tuple(sorted(edge)))
+#    
+##    for edge in forbiddenEdges:
+##        print edge
+#        
+#    while length > 0:
+#        if jump < len(U)-1:
+#            edge = U[jump][1]
+#            side = UP
+#        else:
+#            edge = L[jump-len(U)][1]
+#            side = DOWN
+#        p1, p2 = edge.getPoints()
+#                
+#        line1, line2, U, L = crossEdge(n, p1, p2, side, upper, lower, indices, ordered)
+#        print "lens", len(U), len(L)
+#        current = getPolygon(U, L)
+#        yield current
+#        length -=1
+#        jump = 0
+#        print "current", current
+#        print "jump", jump
+#        print
+#        jump = current.index(list(last))
+#        jump += 1 
+##        print current[jump], "vs", last
+##        while tuple(current[jump]) != last:
+##            jump = (jump+1)%len(current)
+##            print tuple(current[jump]), "vs", last, tuple(current[jump]) != last
+#        while tuple(current[jump]) in forbiddenEdges:
 #            jump = (jump+1)%len(current)
-#            print tuple(current[jump]), "vs", last, tuple(current[jump]) != last
-        while tuple(current[jump]) in forbiddenEdges:
-            jump = (jump+1)%len(current)
-        last = tuple(current[jump])
-        print "crossing", last
-        print "jump", jump
-        print
+#        last = tuple(current[jump])
+#        print "crossing", last
+#        print "jump", jump
+#        print
 
 def factorial(n):
     res = 1
@@ -1873,3 +1898,538 @@ def get_all_extensions(pts,debug=False):
 #     for x in P:
 #         D[x]=pts.index([x[0],x[1]])
 #     return D
+    
+def getAndPaintPolygons(p, pts, distance=float('inf'), strict = False):
+    """Returns all the cells in the line array at distance at most `distance`, as
+    Polyons colored in the following way:
+     -green if the distance is 0 mod 3
+     -purple if the cell is at distance 1 mod 3
+     -red if the distance is 2 mod 3     
+    """
+    ordered, indices = orderAllPoints(p, pts)
+    upper, lower, counters = getPointRegion(p, ordered, indices)
+    U, L = getRegionR(upper, lower)
+    n = (len(indices) - 1) * 2
+    
+    start = getPolygon(U, L)
+    colors = {0:"green", 1:"purple", 2:"red"}
+    currDistance = 0
+    if not strict or currDistance == distance:
+        yield Polygon(start, colors[0])
+    
+    visitedPolygons = set()
+    visitedPolygons.add(getPolygonKey(start))
+    
+    
+    class region(object):
+        def __init__(self, regionU, regionL, lastEdge = None, side = None, neighbors1=None, neighbors2=None, lines1=None, lines2=None):
+            self.regionU = regionU
+            self.regionL = regionL
+            self.total = len(regionU) + len(regionL)
+            self.edgeIndex = random.randint(0, self.total-1)
+            self.i = 0
+            self.lastEdge = lastEdge
+            self.side = side
+            self.neighbors1 = neighbors1
+            self.neighbors2 = neighbors2
+            self.lines1 = lines1
+            self.lines2 = lines2
+    
+    def update(p, q, ant, suc):
+        antipodal = False
+        if ordered[tuple(p)][ant] == q:
+            oldline = line(p, ordered[tuple(p)][suc])
+            indices[tuple(p)][0] = [(ant - 1) % n, ant]
+            newpoint = ordered[tuple(p)][(ant - 1) % n]
+            if ant in indices[tuple(p)][1]:
+                antipodal = True
+        else:
+            oldline = line(p, ordered[tuple(p)][ant])
+            indices[tuple(p)][0] = [suc, (suc + 1) % n]
+            newpoint = ordered[tuple(p)][(suc + 1) % n]
+            if suc in indices[tuple(p)][1]:
+                antipodal = True
+
+        newline = line(p, newpoint)
+        aux = [p[0], p[1] + 1]
+        
+        # TODO: Explain why this works
+        sameTurn = turn(p, q, newpoint) == turn(p, aux, newpoint)
+        
+        keyold = tuple(dualize(oldline))
+        counters[keyold] -= 1
+        oldSide = None
+        
+        if counters[keyold] == 0:
+            try:
+                upper.delete(dualize(oldline))
+                oldSide = UP
+            except:
+                lower.delete(dualize(oldline)) #TODO: Should know whether it's inside upper or lower
+                oldSide = DOWN
+        
+        keynew = tuple(dualize(newline))
+        counters.setdefault(keynew, 0)
+        counters[keynew] += 1
+        
+        if sameTurn == antipodal:#TODO: check this part
+            if counters[keynew] == 1:
+                upper.insert(dualize(newline), newline)
+            return newline, UP, oldline, oldSide #new goes to up, old was in oldside
+        else:
+            if counters[keynew] == 1:
+                lower.insert(dualize(newline), newline)
+            return newline, DOWN, oldline, oldSide
+    
+    def restore(lines):
+        newkey = tuple(dualize(lines[0])) 
+        counters[newkey] -= 1
+        if counters[newkey] == 0:
+            if lines[1] == UP:
+                upper.delete(dualize(lines[0]))
+            else:
+                lower.delete(dualize(lines[0]))
+                
+        oldkey = tuple(dualize(lines[2]))
+        counters[oldkey] += 1
+        if counters[oldkey] == 1:
+            if lines[3] == UP:
+                upper.insert(dualize(lines[2]),lines[2])
+            else:
+                lower.insert(dualize(lines[2]),lines[2])
+                
+    S = deque()
+    S.append(region(U, L))
+    
+    while len(S) > 0:
+        
+        current = S[-1]
+        regionU, regionL = current.regionU, current.regionL
+        
+        if current.i < current.total:
+            current.i += 1
+            current.edgeIndex = (current.edgeIndex + 1) % current.total
+#            print " "*len(S), "Will use", current.edgeIndex, " of" , current.total
+            if current.edgeIndex < len(regionU):
+                crossingEdge = regionU[current.edgeIndex][1]
+                side = UP
+            else:                
+                crossingEdge = regionL[current.edgeIndex - len(regionU)][1]
+                side = DOWN
+            p1, p2 = crossingEdge.getPoints()
+#            if p1 > p2:
+#                p1, p2 = p2, p1
+            
+            inc = turn(p1, p2, p)*side
+            
+            if [p1, p2] == current.lastEdge or currDistance+inc > distance:
+#                print " "*len(S), "points", p1, p2, [p1, p2]
+#                print " "*len(S), "lastedge!"
+                continue
+#            print "next line"
+        
+            ant1, suc1 = indices[tuple(p1)][0]            
+            ant2, suc2 = indices[tuple(p2)][0]
+    
+            if side == UP:
+                upper.delete(dualize(crossingEdge))
+                lower.insert(dualize(crossingEdge), crossingEdge)
+        
+            elif side == DOWN:
+                lower.delete(dualize(crossingEdge))
+                upper.insert(dualize(crossingEdge), crossingEdge)
+            
+            # We update ant and suc for p1 and insert the new line in 
+            # the appropiate envelope
+            lines1 = update(p1, p2, ant1, suc1)
+            # We do the same for p2       
+            lines2 = update(p2, p1, ant2, suc2)
+        
+            U, L = getRegionR(upper, lower) #TODO: write a composing function
+            poly = getPolygon(U,L)
+            triang = getPolygonKey(poly)
+            
+            if triang not in visitedPolygons:
+                visitedPolygons.add(triang)
+                currDistance += inc
+#                print "found one, distance", currDistance
+                if not strict or currDistance == distance:
+                    yield Polygon(poly, colors[currDistance%3])
+
+                #regions += 1
+#                regions.append(poly)
+#                print "                               van", len(regions)
+#                print " "*len(S), "push!, I crossed", crossingEdge
+                S.append( region( U, L, [p1,p2], side, (ant1, suc1), (ant2, suc2), lines1, lines2 ) )
+#                print "level", len(S)
+               # if regions >= length and length>=0:
+                   # print "found enough regions"
+                    #break
+            else:
+#                print " "*len(S), "already visited"
+                indices[tuple(p1)][0] = [ant1, suc1]
+                indices[tuple(p2)][0] = [ant2, suc2]
+                            
+                restore(lines1)
+                restore(lines2)
+                
+                if side == UP:   
+                    lower.delete(dualize(crossingEdge))
+                    upper.insert(dualize(crossingEdge), crossingEdge) #TODO: should be able to dualize the point instead of adding the line as an object, right?
+                else:
+                    upper.delete(dualize(crossingEdge))
+                    lower.insert(dualize(crossingEdge), crossingEdge)
+        else:
+#            print " "*len(S), "done"
+            if len(S) > 1:
+                
+                p1 = current.lastEdge[0]
+                p2 = current.lastEdge[1]
+                indices[tuple(p1)][0] = [current.neighbors1[0], current.neighbors1[1]]
+                indices[tuple(p2)][0] = [current.neighbors2[0], current.neighbors2[1]]
+                            
+                restore(current.lines1)
+                restore(current.lines2)
+                    
+                edge = line(p1, p2)
+                inc = turn(p1, p2, p)*current.side
+                currDistance -= inc
+#                print "returning", currDistance
+#                print " "*len(S), "returning via", edge
+                
+                if current.side == UP:                    
+                    lower.delete(dualize(edge))
+                    upper.insert(dualize(edge), edge) #TODO: should be able to dualize the point instead of adding the line as an object, right?
+                else:
+                    upper.delete(dualize(edge))
+                    lower.insert(dualize(edge), edge)
+#            print " "*len(S), "pop!"
+            S.pop()
+            
+def genSpiralWalk(p, pts, levels=float('inf')):
+    """Returns all the cells in the line array of pts whose distance from p's cell satisfies:
+    distance%3 = 0 and distance/3 <= levels.
+    """
+    
+    class Cell:
+        def __init__(self, upper, lower, ordered, counters, indices):
+            self.upper = copy.deepcopy(upper)
+            self.lower = copy.deepcopy(lower)
+            self.ordered = copy.deepcopy(ordered)
+            self.counters = copy.deepcopy(counters)
+            self.indices = copy.deepcopy(indices)
+            self.U, self.L = getRegionR(self.upper, self.lower)
+            
+    def update(p, q, ant, suc, cell):
+        n = (len(start.indices) - 1) * 2
+        antipodal = False
+        if cell.ordered[tuple(p)][ant] == q:
+            oldline = line(p, cell.ordered[tuple(p)][suc])
+            cell.indices[tuple(p)][0] = [(ant - 1) % n, ant]
+            newpoint = cell.ordered[tuple(p)][(ant - 1) % n]
+            if ant in cell.indices[tuple(p)][1]:
+                antipodal = True
+        else:
+            oldline = line(p, cell.ordered[tuple(p)][ant])
+            cell.indices[tuple(p)][0] = [suc, (suc + 1) % n]
+            newpoint = cell.ordered[tuple(p)][(suc + 1) % n]
+            if suc in cell.indices[tuple(p)][1]:
+                antipodal = True
+
+        newline = line(p, newpoint)
+        aux = [p[0], p[1] + 1]
+        
+        # TODO: Explain why this works
+        sameTurn = turn(p, q, newpoint) == turn(p, aux, newpoint)
+        
+        keyold = tuple(dualize(oldline))
+        cell.counters[keyold] -= 1
+        oldSide = None
+        
+        if cell.counters[keyold] == 0:
+            try:
+                cell.upper.delete(dualize(oldline))
+                oldSide = UP
+            except:
+                cell.lower.delete(dualize(oldline)) #TODO: Should know whether it's inside upper or lower
+                oldSide = DOWN
+        
+        keynew = tuple(dualize(newline))
+        cell.counters.setdefault(keynew, 0)
+        cell.counters[keynew] += 1
+        
+        if sameTurn == antipodal:#TODO: check this part
+            if cell.counters[keynew] == 1:
+                cell.upper.insert(dualize(newline), newline)
+            return newline, UP, oldline, oldSide #new goes to up, old was in oldside
+        else:
+            if cell.counters[keynew] == 1:
+                cell.lower.insert(dualize(newline), newline)
+            return newline, DOWN, oldline, oldSide
+            
+    ########################### END UPDATE ##################################
+            
+    def jump(edge, cell):
+        if edge < len(cell.U):
+            crossingEdge = cell.U[edge][1]
+            side = UP
+        else:                
+            crossingEdge = cell.L[edge - len(cell.U)][1]
+            side = DOWN
+        p1, p2 = crossingEdge.getPoints()
+    
+        ant1, suc1 = cell.indices[tuple(p1)][0]
+        ant2, suc2 = cell.indices[tuple(p2)][0]
+
+        if side == UP:
+            cell.upper.delete(dualize(crossingEdge))
+            cell.lower.insert(dualize(crossingEdge), crossingEdge)
+    
+        elif side == DOWN:
+            cell.lower.delete(dualize(crossingEdge))
+            cell.upper.insert(dualize(crossingEdge), crossingEdge)
+        
+        # We update ant and suc for p1 and insert the new line in 
+        # the appropiate envelope
+        lines1 = update(p1, p2, ant1, suc1)
+        # We do the same for p2       
+        lines2 = update(p2, p1, ant2, suc2)
+        
+        return lines1, lines2
+        
+    ########################### END JUMP #######################################
+        
+    def restore(lines, cell):
+        newkey = tuple(dualize(lines[0])) 
+        cell.counters[newkey] -= 1
+        if cell.counters[newkey] == 0:
+            if lines[1] == UP:
+                cell.upper.delete(dualize(lines[0]))
+            else:
+                cell.lower.delete(dualize(lines[0]))
+                
+        oldkey = tuple(dualize(lines[2]))
+        cell.counters[oldkey] += 1
+        if cell.counters[oldkey] == 1:
+            if lines[3] == UP:
+                cell.upper.insert(dualize(lines[2]),lines[2])
+            else:
+                cell.lower.insert(dualize(lines[2]),lines[2])
+                
+    ######################### END RESTORE ###################################
+                
+    def findNext(cell, jumps=3, start=0, forbidden=None):
+        """Jumps to a cell at distance jumps from the orginal one"""
+        if jumps == 0:
+            return True
+        if jumps > 0:
+            for i in range(len(cell.U)):
+                p1, p2 = cell.U[i][1].getPoints()
+                if [p1, p2] == forbidden:
+                    continue
+                if turn(p1, p2, p) == RIGHT:
+                    lines1, lines2 = jump(i, cell)
+                    if findNext(cell, jumps-1, [p1,p2]):
+                        return True
+                    restore(lines1, cell)
+                    restore(lines2, cell)
+            for i in range(len(cell.U), len(cell.U)+len(cell.L)):
+                p1, p2 = cell.L[i][1].getPoints()
+                if [p1, p2] == forbidden:
+                    continue
+                if turn(p1, p2, p) == LEFT:
+                    lines1, lines2 = jump(i, cell)
+                    if findNext(cell, jumps-1, [p1,p2]):
+                        return True
+                    restore(lines1, cell)
+                    restore(lines2, cell)
+        else:
+            for i in range(len(cell.U)):
+                p1, p2 = cell.U[i][1].getPoints()
+                if [p1, p2] == forbidden:
+                    continue
+                if turn(p1, p2, p) == LEFT:
+                    lines1, lines2 = jump(i, cell)
+                    if findNext(cell, jumps+1, [p1,p2]):
+                        return True
+                    restore(lines1, cell)
+                    restore(lines2, cell)
+            for i in range(len(cell.U), len(cell.U)+len(cell.L)):
+                p1, p2 = cell.L[i][1].getPoints()
+                if [p1, p2] == forbidden:
+                    continue
+                if turn(p1, p2, p) == RIGHT:
+                    lines1, lines2 = jump(i, cell)
+                    if findNext(cell, jumps+1, [p1,p2]):
+                        return True
+                    restore(lines1, cell)
+                    restore(lines2, cell)
+            
+        return False
+        
+    ##################### END FINDNEXT ######################################
+        
+    def getRes(cell):
+        res = []
+        for l in cell.U:
+            res.append(l[1].getPoints())
+        for l in cell.L:
+            res.append(l[1].getPoints())
+        return res
+            
+    _ordered, _indices = orderAllPoints(p, pts)
+    _upper, _lower, _counters = getPointRegion(p, _ordered, _indices)
+    
+    start = Cell(_upper, _lower, _ordered, _counters, _indices)
+    
+#    n = (len(start.indices) - 1) * 2
+    
+    level = 0
+    if level <= levels:
+        yield getRes(start)
+        
+    findNext(start)
+    
+    while(level <= levels):
+        yield getRes(start)
+        
+        current = copy.deepcopy(start)
+        nextFound = False
+        
+        while True:
+            
+            for i in range(len(current.U)):
+                p1, p2 = current.U[i][1].getPoints()
+                if
+            for i in range(len(cell.U), len(cell.U)+len(cell.L)):
+                p1, p2 = cell.L[i][1].getPoints()
+                if turn(p1, p2, p) == LEFT:
+                    lines1, lines2 = jump(i, cell)
+                    if findNext(cell, jumps-1):
+                        return True
+                    restore(lines1, cell)
+                    restore(lines2, cell)
+        
+    
+    visitedPolygons = set()
+    visitedPolygons.add(getPolygonKey(start))
+    
+    
+#    class region(object):
+#        def __init__(self, regionU, regionL, lastEdge = None, side = None, neighbors1=None, neighbors2=None, lines1=None, lines2=None):
+#            self.regionU = regionU
+#            self.regionL = regionL
+#            self.total = len(regionU) + len(regionL)
+#            self.edgeIndex = random.randint(0, self.total-1)
+#            self.i = 0
+#            self.lastEdge = lastEdge
+#            self.side = side
+#            self.neighbors1 = neighbors1
+#            self.neighbors2 = neighbors2
+#            self.lines1 = lines1
+#            self.lines2 = lines2
+    
+    while len(S) > 0:
+        
+        current = S[-1]
+        regionU, regionL = current.regionU, current.regionL
+        
+        if current.i < current.total:
+            current.i += 1
+            current.edgeIndex = (current.edgeIndex + 1) % current.total
+#            print " "*len(S), "Will use", current.edgeIndex, " of" , current.total
+            if current.edgeIndex < len(regionU):
+                crossingEdge = regionU[current.edgeIndex][1]
+                side = UP
+            else:                
+                crossingEdge = regionL[current.edgeIndex - len(regionU)][1]
+                side = DOWN
+            p1, p2 = crossingEdge.getPoints()
+#            if p1 > p2:
+#                p1, p2 = p2, p1
+            
+            inc = turn(p1, p2, p)*side
+            
+            if [p1, p2] == current.lastEdge or currDistance+inc > distance:
+#                print " "*len(S), "points", p1, p2, [p1, p2]
+#                print " "*len(S), "lastedge!"
+                continue
+#            print "next line"
+        
+            ant1, suc1 = indices[tuple(p1)][0]            
+            ant2, suc2 = indices[tuple(p2)][0]
+    
+            if side == UP:
+                upper.delete(dualize(crossingEdge))
+                lower.insert(dualize(crossingEdge), crossingEdge)
+        
+            elif side == DOWN:
+                lower.delete(dualize(crossingEdge))
+                upper.insert(dualize(crossingEdge), crossingEdge)
+            
+            # We update ant and suc for p1 and insert the new line in 
+            # the appropiate envelope
+            lines1 = update(p1, p2, ant1, suc1)
+            # We do the same for p2       
+            lines2 = update(p2, p1, ant2, suc2)
+        
+            U, L = getRegionR(upper, lower) #TODO: write a composing function
+            poly = getPolygon(U,L)
+            triang = getPolygonKey(poly)
+            
+            if triang not in visitedPolygons:
+                visitedPolygons.add(triang)
+                currDistance += inc
+#                print "found one, distance", currDistance
+                if not strict or currDistance == distance:
+                    yield Polygon(poly, colors[currDistance%3])
+
+                #regions += 1
+#                regions.append(poly)
+#                print "                               van", len(regions)
+#                print " "*len(S), "push!, I crossed", crossingEdge
+                S.append( region( U, L, [p1,p2], side, (ant1, suc1), (ant2, suc2), lines1, lines2 ) )
+#                print "level", len(S)
+               # if regions >= length and length>=0:
+                   # print "found enough regions"
+                    #break
+            else:
+#                print " "*len(S), "already visited"
+                indices[tuple(p1)][0] = [ant1, suc1]
+                indices[tuple(p2)][0] = [ant2, suc2]
+                            
+                restore(lines1)
+                restore(lines2)
+                
+                if side == UP:   
+                    lower.delete(dualize(crossingEdge))
+                    upper.insert(dualize(crossingEdge), crossingEdge) #TODO: should be able to dualize the point instead of adding the line as an object, right?
+                else:
+                    upper.delete(dualize(crossingEdge))
+                    lower.insert(dualize(crossingEdge), crossingEdge)
+        else:
+#            print " "*len(S), "done"
+            if len(S) > 1:
+                
+                p1 = current.lastEdge[0]
+                p2 = current.lastEdge[1]
+                indices[tuple(p1)][0] = [current.neighbors1[0], current.neighbors1[1]]
+                indices[tuple(p2)][0] = [current.neighbors2[0], current.neighbors2[1]]
+                            
+                restore(current.lines1)
+                restore(current.lines2)
+                    
+                edge = line(p1, p2)
+                inc = turn(p1, p2, p)*current.side
+                currDistance -= inc
+#                print "returning", currDistance
+#                print " "*len(S), "returning via", edge
+                
+                if current.side == UP:                    
+                    lower.delete(dualize(edge))
+                    upper.insert(dualize(edge), edge) #TODO: should be able to dualize the point instead of adding the line as an object, right?
+                else:
+                    upper.delete(dualize(edge))
+                    lower.insert(dualize(edge), edge)
+#            print " "*len(S), "pop!"
+            S.pop()
