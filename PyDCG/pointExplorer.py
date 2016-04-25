@@ -216,10 +216,10 @@ class line(object):
     # TODO: Si se quitan las propiedades, se debería protejer p, q, m, b?
 
     def __init__(self, p, q):
-        if not isinstance(p, list) or not isinstance(q, list):
+        if not (isinstance(p, list) or isinstance(p, tuple)) or not (isinstance(q, list) or isinstance(q, tuple)):
             raise Exception
-        self.p = p
-        self.q = q
+        self.p = list(p)
+        self.q = list(q)
         if p > q:
             self.p, self.q = self.q, self.p
         self.m = rational(self.p[1] - self.q[1], self.p[0] - self.q[0], True)
@@ -2297,16 +2297,17 @@ def genSpiralWalk(p, pts, levels=float('inf')):
         nextFound = False
         
         while True:
-            
+            cell = None
             for i in range(len(current.U)):
                 p1, p2 = current.U[i][1].getPoints()
-                if
+                #if
             for i in range(len(cell.U), len(cell.U)+len(cell.L)):
                 p1, p2 = cell.L[i][1].getPoints()
                 if turn(p1, p2, p) == LEFT:
                     lines1, lines2 = jump(i, cell)
                     if findNext(cell, jumps-1):
-                        return True
+                 #       return True
+                        pass
                     restore(lines1, cell)
                     restore(lines2, cell)
         
@@ -2433,3 +2434,103 @@ def genSpiralWalk(p, pts, levels=float('inf')):
                     lower.insert(dualize(edge), edge)
 #            print " "*len(S), "pop!"
             S.pop()
+            
+class Cell(object):
+    def __init__(self, p, points):
+        self.points = copy.deepcopy(points)
+        self.p = copy.deepcopy(p)
+        self.ordered, self.indices = orderAllPoints(p, points)
+        self.upper, self.lower, self.counters = getPointRegion(p, self.ordered, self.indices)
+        self.U, self.L = getRegionR(self.upper, self.lower)
+        self.vertices = getPolygon(self.U, self.L)
+        self.edges = []
+        self.edgeIndices = {}
+        self.__updateEdges()        
+            
+    def __updateEdges(self):
+        self.edges = []
+        self.edgeIndices = {}
+        for l in self.U:
+            endpoints = l[1].getPoints()
+            endpoints = tuple(endpoints[0]), tuple(endpoints[1])
+            self.edges.append(endpoints)
+            self.edgeIndices[endpoints] = [l[1], UP]
+        for l in self.L:
+            endpoints = l[1].getPoints()
+            endpoints = tuple(endpoints[0]), tuple(endpoints[1])
+            self.edges.append(endpoints)
+            self.edgeIndices[endpoints] = [l[1], DOWN]
+            
+    def jumpEdge(self, edge):
+        p1, p2 = edge
+        if list(p1) not in self.points or list(p2) not in self.points:
+            raise ValueError("Both points must belong to the point set.")
+        
+        crossingEdge, side = self.edgeIndices[edge]
+    
+        ant1, suc1 = self.indices[p1][0]
+        ant2, suc2 = self.indices[p2][0]
+
+        if side == UP:
+            self.upper.delete(dualize(crossingEdge))
+            self.lower.insert(dualize(crossingEdge), crossingEdge)
+    
+        elif side == DOWN:
+            self.lower.delete(dualize(crossingEdge))
+            self.upper.insert(dualize(crossingEdge), crossingEdge)
+        
+        # We update ant and suc for p1 and insert the new line in 
+        # the appropiate envelope
+        self.update(p1, p2, ant1, suc1)
+        # We do the same for p2       
+        self.update(p2, p1, ant2, suc2)
+        
+    def update(self, p, q, ant, suc):
+        n = (len(self.indices) - 1) * 2
+        antipodal = False
+        if self.ordered[tuple(p)][ant] == q:
+            oldline = line(p, self.ordered[tuple(p)][suc])
+            self.indices[tuple(p)][0] = [(ant - 1) % n, ant]
+            newpoint = self.ordered[tuple(p)][(ant - 1) % n]
+            if ant in self.indices[tuple(p)][1]:
+                antipodal = True
+        else:
+            oldline = line(p, self.ordered[tuple(p)][ant])
+            self.indices[tuple(p)][0] = [suc, (suc + 1) % n]
+            newpoint = self.ordered[tuple(p)][(suc + 1) % n]
+            if suc in self.indices[tuple(p)][1]:
+                antipodal = True
+
+        newline = line(p, newpoint)
+        aux = [p[0], p[1] + 1]
+        
+        # TODO: Explain why this works
+        sameTurn = turn(p, q, newpoint) == turn(p, aux, newpoint)
+        
+        keyold = tuple(dualize(oldline))
+        self.counters[keyold] -= 1
+        
+        if self.counters[keyold] == 0:
+            try:
+                self.upper.delete(dualize(oldline))
+            except:
+                self.lower.delete(dualize(oldline)) #TODO: Should know whether it's inside upper or lower
+        
+        keynew = tuple(dualize(newline))
+        self.counters[keynew] = self.counters.setdefault(keynew, 0)+1
+        
+        if sameTurn == antipodal:#TODO: check this part
+            if self.counters[keynew] == 1:
+                self.upper.insert(dualize(newline), newline) #new goes to up, old was in oldside
+        else:
+            if self.counters[keynew] == 1:
+                self.lower.insert(dualize(newline), newline)
+                
+        self.__updateEdges()
+        self.U, self.L = getRegionR(self.upper, self.lower)
+        self.vertices = getPolygon(self.U, self.L)
+            
+    ########################### END UPDATE ##################################
+            
+    def getVisPolygon(self):
+        return getPolSegs(self.vertices)
