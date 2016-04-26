@@ -1054,3 +1054,15 @@ def verifyBinaryTree(T):
         raise Exception
     else:
         print "ALL GOOD"
+
+def inOrder(node):
+    if node.right is None and node.left is None:
+        yield node
+    else:
+        if node.left is not None:
+            for n in inOrder(node.left):
+                yield n
+        yield node
+        if node.right is not None:
+            for n in inOrder(node.right):
+                yield n

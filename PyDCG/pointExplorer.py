@@ -272,13 +272,18 @@ def dualize(obj):
     if isinstance(obj, line):
         return [obj.m, obj.b * -1]
 #    elif isinstance(obj, list):
+    print "Got", obj
     raise Exception("Not implemented yet!")
+    
 #        return #TODO: write this!
 
 
 def getPointRegion(q, sortedpoints, indices):
-    """Assumes len(sortedpoints) > 3, each entry of sorted points should contain
-       a point `p` and the other points sorted around it."""
+    """ Assumes len(sortedpoints) > 3, each entry of sorted points should contain
+        a point `p` and the other points sorted around it.
+        Returns upper, lower and counters: the upper hull, lower hull, and a dictionary
+        mapping the dual of each line inserted to the number of times it has been inserted
+       """
     upper = []
     lower = []
     counters = {}
@@ -292,7 +297,6 @@ def getPointRegion(q, sortedpoints, indices):
 
         if intersection > q[1]:
             upper.append(predline)
-
         elif intersection < q[1]:
             lower.append(predline)
         else:
@@ -314,14 +318,12 @@ def getPointRegion(q, sortedpoints, indices):
 
     for l in upper:
         point = dualize(l)
-        counters.setdefault(tuple(point), 0)
-        counters[tuple(point)] += 1
+        counters[tuple(point)] = counters.setdefault(tuple(point), 0) + 1
         upperHull.insert(point, l)
 
     for l in lower:
         point = dualize(l)
-        counters.setdefault(tuple(point), 0)
-        counters[tuple(point)] += 1
+        counters[tuple(point)] = counters.setdefault(tuple(point), 0) + 1
         lowerHull.insert(point, l)
 
     return upperHull, lowerHull, counters
@@ -668,6 +670,12 @@ def getLines(upper, lower=None, mode=1):
 
 
 def orderAllPoints(q, points):
+    """ Returns a pair of dictionaries: orderedpoints and indices.
+        - orderedpoints maps every point p in points to a list with the points in {pts \ {p}} \cup antipodals {pts \ {p}} sorted ccw around p.
+        - indices maps every point to a pair of lists:
+            indices[p][0] is a list with the indices of the points that would appear before and after q in orderedpoints[p]
+            indices[p][1] is a list with the indices of the points in orderedpoints[p] that are antipodal
+    """
     orderedpoints = {}
     indices = {}
     reinsert = False
@@ -2440,7 +2448,7 @@ class Cell(object):
         self.points = copy.deepcopy(points)
         self.p = copy.deepcopy(p)
         self.ordered, self.indices = orderAllPoints(p, points)
-        self.upper, self.lower, self.counters = getPointRegion(p, self.ordered, self.indices)
+        self.upper, self.lower, self.counters = getPointRegion(self.p, self.ordered, self.indices)
         self.U, self.L = getRegionR(self.upper, self.lower)
         self.vertices = getPolygon(self.U, self.L)
         self.edges = []
@@ -2488,7 +2496,7 @@ class Cell(object):
     def update(self, p, q, ant, suc):
         n = (len(self.indices) - 1) * 2
         antipodal = False
-        if self.ordered[tuple(p)][ant] == q:
+        if self.ordered[tuple(p)][ant] == list(q):
             oldline = line(p, self.ordered[tuple(p)][suc])
             self.indices[tuple(p)][0] = [(ant - 1) % n, ant]
             newpoint = self.ordered[tuple(p)][(ant - 1) % n]
@@ -2507,23 +2515,23 @@ class Cell(object):
         # TODO: Explain why this works
         sameTurn = turn(p, q, newpoint) == turn(p, aux, newpoint)
         
-        keyold = tuple(dualize(oldline))
-        self.counters[keyold] -= 1
+        oldDual = tuple(dualize(oldline))
+        self.counters[oldDual] -= 1
         
-        if self.counters[keyold] == 0:
+        if self.counters[oldDual] == 0:
             try:
                 self.upper.delete(dualize(oldline))
             except:
                 self.lower.delete(dualize(oldline)) #TODO: Should know whether it's inside upper or lower
         
-        keynew = tuple(dualize(newline))
-        self.counters[keynew] = self.counters.setdefault(keynew, 0)+1
+        newDual = tuple(dualize(newline))
+        self.counters[newDual] = self.counters.setdefault(newDual, 0) + 1
         
         if sameTurn == antipodal:#TODO: check this part
-            if self.counters[keynew] == 1:
+            if self.counters[newDual] == 1:
                 self.upper.insert(dualize(newline), newline) #new goes to up, old was in oldside
         else:
-            if self.counters[keynew] == 1:
+            if self.counters[newDual] == 1:
                 self.lower.insert(dualize(newline), newline)
                 
         self.__updateEdges()
