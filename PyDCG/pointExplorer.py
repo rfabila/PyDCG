@@ -40,6 +40,9 @@ COLLINEAR = 0
 UP = 1
 DOWN = -1
 
+FARTHER = 1
+CLOSER = -1
+
 class Polygon(object):
     def __init__(self, vertices = [], fill = "", outline = "black", bounded = True):
         self.bounded = bounded
@@ -778,7 +781,7 @@ def updateVis(vis, pts, res, indexp, indexLines, pol=False):
         vis.segments = []
 
 
-def getPolygon(U, L, k=10000):
+def getPolygon(U, L, k=1000):
     if len(U) == 0 and len(L) == 0:
         raise Exception("Can't form a polygon from empty chains")
         return
@@ -801,7 +804,7 @@ def getPolygon(U, L, k=10000):
 
         upts.insert(0, p1)
         upts.append(p2)
-
+#        print "just up"
         return upts
 
     if len(U) == 0:
@@ -816,7 +819,7 @@ def getPolygon(U, L, k=10000):
 
         lpts.insert(0, p1)
         lpts.append(p2)
-
+#        print "just down"
         return lpts
 
     # This one should be the left-most point of the polygon
@@ -825,6 +828,7 @@ def getPolygon(U, L, k=10000):
     rm = U[0][1].intersection(L[0][1])
 
     if len(U) == 1 and len(L) == 1:  # This means the region is just a wedge
+        
         # Let's see if we need the right or the left wedge
         p = lm
         p1 = [p[0] + k, U[0][1].evalx(p[0] + k)]
@@ -832,7 +836,7 @@ def getPolygon(U, L, k=10000):
         if turn(p1, p, p2) > 0:
             p1 = [p[0] - k, L[0][1].evalx(p[0] - k)]
             p2 = [p[0] - k, U[0][1].evalx(p[0] - k)]
-#
+#        print "unbounded"
         return [p1, p, p2]
 
     else:
@@ -850,7 +854,7 @@ def getPolygon(U, L, k=10000):
 
             lpts.insert(0, p1)
             lpts.append(p2)
-
+#            print "unbounded"
             return lpts
 
         aux = upts[0] if len(upts) > 0 else lpts[-1]
@@ -868,7 +872,7 @@ def getPolygon(U, L, k=10000):
             p2[1] = L[0][1].evalx(p2[0])
             upts.insert(0, p1)
             upts.append(p2)
-
+#            print "unbounded"
             return upts
 
     # If we get to this point, the region is a bounded polygon
@@ -2140,12 +2144,15 @@ def getAndPaintPolygons(p, pts, distance=float('inf'), strict = False, getPairs 
 #            print " "*len(S), "pop!"
             S.pop()
             
+def jumpDistance(p, cell, edge):
+    """Returns FARTHER or CLOSER, depending on the distance of the region adjacent to cell at edge"""
+    return FARTHER if (cell.edgeIndices[edge][1] == UP and turn(edge[0], edge[1], p) == RIGHT) or \
+                          (cell.edgeIndices[edge][1] == DOWN and turn (edge[0], edge[1], p) == LEFT) \
+                       else CLOSER
+    
+            
 def moveNCells(p, cell, jumps=3, forbiddenEdge = None):
     """Jumps to a cell at distance jumps from the this cell, with respect to p"""
-        
-    FARTHER = 1
-    CLOSER = -1
-        
     inc = -1 if jumps > 0 else 1
     
     for edge in cell.edges:
@@ -2153,9 +2160,7 @@ def moveNCells(p, cell, jumps=3, forbiddenEdge = None):
             continue
 #        print "side", cell.edgeIndices[edge]
 #        print "turn", turn(edge[0], edge[1], p)
-        move = FARTHER if (cell.edgeIndices[edge][1] == UP and turn(edge[0], edge[1], p) == RIGHT) or \
-                          (cell.edgeIndices[edge][1] == DOWN and turn (edge[0], edge[1], p) == LEFT) \
-                       else CLOSER
+        move = jumpDistance(p, cell, edge)
 #        print "edge", edge, "moves", "farther" if move == FARTHER else "closer"
         if (move == FARTHER and jumps > 0) or (move == CLOSER and jumps < 0):
 #            print "One jump!", edge
@@ -2168,6 +2173,36 @@ def moveNCells(p, cell, jumps=3, forbiddenEdge = None):
             cell.jumpEdge(edge)
         
     return []
+    
+def xJump(p, cell, edge, jumpDir = 1):
+    """Tries to make an -+ x jump. Returns True and last jumped edge if succesful, else False and None"""
+    dist = jumpDistance(p, cell, edge)
+    if dist != CLOSER:
+        return False, None
+    cell.jumpEdge(edge)
+    nextEdge = cell.edges.index(edge)
+    nextEdge = cell.edges[(nextEdge+jumpDir)%len(cell.edges)]
+    dist += jumpDistance(p, cell, nextEdge)
+    if dist == 0:
+        cell.jumpEdge(nextEdge)
+        return True, nextEdge
+    cell.jumpEdge(edge)
+    return False, None
+    
+def semiCopy(cell):
+    newCell = Cell([0,0], [[1,1],[2,3],[6,10]])
+    newCell.points = cell.points
+    newCell.p = cell.p
+    newCell.ordered = cell.ordered
+    
+    newCell.upper = copy.deepcopy(cell.upper)
+    newCell.lower = copy.deepcopy(cell.lower)
+    newCell.indices = copy.deepcopy(cell.indices)
+    newCell.counters = copy.deepcopy(cell.counters)
+    
+    newCell._updateEdges()
+    return newCell
+    
             
 def genSpiralWalk(p, pts, levels=float('inf'), getPols = False):
     """Returns all the cells in the line array of pts whose distance from p's cell satisfies:
@@ -2178,7 +2213,7 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols = False):
     
     level = 0
     if getPols:
-        yield start.getVisPolygon()
+        yield Polygon(start.vertices, "blue")
     else:
         yield start.edges
         
@@ -2187,61 +2222,202 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols = False):
     if len(edge) == 0:
         return
 
-    startEdge = edge[-1]    
+    edge = edge[-1]    #edge is the edge which we jumped to land in the current cell
     
-    while(level <= levels and start is not None):
-        print "starting"
-        
-        level = 0
+    
+    while(level < levels and start is not None):
+        print "level", level+1
+        firstEdge = edge
+#        print "starting", level, levels
+#        print "startingEdge", edge
         if getPols:
-            yield start.getVisPolygon()
+            yield Polygon(start.vertices, "blue")
         else:
             yield start.edges
         
         nextStart = None
         nextFound = False
-        firstJump = None
-        tries = 0
-        finished = False
-        edge = None
+        nextEdge = None
         
-        while not finished and tries < 2:
-            current = copy.deepcopy(start)
+        firstIndex = None
+        finished = False
+        starJump = False
+        
+#        current = copy.deepcopy(start)
+        current = semiCopy(start)
+        
+        while not finished: #We go to the left
+#            print "current pre", current.edges
+            if not nextFound:
+#                nextStart = copy.deepcopy(current)
+                nextStart = semiCopy(current)
+                res = moveNCells(p, nextStart, 3)
+                if len(res) > 0:
+                    nextFound = True
+                    nextEdge = res[-1]
             
-            while True:            
-                
-                if not nextFound:
-                    nextStart = copy.deepcopy(current)
-                    res = moveNCells(p, nextStart, 3)
-                    if len(res) > 0:
-                        nextFound = True
-                        
-                edge = moveNCells(p, current, 1, edge)[0]
-                print "crossed +", edge
-                if firstJump is None:
-                    firstJump = edge
-                try:
-                    edge = moveNCells(p, current, -1, edge)[0]
-                    print "crossed -", edge
+            edgeIndex = current.edges.index(edge)
+#            print "current edges:", current.edges, len(current.edges)
+#            print
+
+            #We check if we are at a star
+            star = False
+            for i in xrange(-1,len(current.edges)-1):
+                e1 = current.edges[i]
+                e2 = current.edges[i+1]
+                if e1[0] in e2 or e1[1] in e2:
+                    star = True
+                    break
+            
+#            print "star check:", star
+#            print current.edges
+#            print
+            if star and not starJump:
+                starJump = True
+                edge = current.edges[i]
+                dist = jumpDistance(p, current, edge)
+                current.jumpEdge(edge)
+                while dist != 0:
+                    index = current.edges.index(edge)
+                    edge = current.edges[(index-1)%len(current.edges)]
+                    dist += jumpDistance(p, current, edge)
+                    current.jumpEdge(edge)
+                    
+                if current.edges != start.edges:
+#                        print "back to start"
                     if getPols:
-                        yield current.getVisPolygon()
+                        yield Polygon(current.vertices, "blue")
                     else:
                         yield current.edges
-                    nextStart
-                except IndexError:
-                    print "index"
+                else:
+                    finished = True
+            
+#            elif star and starJump:
+#                starJump = False
+                    
+            else:
+                if starJump:
+                    starJump = False
+            #we are not in a star
+                for i in xrange(len(current.edges)):
+    #                print "index", edgeIndex
+                    res, newEdge = xJump(p, current, current.edges[edgeIndex%len(current.edges)])
+    #                if not res:
+    #                    print "current", current.getVisPolygon(), len(current.edges)
+    #                    print "edge", current.edges[edgeIndex%len(current.edges)], res
+    #                    print
+                    if res:
+    #                    print "got it", current.getVisPolygon(), len(current.edges)
+    #                    print "edge", newEdge, res
+    #                    print
+                        edge = newEdge
+                        if firstIndex == None:
+                            firstIndex = edgeIndex
+                        if current.edges != start.edges:
+    #                        print "back to start"
+                            if getPols:
+                                yield Polygon(current.vertices, "blue")
+                            else:
+                                yield current.edges
+                        else:
+                            finished = True
+                        break
+                    edgeIndex -= 1
+                    
+                if not res: #We can not go any further
+    #                print "wall"
                     break
+                    #finished = True
+                    
+#        print "finished?", finished
+        edge = firstEdge
+        current = start
+        
+        while not finished: #We go to the right
+#            print "to the right!"
+#            print "current pre", current.edges
+            if not nextFound:
+#                nextStart = copy.deepcopy(current)
+                nextStart = semiCopy(current)
+                res = moveNCells(p, nextStart, 3)
+                if len(res) > 0:
+                    nextFound = True
+                    nextEdge = res[-1]
+            
+            edgeIndex = current.edges.index(edge)
+#            print "current edges:", current.edges, len(current.edges)
+#            print
+
+            #We check if we are at a star
+            star = False
+            for i in xrange(-1,len(current.edges)-1):
+                e1 = current.edges[i]
+                e2 = current.edges[i+1]
+                if e1[0] in e2 or e1[1] in e2:
+                    star = True
+                    break
+            
+#            print "star check:", star
+#            print current.edges
+#            print
+            if star and not starJump:
+                starJump = True
+                edge = current.edges[i]
+                dist = jumpDistance(p, current, edge)
+                current.jumpEdge(edge)
+                while dist != 0:
+                    index = current.edges.index(edge)
+                    edge = current.edges[(index-1)%len(current.edges)]
+                    dist += jumpDistance(p, current, edge)
+                    current.jumpEdge(edge)
+                    
+#                print "yay"
+                if getPols:
+                    yield Polygon(current.vertices, "blue")
+                else:
+                    yield current.edges
+            
+#            elif star and starJump:
+#                starJump = False
+                    
+            else:
+                if starJump:
+                    starJump = False
+            #we are not in a star
+                for i in xrange(len(current.edges)):
+#                    if edgeIndex == firstIndex:
+#                        continue
+    #                print "index", edgeIndex
+                    res, newEdge = xJump(p, current, current.edges[edgeIndex%len(current.edges)], -1)
+    #                if not res:
+    #                    print "current", current.getVisPolygon(), len(current.edges)
+    #                    print "edge", current.edges[edgeIndex%len(current.edges)], res
+    #                    print
+                    if res:
+    #                    print "got it", current.getVisPolygon(), len(current.edges)
+    #                    print "edge", newEdge, res
+    #                    print
+                        edge = newEdge
+#                        print "yay"
+                        if getPols:
+                            yield Polygon(current.vertices, "blue")
+                        else:
+                            yield current.edges
+                        break
+                    edgeIndex += 1
+                    
+                if not res: #We can not go any further
+    #                print "wall"
+#                    print "finished!"
+                    finished = True
+                    #finished = True        
+        
                 
-                if current.edges == start.edges:
-                    break
-            
-            if firstJump is not None and current.edges == start.edges:
-                finished = True
-            
-            tries += 1
-            
-        level += 1
+                
+#        print "next"
+        level += 1        
         start = nextStart
+        edge = nextEdge
             
 class Cell(object):
     def __init__(self, p, points):
@@ -2253,9 +2429,10 @@ class Cell(object):
         self.vertices = getPolygon(self.U, self.L)
         self.edges = []
         self.edgeIndices = {}
-        self.__updateEdges()        
+        self._updateEdges()
             
-    def __updateEdges(self):
+    def _updateEdges(self):
+        self.U, self.L = getRegionR(self.upper, self.lower)
         self.edges = []
         self.edgeIndices = {}
         for l in self.U:
@@ -2263,11 +2440,12 @@ class Cell(object):
             endpoints = tuple(endpoints[0]), tuple(endpoints[1])
             self.edges.append(endpoints)
             self.edgeIndices[endpoints] = [l[1], UP]
-        for l in self.L:
+        for l in reversed(self.L):
             endpoints = l[1].getPoints()
             endpoints = tuple(endpoints[0]), tuple(endpoints[1])
             self.edges.append(endpoints)
             self.edgeIndices[endpoints] = [l[1], DOWN]
+        self.vertices = getPolygon(self.U, self.L)
             
     def jumpEdge(self, edge):
         p1, p2 = edge
@@ -2334,8 +2512,7 @@ class Cell(object):
             if self.counters[newDual] == 1:
                 self.lower.insert(dualize(newline), newline)
                 
-        self.__updateEdges()
-        self.U, self.L = getRegionR(self.upper, self.lower)
+        self._updateEdges()
         self.vertices = getPolygon(self.U, self.L)
             
     ########################### END UPDATE ##################################
