@@ -2247,6 +2247,7 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols = False):
         current = semiCopy(start)
         
         while not finished: #We go to the left
+            print "To the left!"
 #            print "current pre", current.edges
             if not nextFound:
 #                nextStart = copy.deepcopy(current)
@@ -2277,11 +2278,19 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols = False):
                 edge = current.edges[i]
                 dist = jumpDistance(p, current, edge)
                 current.jumpEdge(edge)
+#                if getPols:
+#                    yield Polygon(current.vertices, "blue")
+#                else:
+#                    yield current.edges
                 while dist != 0:
                     index = current.edges.index(edge)
                     edge = current.edges[(index-1)%len(current.edges)]
                     dist += jumpDistance(p, current, edge)
                     current.jumpEdge(edge)
+#                    if getPols:
+#                        yield Polygon(current.vertices, "blue")
+#                    else:
+#                        yield current.edges
                     
                 if current.edges != start.edges:
 #                        print "back to start"
@@ -2306,7 +2315,14 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols = False):
     #                    print "current", current.getVisPolygon(), len(current.edges)
     #                    print "edge", current.edges[edgeIndex%len(current.edges)], res
     #                    print
+                    
                     if res:
+#                        current.jumpEdge(newEdge)
+#                        if getPols:
+#                            yield Polygon(current.vertices, "blue")
+#                        else:
+#                            yield current.edges
+#                        current.jumpEdge(newEdge)
     #                    print "got it", current.getVisPolygon(), len(current.edges)
     #                    print "edge", newEdge, res
     #                    print
@@ -2334,7 +2350,7 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols = False):
         current = start
         
         while not finished: #We go to the right
-#            print "to the right!"
+            print "to the right!"
 #            print "current pre", current.edges
             if not nextFound:
 #                nextStart = copy.deepcopy(current)
@@ -2365,12 +2381,19 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols = False):
                 edge = current.edges[i]
                 dist = jumpDistance(p, current, edge)
                 current.jumpEdge(edge)
+#                if getPols:
+#                    yield Polygon(current.vertices, "blue")
+#                else:
+#                    yield current.edges
                 while dist != 0:
                     index = current.edges.index(edge)
                     edge = current.edges[(index-1)%len(current.edges)]
                     dist += jumpDistance(p, current, edge)
                     current.jumpEdge(edge)
-                    
+#                    if getPols:
+#                        yield Polygon(current.vertices, "blue")
+#                    else:
+#                        yield current.edges
 #                print "yay"
                 if getPols:
                     yield Polygon(current.vertices, "blue")
@@ -2393,7 +2416,14 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols = False):
     #                    print "current", current.getVisPolygon(), len(current.edges)
     #                    print "edge", current.edges[edgeIndex%len(current.edges)], res
     #                    print
+                    
                     if res:
+#                        current.jumpEdge(newEdge)
+#                        if getPols:
+#                            yield Polygon(current.vertices, "blue")
+#                        else:
+#                            yield current.edges
+#                        current.jumpEdge(newEdge)
     #                    print "got it", current.getVisPolygon(), len(current.edges)
     #                    print "edge", newEdge, res
     #                    print
@@ -2519,3 +2549,268 @@ class Cell(object):
             
     def getVisPolygon(self):
         return getPolSegs(self.vertices)
+        
+def genSpiralWalkEdges(p, pts, levels=float('inf'), getPols = False):
+    """Returns all the cells in the line array of pts whose distance from p's cell satisfies:
+    distance%3 = 0 and distance/3 <= levels.
+    """
+    
+    start = Cell(p, pts)
+    
+    level = 0
+#    if getPols:
+#        yield Polygon(start.vertices, "blue")
+#    else:
+#        yield start.edges
+        
+    edge = moveNCells(p, start, 3)
+
+    for e in reversed(edge):
+        start.jumpEdge(e)
+    
+    for e in edge:
+        start.jumpEdge(e)
+        yield e, getCenter(start.vertices)
+    
+    if len(edge) == 0:
+        return
+
+    edge = edge[-1]    #edge is the edge which we jumped to land in the current cell
+    
+    while(level < levels and start is not None):
+        print "level", level+1
+        firstEdge = edge
+#        print "starting", level, levels
+#        print "startingEdge", edge
+#        if getPols:
+#            yield Polygon(start.vertices, "blue")
+#        else:
+#            yield start.edges
+        
+        nextStart = None
+        nextFound = False
+        nextEdge = None
+        
+        firstIndex = None
+        finished = False
+        starJump = False
+        
+#        current = copy.deepcopy(start)
+        current = semiCopy(start)
+        
+        while not finished: #We go to the left
+#            print "current pre", current.edges
+            if not nextFound:
+#                nextStart = copy.deepcopy(current)
+                nextStart = semiCopy(current)
+                res = moveNCells(p, nextStart, 3)
+                if len(res) > 0:
+                    nextFound = True
+                    nextEdge = res
+            
+            edgeIndex = current.edges.index(edge)
+#            print "current edges:", current.edges, len(current.edges)
+#            print
+
+            #We check if we are at a star
+            star = False
+            for i in xrange(-1,len(current.edges)-1):
+                e1 = current.edges[i]
+                e2 = current.edges[i+1]
+                if e1[0] in e2 or e1[1] in e2:
+                    star = True
+                    break
+            
+#            print "star check:", star
+#            print current.edges
+#            print
+            if star and not starJump:
+                starJump = True
+                edge = current.edges[i]
+                dist = jumpDistance(p, current, edge)
+                current.jumpEdge(edge)
+                yield edge, getCenter(current.vertices)
+#                if getPols:
+#                    yield Polygon(current.vertices, "blue")
+#                else:
+#                    yield current.edges
+                while dist != 0:
+                    index = current.edges.index(edge)
+                    edge = current.edges[(index-1)%len(current.edges)]
+                    dist += jumpDistance(p, current, edge)
+                    current.jumpEdge(edge)
+                    yield edge, getCenter(current.vertices)
+#                    if getPols:
+#                        yield Polygon(current.vertices, "blue")
+#                    else:
+#                        yield current.edges
+                    
+                if current.edges == start.edges:
+##                        print "back to start"
+#                    yield edge, getCenter(current.vertices)
+#                    if getPols:
+#                        yield Polygon(current.vertices, "blue")
+#                    else:
+#                        yield current.edges
+#                else:
+                    finished = True
+            
+#            elif star and starJump:
+#                starJump = False
+                    
+            else:
+                if starJump:
+                    starJump = False
+            #we are not in a star
+                for i in xrange(len(current.edges)):
+    #                print "index", edgeIndex
+                    res, newEdge = xJump(p, current, current.edges[edgeIndex%len(current.edges)])
+    #                if not res:
+    #                    print "current", current.getVisPolygon(), len(current.edges)
+    #                    print "edge", current.edges[edgeIndex%len(current.edges)], res
+    #                    print
+                    
+                    if res:
+                        current.jumpEdge(newEdge)
+                        yield current.edges[edgeIndex%len(current.edges)], getCenter(current.vertices)
+#                        if getPols:
+#                            yield Polygon(current.vertices, "blue")
+#                        else:
+#                            yield current.edges
+                        current.jumpEdge(newEdge)
+    #                    print "got it", current.getVisPolygon(), len(current.edges)
+    #                    print "edge", newEdge, res
+    #                    print
+                        edge = newEdge
+                        if firstIndex == None:
+                            firstIndex = edgeIndex
+                        if current.edges != start.edges:
+    #                        print "back to start"
+                            yield edge, getCenter(current.vertices)
+#                            if getPols:
+#                                yield Polygon(current.vertices, "blue")
+#                            else:
+#                                yield current.edges
+                        else:
+                            finished = True
+                        break
+                    edgeIndex -= 1
+                    
+                if not res: #We can not go any further
+    #                print "wall"
+                    break
+                    #finished = True
+                    
+#        print "finished?", finished
+        edge = firstEdge
+        current = semiCopy(start)
+        
+        while not finished: #We go to the right
+            print "to the right!"
+#            print "current pre", current.edges
+            if not nextFound:
+#                nextStart = copy.deepcopy(current)
+                nextStart = semiCopy(current)
+                res = moveNCells(p, nextStart, 3)
+                if len(res) > 0:
+                    nextFound = True
+                    nextEdge = res
+            
+            edgeIndex = current.edges.index(edge)
+#            print "current edges:", current.edges, len(current.edges)
+#            print
+
+            #We check if we are at a star
+            star = False
+            for i in xrange(-1,len(current.edges)-1):
+                e1 = current.edges[i]
+                e2 = current.edges[i+1]
+                if e1[0] in e2 or e1[1] in e2:
+                    star = True
+                    break
+            
+#            print "star check:", star
+#            print current.edges
+#            print
+            if star and not starJump:
+                starJump = True
+                edge = current.edges[i]
+                dist = jumpDistance(p, current, edge)
+                current.jumpEdge(edge)
+                yield edge, getCenter(current.vertices)
+#                if getPols:
+#                    yield Polygon(current.vertices, "blue")
+#                else:
+#                    yield current.edges
+                while dist != 0:
+                    index = current.edges.index(edge)
+                    edge = current.edges[(index-1)%len(current.edges)]
+                    dist += jumpDistance(p, current, edge)
+                    current.jumpEdge(edge)
+                    yield edge, getCenter(current.vertices)
+#                    if getPols:
+#                        yield Polygon(current.vertices, "blue")
+#                    else:
+#                        yield current.edges
+#                print "yay"
+                    
+#                if getPols:
+#                    yield Polygon(current.vertices, "blue")
+#                else:
+#                    yield current.edges
+            
+#            elif star and starJump:
+#                starJump = False
+                    
+            else:
+                if starJump:
+                    starJump = False
+            #we are not in a star
+                for i in xrange(len(current.edges)):
+#                    if edgeIndex == firstIndex:
+#                        continue
+    #                print "index", edgeIndex
+                    res, newEdge = xJump(p, current, current.edges[edgeIndex%len(current.edges)], -1)
+    #                if not res:
+    #                    print "current", current.getVisPolygon(), len(current.edges)
+    #                    print "edge", current.edges[edgeIndex%len(current.edges)], res
+    #                    print
+                    
+                    if res:
+                        current.jumpEdge(newEdge)
+                        yield current.edges[edgeIndex%len(current.edges)], getCenter(current.vertices)
+#                        if getPols:
+#                            yield Polygon(current.vertices, "blue")
+#                        else:
+#                            yield current.edges
+                        current.jumpEdge(newEdge)
+    #                    print "got it", current.getVisPolygon(), len(current.edges)
+    #                    print "edge", newEdge, res
+    #                    print
+                        edge = newEdge
+#                        print "yay"
+                        yield edge, getCenter(current.vertices)
+#                        if getPols:
+#                            yield Polygon(current.vertices, "blue")
+#                        else:
+#                            yield current.edges
+                        break
+                    edgeIndex += 1
+                    
+                if not res: #We can not go any further
+    #                print "wall"
+#                    print "finished!"
+                    finished = True
+                    #finished = True        
+        
+                
+                
+#        print "next"
+        level += 1        
+        
+        for e in nextEdge:
+            start.jumpEdge(e)
+            yield e, getCenter(start.vertices)
+            
+        start = nextStart
+        edge = nextEdge[-1]
