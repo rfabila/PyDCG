@@ -3198,7 +3198,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
         M = nextM
         cr = nextCr
         
-def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
+def genSpiralWalkCr(p, pts, levels=float('inf')):
     """Returns all the cells in the line array of pts whose distance from p's cell satisfies:
     distance%3 = 0 and distance/3 <= levels.
     """
@@ -3232,13 +3232,13 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
     for i in xrange(len(edge)):
         e = edge[i][0]
         pt = edge[i][1]
-        print "e, pt", e, pt
-        if  ordertypes.lambda_matrix(pts+[pt])!=M:
-            raise Exception("Matrix")
-        if crossing.count_crossings(pts+[pt])!=cr:
-            raise Exception("cr")
-        
-     #   yield cr, pt
+#        print "e, pt", e, pt
+#        if  ordertypes.lambda_matrix(pts+[pt])!=M:
+#            raise Exception("Matrix")
+#        if crossing.count_crossings(pts+[pt])!=cr:
+#            raise Exception("cr")
+#        
+#        yield cr, pt
             
         cr+=chg_cr(M,D,p,e,pt)
         
@@ -3253,23 +3253,11 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
     
     while(level < levels and start is not None):
         print "                                           level", level+1
-        print "starting with"
-        print start.vertices
         firstEdge = edge
         auxpt = getCenter(start.vertices)
         
-        if  ordertypes.lambda_matrix(pts+[auxpt])!=M:
-            raise Exception("Matrix")
-        if crossing.count_crossings(pts+[auxpt])!=cr:
-            raise Exception("cr")
-        
-#        yield cr, auxpt
         for x in checkNeighbors(start, initialCr, cr, M, D, p, pts, auxpt):
             yield x
-#        if getPols:
-#            yield Polygon(start.vertices, "blue")
-#        else:
-#            yield start.edges
         
         nextStart = None
         nextFound = False
@@ -3288,10 +3276,10 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
         #################################################### TO THE LEFT ###############################################
         while not finished: #We go to the left
             lastVisited = current.edges
-            print "To the left!                               "
+#            print "To the left!                               "
 #            print "current pre", current.edges
             if not nextFound:
-                print "                                not found yet"
+#                print "                                not found yet"
                 nextStart = semiCopy(current)
                 res = moveNCells(p, nextStart, 3, getCenters=True)
                 if len(res) > 0:
@@ -3301,10 +3289,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
                         e = res[i][0]
                         pt = res[i][1]
                         
-                        if  ordertypes.lambda_matrix(pts+[pt])!=nextM:
-                            raise Exception("Matrix")
-                        if crossing.count_crossings(pts+[pt])!=nextCr:
-                            raise Exception("cr")
+                        
                         
 #                        yield nextCr, pt
                             
@@ -3341,16 +3326,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
                     cr += chg_cr(M, D, p, edgeCandidadte, auxpt)
                     update_lambda_matrix(M, D, p, edgeCandidadte, auxpt)
 
-                    if  ordertypes.lambda_matrix(pts+[pt])!=M:
-                        print M
-                        print
-                        print ordertypes.lambda_matrix(pts+[pt])
-                        raise Exception("Matrix")
-                    if crossing.count_crossings(pts+[pt])!=cr:
-                        print cr
-                        print
-                        print crossing.count_crossings(pts+[pt])
-                        raise Exception("cr")
+                    
                         
                     auxpt = getCenter(current.vertices)
                     
@@ -3363,16 +3339,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
                     cr += chg_cr(M, D, p, newEdge, pt)
                     update_lambda_matrix(M, D, p, newEdge, pt)
 
-                    if  ordertypes.lambda_matrix(pts+[auxpt])!=M:
-                        print M
-                        print
-                        print ordertypes.lambda_matrix(pts+[auxpt])
-                        raise Exception("Matrix")
-                    if crossing.count_crossings(pts+[auxpt])!=cr:
-                        print cr
-                        print
-                        print crossing.count_crossings(pts+[auxpt])
-                        raise Exception("cr")
+                
                     
 #                    print "done two jumps"
 #                    yield cr, auxpt
@@ -3431,16 +3398,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
                 
                 auxpt = getCenter(current.vertices)
 
-                if  ordertypes.lambda_matrix(pts+[auxpt])!=M:
-                    print M
-                    print
-                    print ordertypes.lambda_matrix(pts+[auxpt])
-                    raise Exception("Matrix")
-                if crossing.count_crossings(pts+[auxpt])!=cr:
-                    print cr
-                    print
-                    print crossing.count_crossings(pts+[auxpt])
-                    raise Exception("cr")
+                
                     
                 for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, auxpt):
                     yield x
@@ -3461,16 +3419,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
                     
                     auxpt = getCenter(current.vertices)
     
-                    if  ordertypes.lambda_matrix(pts+[auxpt])!=M:
-                        print M
-                        print
-                        print ordertypes.lambda_matrix(pts+[auxpt])
-                        raise Exception("Matrix")
-                    if crossing.count_crossings(pts+[auxpt])!=cr:
-                        print cr
-                        print
-                        print crossing.count_crossings(pts+[auxpt])
-                        raise Exception("cr")
+                    
                         
                     for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, auxpt):
                         yield x
@@ -3527,11 +3476,11 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
         #################################################### TO THE RIGHT ###############################################
         while not finished: #We go to the right
             lastVisited = current.edges 
-            print "To the right!                              "
+#            print "To the right!                              "
 #            print "current pre", current.edges
             if not nextFound:
                 nextStart = semiCopy(current)
-                print "                                        Not found yet!"
+#                print "                                        Not found yet!"
                 res = moveNCells(p, nextStart, 3, getCenters=True)
                 if len(res) > 0:
                     nextM = copy.deepcopy(M)
@@ -3550,8 +3499,8 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
                         nextCr += chg_cr(nextM,D,p,e,pt)
                         update_lambda_matrix(nextM,D,p,e,pt)
                         
-                    print "                                     FOUNDNEXT ON RIGHT"
-                    print nextStart.vertices
+#                    print "                                     FOUNDNEXT ON RIGHT"
+#                    print nextStart.vertices
 #                    nextStart = semiCopy(current)
                     nextFound = True
                     nextEdge = res[-1][0]
@@ -3582,17 +3531,6 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
                     ####################3
                     cr += chg_cr(M, D, p, edgeCandidadte, auxpt)
                     update_lambda_matrix(M, D, p, edgeCandidadte, auxpt)
-
-                    if  ordertypes.lambda_matrix(pts+[pt])!=M:
-                        print M
-                        print
-                        print ordertypes.lambda_matrix(pts+[pt])
-                        raise Exception("Matrix")
-                    if crossing.count_crossings(pts+[pt])!=cr:
-                        print cr
-                        print
-                        print crossing.count_crossings(pts+[pt])
-                        raise Exception("cr")
                         
                     auxpt = getCenter(current.vertices)
                     
@@ -3604,17 +3542,6 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
                     
                     cr += chg_cr(M, D, p, newEdge, pt)
                     update_lambda_matrix(M, D, p, newEdge, pt)
-
-                    if  ordertypes.lambda_matrix(pts+[auxpt])!=M:
-                        print M
-                        print
-                        print ordertypes.lambda_matrix(pts+[auxpt])
-                        raise Exception("Matrix")
-                    if crossing.count_crossings(pts+[auxpt])!=cr:
-                        print cr
-                        print
-                        print crossing.count_crossings(pts+[auxpt])
-                        raise Exception("cr")
                     
 #                    print "done two jumps"
 #                    yield cr, auxpt
@@ -3667,17 +3594,6 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
                 update_lambda_matrix(M, D, p, edge, auxpt)
                 
                 auxpt = getCenter(current.vertices)
-
-                if  ordertypes.lambda_matrix(pts+[auxpt])!=M:
-                    print M
-                    print
-                    print ordertypes.lambda_matrix(pts+[auxpt])
-                    raise Exception("Matrix")
-                if crossing.count_crossings(pts+[auxpt])!=cr:
-                    print cr
-                    print
-                    print crossing.count_crossings(pts+[auxpt])
-                    raise Exception("cr")
                     
 #                yield cr, auxpt
                 for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, auxpt):
@@ -3697,17 +3613,6 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
                     update_lambda_matrix(M, D, p, edge, auxpt)
                     
                     auxpt = getCenter(current.vertices)
-    
-                    if  ordertypes.lambda_matrix(pts+[auxpt])!=M:
-                        print M
-                        print
-                        print ordertypes.lambda_matrix(pts+[auxpt])
-                        raise Exception("Matrix")
-                    if crossing.count_crossings(pts+[auxpt])!=cr:
-                        print cr
-                        print
-                        print crossing.count_crossings(pts+[auxpt])
-                        raise Exception("cr")
                         
 #                    yield cr, auxpt
                     for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, auxpt):
@@ -3762,15 +3667,11 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
         cr = nextCr
         
 def checkNeighbors(cell, initialCr, cr, M, D, p, pts, auxpt):
+    if cr < initialCr[0]:
+        initialCr[0] = cr
+        yield auxpt, cr
     for e in cell.edges:
         change = chg_cr(M, D, p, e, auxpt)
-        cell.jumpEdge(e)
-        if crossing.count_crossings(pts+[getCenter(cell.vertices)]) != cr+change:        
-            print "                                                                     :("
-        assert crossing.count_crossings(pts+[getCenter(cell.vertices)]) == cr+change
-        if crossing.count_crossings(pts+[getCenter(cell.vertices)]) != cr+change:
-            raise Exception
-        cell.jumpEdge(e)
         if cr+change < initialCr[0]:
             initialCr[0] = cr+change
             cell.jumpEdge(e)
