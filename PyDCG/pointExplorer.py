@@ -915,8 +915,13 @@ def getCenter(polygon):
     for f in funcs:
         for g in funcs:
             candidate = [f(res[0]/n), g(res[1]/n)]
-            if pointInPolygon(candidate, polygon) and not sameXCoord(candidate, polygon):
-                return candidate
+            deltas = [0,-1,2]
+            for d in deltas:
+                candidate[0]+=d
+                if pointInPolygon(candidate, polygon) and not sameXCoord(candidate, polygon):
+                    return candidate
+                    
+    print "Warning, no center found", polygon
     return None
 
 def getPolSegs(polygon, w=3):
@@ -3667,6 +3672,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf')):
         cr = nextCr
         
 def checkNeighbors(cell, initialCr, cr, M, D, p, pts, auxpt):
+    assert auxpt is not None
     if cr < initialCr[0]:
         initialCr[0] = cr
         yield auxpt, cr
