@@ -915,8 +915,13 @@ def getCenter(polygon):
     for f in funcs:
         for g in funcs:
             candidate = [f(res[0]/n), g(res[1]/n)]
-            if pointInPolygon(candidate, polygon) and not sameXCoord(candidate, polygon):
-                return candidate
+            deltas = [0,-1,2]
+            for d in deltas:
+                candidate[0]+=d
+                if pointInPolygon(candidate, polygon) and not sameXCoord(candidate, polygon):
+                    return candidate
+                    
+#    print "Warning, no center found", polygon
     return None
 
 def getPolSegs(polygon, w=3):
@@ -1827,6 +1832,7 @@ def randPointPolygon(poly, tries=100):
         if p is not None:
             return p
         tries -= 1
+#    print "Warning, no point found in", poly
     return None
     
 
@@ -2171,16 +2177,17 @@ def moveNCells(p, cell, jumps=3, forbiddenEdge = None, getCenters = False):
 #        print "edge", edge, "moves", "farther" if move == FARTHER else "closer"
         if (move == FARTHER and jumps > 0) or (move == CLOSER and jumps < 0):
 #            print "One jump!", edge
-            center = getCenter(cell.vertices)
+#            center = randPointPolygon(cell.vertices)
+#            assert center is not None
             cell.jumpEdge(edge)            
             if abs(jumps) == 1:
                 if getCenters:
-                    return [[edge, center]]
+                    return [[edge, cell.vertices]]
                 return [edge]
             res =  moveNCells(p, cell, jumps+inc, forbiddenEdge, getCenters)
             if len(res) > 0:
                 if getCenters:
-                    return [[edge, center]] + res
+                    return [[edge, cell.vertices]] + res
                 return [edge] + res
             cell.jumpEdge(edge)
         
@@ -2197,11 +2204,12 @@ def xJump(p, cell, edge, jumpDir = 1, getAuxpt = False):
     nextEdge = cell.edges.index(edge)
     nextEdge = cell.edges[(nextEdge+jumpDir)%len(cell.edges)]
     dist += jumpDistance(p, cell, nextEdge)
-    auxpt = getCenter(cell.vertices)
+    auxvertices = cell.vertices
+#    assert auxpt is not None
     if dist == 0:
         cell.jumpEdge(nextEdge)
         if getAuxpt:
-            return True, [nextEdge, auxpt]
+            return True, [nextEdge, auxvertices]
         return True, nextEdge
     cell.jumpEdge(edge)
     if getAuxpt:
@@ -2648,7 +2656,11 @@ class Cell(object):
     def getVisPolygon(self):
         return getPolSegs(self.vertices)
         
-def chg_cr(M,D,p,edge,point):
+def chg_cr(M,D,p,edge,vertices):
+    assert len(vertices) > 2
+    for point in vertices:
+        if turn(edge[0], edge[1], point) != COLLINEAR:
+            break
     edge2=([edge[0][0],edge[0][1]], [edge[1][0],edge[1][1]])
     if turn(edge2[0],edge2[1],point)>0:
         p0=D[edge[0]]
@@ -2667,7 +2679,11 @@ def chg_cr(M,D,p,edge,point):
     ch_cr= ch_cr - M[pi][p1] +1 
     return ch_cr
     #----------------------------------------------------------------        
-def update_lambda_matrix(M,D,p,edge,point):
+def update_lambda_matrix(M,D,p,edge,vertices):
+    assert len(vertices) > 2
+    for point in vertices:
+        if turn(edge[0], edge[1], point) != COLLINEAR:
+            break
     edge2=([edge[0][0],edge[0][1]], [edge[1][0],edge[1][1]])
     if turn(edge2[0],edge2[1],point)>0:
         p0=D[edge[0]]
@@ -2685,7 +2701,7 @@ def update_lambda_matrix(M,D,p,edge,point):
     M[pi][p1]=M[pi][p1]-1
     #----------------------------------------------------------------- 
     
-def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
+def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
     """Returns all the cells in the line array of pts whose distance from p's cell satisfies:
     distance%3 = 0 and distance/3 <= levels.
     """
@@ -2704,9 +2720,18 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
     M=ordertypes.lambda_matrix(pts+[p])
     D=ordertypes.points_index(pts+[p])   
     cr=crossing.count_crossings(pts+[p])
+    initialCr = cr
     ################################################
     
-    #yield auxpt, cr
+    #yield auxpt, initialCr, initialCr, cr
+    
+    for e in start.edges:
+        change = chg_cr(M, D, p, e, p)
+        if cr+change < initialCr:
+            initialCr = cr+change
+            start.jumpEdge(e)
+            yield getCenter(start.vertices), initialCr
+            start.jumpEdge(e)
     
     edge = moveNCells(p, start, 3, getCenters=True)
     
@@ -2716,24 +2741,12 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
         return
         
     ################################################3
-#    for e in reversed(edge):
-#        start.jumpEdge(e)
     for i in xrange(len(edge)):
         e = edge[i][0]
         pt = edge[i][1]
-        print "e, pt", e, pt
-        if  ordertypes.lambda_matrix(pts+[pt])!=M:
-            raise Exception("Matrix")
-        if crossing.count_crossings(pts+[pt])!=cr:
-            raise Exception("cr")
-        
-        yield cr, pt
-            
+        assert pt is not None
         cr+=chg_cr(M,D,p,e,pt)
-        
         update_lambda_matrix(M,D,p,e,pt)
-#        start.jumpEdge(e)
-#        auxpt = getCenter(start.vertices)
         
     #################################################
     
@@ -2746,17 +2759,6 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
         print start.vertices
         firstEdge = edge
         auxpt = getCenter(start.vertices)
-        
-        if  ordertypes.lambda_matrix(pts+[auxpt])!=M:
-            raise Exception("Matrix")
-        if crossing.count_crossings(pts+[auxpt])!=cr:
-            raise Exception("cr")
-        
-        yield cr, auxpt
-#        if getPols:
-#            yield Polygon(start.vertices, "blue")
-#        else:
-#            yield start.edges
         
         nextStart = None
         nextFound = False
@@ -2774,11 +2776,23 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
         current = semiCopy(start)
         #################################################### TO THE LEFT ###############################################
         while not finished: #We go to the left
+        
+            for e in current.edges:
+                change = chg_cr(M, D, p, e, auxpt)
+                if cr+change < initialCr:
+                    initialCr = cr+change
+                    current.jumpEdge(e)
+                    if crossing.count_crossings(pts+[getCenter(current.vertices)]) != initialCr:
+                        raise Exception
+                    yield getCenter(current.vertices), initialCr
+                    
+                    current.jumpEdge(e)
+                    
             lastVisited = current.edges
             print "To the left!                               "
 #            print "current pre", current.edges
             if not nextFound:
-                print "                                not found yet"
+#                print "                                not found yet"
                 nextStart = semiCopy(current)
                 res = moveNCells(p, nextStart, 3, getCenters=True)
                 if len(res) > 0:
@@ -2788,18 +2802,13 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
                         e = res[i][0]
                         pt = res[i][1]
                         
-                        if  ordertypes.lambda_matrix(pts+[pt])!=nextM:
-                            raise Exception("Matrix")
-                        if crossing.count_crossings(pts+[pt])!=nextCr:
-                            raise Exception("cr")
-                        
-                        yield nextCr, pt
-                            
+#                        yield nextCr, pt
+                        assert pt is not None
                         nextCr += chg_cr(nextM,D,p,e,pt)
                         update_lambda_matrix(nextM,D,p,e,pt)
                         
-                    print "                                     FOUNDNEXT"
-                    print nextStart.vertices
+#                    print "                                     FOUNDNEXT"
+#                    print nextStart.vertices
                     nextFound = True
                     nextEdge = res[-1][0]
                 else:
@@ -2814,11 +2823,11 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
                 res, newEdge = xJump(p, current, current.edges[edgeIndex%len(current.edges)], getAuxpt=True)
                 
                 if res:
+                    
 #                    print "found edge"
                     pt = newEdge[1]
                     newEdge = newEdge[0]
                     if current.edges == lastVisited:
-                        
                         res = False
                         continue
                     if starJump:
@@ -2828,37 +2837,43 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
                     cr += chg_cr(M, D, p, edgeCandidadte, auxpt)
                     update_lambda_matrix(M, D, p, edgeCandidadte, auxpt)
 
-                    if  ordertypes.lambda_matrix(pts+[pt])!=M:
-                        print M
-                        print
-                        print ordertypes.lambda_matrix(pts+[pt])
-                        raise Exception("Matrix")
-                    if crossing.count_crossings(pts+[pt])!=cr:
-                        print cr
-                        print
-                        print crossing.count_crossings(pts+[pt])
-                        raise Exception("cr")
+#                    if  ordertypes.lambda_matrix(pts+[pt])!=M:
+#                        print M
+#                        print
+#                        print ordertypes.lambda_matrix(pts+[pt])
+#                        raise Exception("Matrix")
+#                    if crossing.count_crossings(pts+[pt])!=cr:
+#                        print cr
+#                        print
+#                        print crossing.count_crossings(pts+[pt])
+#                        raise Exception("cr")
                         
                     auxpt = getCenter(current.vertices)
                     
-                    yield cr, pt
+#                    yield cr, pt
                     
-                    cr += chg_cr(M, D, p, newEdge, pt)
+                    change += chg_cr(M, D, p, newEdge, pt)
                     update_lambda_matrix(M, D, p, newEdge, pt)
-
-                    if  ordertypes.lambda_matrix(pts+[auxpt])!=M:
-                        print M
-                        print
-                        print ordertypes.lambda_matrix(pts+[auxpt])
-                        raise Exception("Matrix")
-                    if crossing.count_crossings(pts+[auxpt])!=cr:
-                        print cr
-                        print
-                        print crossing.count_crossings(pts+[auxpt])
-                        raise Exception("cr")
+                    
+                    if cr+change < initialCr:
+                        initialCr = cr+change
+                        if crossing.count_crossings(pts+[auxpt]) != initialCr:
+                            raise Exception
+                        yield auxpt, initialCr
+                    cr += change
+                    
+                    for e in current.edges:
+                        change = chg_cr(M, D, p, e, auxpt)
+                        if cr+change < initialCr:
+                            initialCr = cr+change
+                            current.jumpEdge(e)
+                            if crossing.count_crossings(pts+[getCenter(current.vertices)]) != initialCr:
+                                raise Exception
+                            yield getCenter(current.vertices), initialCr
+                            current.jumpEdge(e)
                     
 #                    print "done two jumps"
-                    yield cr, auxpt
+#                    yield cr, auxpt
                     
                     
                     ##########################3
@@ -2907,23 +2922,17 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
                 current.jumpEdge(edge)
                 
                 ###########################33
-                cr += chg_cr(M, D, p, edge, auxpt)
+                change = chg_cr(M, D, p, edge, auxpt)
                 update_lambda_matrix(M, D, p, edge, auxpt)
-                
                 auxpt = getCenter(current.vertices)
-
-                if  ordertypes.lambda_matrix(pts+[auxpt])!=M:
-                    print M
-                    print
-                    print ordertypes.lambda_matrix(pts+[auxpt])
-                    raise Exception("Matrix")
-                if crossing.count_crossings(pts+[auxpt])!=cr:
-                    print cr
-                    print
-                    print crossing.count_crossings(pts+[auxpt])
-                    raise Exception("cr")
+                
+                if cr+change < initialCr:
+                    initialCr = cr+change
+                    if crossing.count_crossings(pts+[auxpt]) != initialCr:
+                        raise Exception
+                    yield auxpt, initialCr
                     
-                yield cr, auxpt
+                cr += change
                 ###################################
                 
                 while dist != 0: #Jumping around starPoint
@@ -2935,23 +2944,16 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
                     dist += jumpDistance(p, current, edge)
                     current.jumpEdge(edge)
                     ###########################33
-                    cr += chg_cr(M, D, p, edge, auxpt)
+                    change = chg_cr(M, D, p, edge, auxpt)
                     update_lambda_matrix(M, D, p, edge, auxpt)
-                    
                     auxpt = getCenter(current.vertices)
-    
-                    if  ordertypes.lambda_matrix(pts+[auxpt])!=M:
-                        print M
-                        print
-                        print ordertypes.lambda_matrix(pts+[auxpt])
-                        raise Exception("Matrix")
-                    if crossing.count_crossings(pts+[auxpt])!=cr:
-                        print cr
-                        print
-                        print crossing.count_crossings(pts+[auxpt])
-                        raise Exception("cr")
                         
-                    yield cr, auxpt
+                    if cr+change < initialCr:
+                        initialCr = cr+change
+                        assert crossing.count_crossings(pts+[auxpt]) == initialCr
+                        yield auxpt, initialCr
+                        
+                    cr += change
                     ###################################
                     
                 #We check than we landed in the right direction
@@ -3016,19 +3018,12 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
                     for i in xrange(len(res)):
                         e = res[i][0]
                         pt = res[i][1]
-                        
-                        if  ordertypes.lambda_matrix(pts+[pt])!=nextM:
-                            raise Exception("Matrix")
-                        if crossing.count_crossings(pts+[pt])!=nextCr:
-                            raise Exception("cr")
-                        
-                        yield nextCr, pt
                             
                         nextCr += chg_cr(nextM,D,p,e,pt)
                         update_lambda_matrix(nextM,D,p,e,pt)
                         
-                    print "                                     FOUNDNEXT ON RIGHT"
-                    print nextStart.vertices
+#                    print "                                     FOUNDNEXT ON RIGHT"
+#                    print nextStart.vertices
 #                    nextStart = semiCopy(current)
                     nextFound = True
                     nextEdge = res[-1][0]
@@ -3060,37 +3055,41 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
                     cr += chg_cr(M, D, p, edgeCandidadte, auxpt)
                     update_lambda_matrix(M, D, p, edgeCandidadte, auxpt)
 
-                    if  ordertypes.lambda_matrix(pts+[pt])!=M:
-                        print M
-                        print
-                        print ordertypes.lambda_matrix(pts+[pt])
-                        raise Exception("Matrix")
-                    if crossing.count_crossings(pts+[pt])!=cr:
-                        print cr
-                        print
-                        print crossing.count_crossings(pts+[pt])
-                        raise Exception("cr")
+#                    if  ordertypes.lambda_matrix(pts+[pt])!=M:
+#                        print M
+#                        print
+#                        print ordertypes.lambda_matrix(pts+[pt])
+#                        raise Exception("Matrix")
+#                    if crossing.count_crossings(pts+[pt])!=cr:
+#                        print cr
+#                        print
+#                        print crossing.count_crossings(pts+[pt])
+#                        raise Exception("cr")
                         
                     auxpt = getCenter(current.vertices)
                     
-                    yield cr, pt
+#                    yield cr, pt
                     
-                    cr += chg_cr(M, D, p, newEdge, pt)
+                    change = chg_cr(M, D, p, newEdge, pt)
                     update_lambda_matrix(M, D, p, newEdge, pt)
 
-                    if  ordertypes.lambda_matrix(pts+[auxpt])!=M:
-                        print M
-                        print
-                        print ordertypes.lambda_matrix(pts+[auxpt])
-                        raise Exception("Matrix")
-                    if crossing.count_crossings(pts+[auxpt])!=cr:
-                        print cr
-                        print
-                        print crossing.count_crossings(pts+[auxpt])
-                        raise Exception("cr")
+                    if cr+change < initialCr:
+                        initialCr = cr+change
+                        assert crossing.count_crossings(pts+[auxpt]) == initialCr
+                        yield auxpt, initialCr
+                    cr += change
+                    
+                    for e in current.edges:
+                        change = chg_cr(M, D, p, e, auxpt)
+                        if cr+change < initialCr:
+                            initialCr = cr+change
+                            current.jumpEdge(e)
+                            assert crossing.count_crossings(pts+[getCenter(current.vertices)]) == initialCr
+                            yield getCenter(current.vertices), initialCr
+                            current.jumpEdge(e)
                     
 #                    print "done two jumps"
-                    yield cr, auxpt
+#                    yield cr, auxpt
                     
                     
                     ##########################3
@@ -3134,23 +3133,17 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
                 current.jumpEdge(edge)
                 
                 ###########################33
-                cr += chg_cr(M, D, p, edge, auxpt)
+                change = chg_cr(M, D, p, edge, auxpt)
                 update_lambda_matrix(M, D, p, edge, auxpt)
                 
                 auxpt = getCenter(current.vertices)
-
-                if  ordertypes.lambda_matrix(pts+[auxpt])!=M:
-                    print M
-                    print
-                    print ordertypes.lambda_matrix(pts+[auxpt])
-                    raise Exception("Matrix")
-                if crossing.count_crossings(pts+[auxpt])!=cr:
-                    print cr
-                    print
-                    print crossing.count_crossings(pts+[auxpt])
-                    raise Exception("cr")
                     
-                yield cr, auxpt
+                if cr+change < initialCr:
+                    initialCr = cr+change
+                    assert crossing.count_crossings(pts+[auxpt]) == initialCr
+                    yield auxpt, initialCr
+                    
+                cr += change
                 ###################################
                 
                 while dist != 0: #Jumping around starPoint
@@ -3162,23 +3155,17 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
                     dist += jumpDistance(p, current, edge)
                     current.jumpEdge(edge)
                     ###########################33
-                    cr += chg_cr(M, D, p, edge, auxpt)
+                    change = chg_cr(M, D, p, edge, auxpt)
                     update_lambda_matrix(M, D, p, edge, auxpt)
                     
                     auxpt = getCenter(current.vertices)
-    
-                    if  ordertypes.lambda_matrix(pts+[auxpt])!=M:
-                        print M
-                        print
-                        print ordertypes.lambda_matrix(pts+[auxpt])
-                        raise Exception("Matrix")
-                    if crossing.count_crossings(pts+[auxpt])!=cr:
-                        print cr
-                        print
-                        print crossing.count_crossings(pts+[auxpt])
-                        raise Exception("cr")
+                    
+                    if cr+change < initialCr:
+                        initialCr = cr+change
+                        assert crossing.count_crossings(pts+[auxpt]) == initialCr
+                        yield auxpt, initialCr
                         
-                    yield cr, auxpt
+                    cr += change
                     ###################################
                     
                 #We check than we landed in the right direction
@@ -3227,3 +3214,507 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), getPols = False):
         
         M = nextM
         cr = nextCr
+        
+def genSpiralWalkCr(p, pts, levels=float('inf')):
+    """Returns all the cells in the line array of pts whose distance from p's cell satisfies:
+    distance%3 = 0 and distance/3 <= levels.
+    """
+    
+    start = Cell(p, pts)    
+    level = 0
+
+    ################################################33
+    auxvertices = None
+    M=ordertypes.lambda_matrix(pts+[p])
+    D=ordertypes.points_index(pts+[p])   
+    cr=crossing.count_crossings(pts+[p])
+#    print "cr", cr
+    initialCr = [cr]
+    ################################################
+    
+    #yield auxpt, cr
+    
+    for x in checkNeighbors(start, initialCr, cr, M, D, p, pts):
+        yield x
+    
+    edge = moveNCells(p, start, 3, getCenters=True)
+    
+#    auxpt = getCenter(start.vertices)
+    
+    if len(edge) == 0:
+        return
+        
+    ################################################3
+#    for e in reversed(edge):
+#        start.jumpEdge(e)
+    for i in xrange(len(edge)):
+        e = edge[i][0]
+        vertices = edge[i][1]
+#        print "e, pt", e, pt
+#        if  ordertypes.lambda_matrix(pts+[pt])!=M:
+#            raise Exception("Matrix")
+#        if crossing.count_crossings(pts+[pt])!=cr:
+#            raise Exception("cr")
+#        
+#        yield cr, pt
+            
+        cr+=chg_cr(M,D,p,e,vertices)
+        
+        update_lambda_matrix(M,D,p,e,vertices)
+#        start.jumpEdge(e)
+#        auxpt = getCenter(start.vertices)
+        
+    #################################################
+    
+    edge = edge[-1][0]    #edge is the edge which we jumped to land in the current cell
+    
+    
+    while(level < levels and start is not None):
+#        print "                                           level", level+1
+        firstEdge = edge
+#        auxpt = randPointPolygon(start.vertices)
+        auxvertices = start.vertices
+        assert auxvertices is not None
+        
+        for x in checkNeighbors(start, initialCr, cr, M, D, p, pts):
+            yield x
+        
+        nextStart = None
+        nextFound = False
+        nextEdge = None
+        ################3
+        nextM = None
+        nextCr = None
+        bakM = copy.deepcopy(M)
+        bakCr = cr
+        #################
+        
+        firstIndex = None
+        finished = False
+        starJump = False
+        current = semiCopy(start)
+        #################################################### TO THE LEFT ###############################################
+        while not finished: #We go to the left
+            lastVisited = current.edges
+#            print "To the left!                               "
+#            print "current pre", current.edges
+            if not nextFound:
+#                print "                                not found yet"
+                nextStart = semiCopy(current)
+                res = moveNCells(p, nextStart, 3, getCenters=True)
+                if len(res) > 0:
+                    nextM = copy.deepcopy(M)
+                    nextCr = cr
+                    for i in xrange(len(res)):
+                        e = res[i][0]
+                        vertices = res[i][1]
+                        
+                        
+                        
+#                        yield nextCr, pt
+                            
+                        nextCr += chg_cr(nextM,D,p,e,vertices)
+                        update_lambda_matrix(nextM,D,p,e,vertices)
+                        
+#                    print "                                     FOUNDNEXT"
+#                    print nextStart.vertices
+                    nextFound = True
+                    nextEdge = res[-1][0]
+                else:
+                    nextStart = None
+            
+            edgeIndex = current.edges.index(edge)
+                
+            #Try an usual jump over every edge
+            for i in xrange(len(current.edges)):
+#                print "index", edgeIndex
+                edgeCandidadte = current.edges[edgeIndex%len(current.edges)]
+                res, newEdge = xJump(p, current, current.edges[edgeIndex%len(current.edges)], getAuxpt=True)
+                
+                if res:
+#                    print "found edge"
+                    midvertices = newEdge[1] #TODO: Change this name
+                    newEdge = newEdge[0]
+                    if current.edges == lastVisited:
+                        
+                        res = False
+                        continue
+                    if starJump:
+                        starJump = False
+                        
+                    ####################3
+                    cr += chg_cr(M, D, p, edgeCandidadte, auxvertices)
+                    update_lambda_matrix(M, D, p, edgeCandidadte, auxvertices)
+
+                    
+                        
+#                    auxpt = randPointPolygon(current.vertices)
+                    auxvertices = current.vertices
+                    
+                    current.jumpEdge(newEdge)
+                    for x in checkNeighbors(current, initialCr, cr, M, D, p, pts):
+                        yield x
+                    current.jumpEdge(newEdge)
+#                    yield cr, pt
+                    
+                    cr += chg_cr(M, D, p, newEdge, midvertices)
+                    update_lambda_matrix(M, D, p, newEdge, midvertices)
+
+                
+                    
+#                    print "done two jumps"
+#                    yield cr, auxpt
+                    for x in checkNeighbors(current, initialCr, cr, M, D, p, pts):
+                        yield x
+                    
+                    
+                    ##########################3
+                    
+                    edge = newEdge
+                    if firstIndex == None:
+                        firstIndex = edgeIndex
+                        
+#                    if current.edges != start.edges:
+#                        if getPols:
+#                            yield Polygon(current.vertices, "blue")
+#                        else:
+#                            yield current.edges
+                    if current.edges == start.edges:
+#                        print "back to start"
+                        finished = True
+                    break
+                edgeIndex -= 1
+                
+            if not res and not starJump: #We couldn't make an usual jump, try to starjump
+#                print "No res"                
+                star = False
+                
+                for i in xrange(-1,len(current.edges)-1):
+                    e1 = current.edges[i]
+                    e2 = current.edges[i+1]
+                    if e1[0] in e2 and list(e1[0]) in current.vertices:
+                        starPoint = e1[0]
+                        star = True
+                        break
+                    if e1[1] in e2 and list(e1[1]) in current.vertices:
+                        starPoint = e1[1]
+                        star = True
+                        break
+                
+#                print "star check:", star    
+                if not star:
+#                    print "Nothng else to do"
+                    break
+                
+                starEdge = i
+                
+#                print "trying starjump"
+                edge = current.edges[starEdge+1]
+                dist = jumpDistance(p, current, edge)
+                current.jumpEdge(edge)
+                
+                ###########################33
+                cr += chg_cr(M, D, p, edge, auxvertices)
+                update_lambda_matrix(M, D, p, edge, auxvertices)
+                
+                auxvertices = current.vertices
+
+                
+                    
+                for x in checkNeighbors(current, initialCr, cr, M, D, p, pts):
+                    yield x
+#                yield cr, auxpt
+                ###################################
+                
+                while dist != 0: #Jumping around starPoint
+                    index = current.edges.index(edge)
+                    if starPoint in current.edges[(index+1)%len(current.edges)]:
+                        edge = current.edges[(index+1)%len(current.edges)]
+                    else:
+                        edge = current.edges[(index-1)%len(current.edges)]
+                    dist += jumpDistance(p, current, edge)
+                    current.jumpEdge(edge)
+                    ###########################33
+                    cr += chg_cr(M, D, p, edge, auxvertices)
+                    update_lambda_matrix(M, D, p, edge, auxvertices)
+                    
+                    auxvertices = current.vertices
+                    
+                    for x in checkNeighbors(current, initialCr, cr, M, D, p, pts):
+                        yield x
+#                    yield cr, auxpt
+                    ###################################
+                    
+                #We check than we landed in the right direction
+                vertexCheck = 0
+                while turn(edge[0], edge[1], current.vertices[vertexCheck]) == COLLINEAR:
+                    vertexCheck += 1
+#                print "giving to turn", p, starPoint, current.vertices[vertexCheck]
+#                print
+                if turn(p, starPoint, current.vertices[vertexCheck]) == LEFT:
+#                    print "starjump"
+                    starJump = True
+                    res = True
+                    if current.edges != start.edges:
+    #                        print "back to start"
+#                        if getPols:
+#                            yield Polygon(current.vertices, "blue")
+#                        else:
+#                            yield current.edges
+                        #We need to set the right edge
+                        index = current.edges.index(edge)
+                        if starPoint in current.edges[(index+1)%len(current.edges)]:
+                            otherEdge = current.edges[(index+1)%len(current.edges)]
+                        else:
+                            otherEdge = current.edges[(index-1)%len(current.edges)]
+                        vertexE = 0
+                        while turn(edge[0], edge[1], current.vertices[vertexE]) != COLLINEAR:
+                            vertexE += 1
+                        vertexO = 0
+                        while turn(edge[0], edge[1], current.vertices[vertexO]) != COLLINEAR:
+                            vertexO += 1
+                        if turn(starPoint, current.vertices[vertexE], current.vertices[vertexO]) == turn(starPoint, current.vertices[vertexE], p):
+                            edge = otherEdge
+                    else:
+                        finished = True
+                else: #The direction changed
+#                    print "wall inside, inversion"
+                    break
+                
+            if not res:
+#                print "wall final, nothing else to do"
+                break
+        #################################################### END TO THE LEFT ###############################################            
+#        print "finished?", finished
+        edge = firstEdge
+        current = start
+        
+        M = bakM
+        cr = bakCr
+        auxvertices = current.vertices
+#        print "verts", auxvertices
+        #################################################### TO THE RIGHT ###############################################
+        while not finished: #We go to the right
+            lastVisited = current.edges 
+#            print "To the right!                              "
+#            print "current pre", current.edges
+            if not nextFound:
+                nextStart = semiCopy(current)
+#                print "                                        Not found yet!"
+                res = moveNCells(p, nextStart, 3, getCenters=True)
+                if len(res) > 0:
+                    nextM = copy.deepcopy(M)
+                    nextCr = cr
+                    for i in xrange(len(res)):
+                        e = res[i][0]
+                        vertices = res[i][1]
+                        
+#                        if  ordertypes.lambda_matrix(pts+[pt])!=nextM:
+#                            raise Exception("Matrix")
+#                        if crossing.count_crossings(pts+[pt])!=nextCr:
+#                            raise Exception("cr")
+                        
+#                        yield nextCr, pt
+                            
+                        nextCr += chg_cr(nextM,D,p,e,vertices)
+                        update_lambda_matrix(nextM,D,p,e,vertices)
+                        
+#                    print "                                     FOUNDNEXT ON RIGHT"
+#                    print nextStart.vertices
+#                    nextStart = semiCopy(current)
+                    nextFound = True
+                    nextEdge = res[-1][0]
+                else:
+#                    print "                                       Set to None"
+                    nextStart = None
+            
+            edgeIndex = current.edges.index(edge)
+                
+            #Try an usual jump over every edge
+#            print "trying usual"
+            for i in xrange(len(current.edges)):
+#                print "index", edgeIndex
+                edgeCandidadte = current.edges[edgeIndex%len(current.edges)]
+                res, newEdge = xJump(p, current, current.edges[edgeIndex%len(current.edges)], -1, getAuxpt=True)
+                
+                if res:
+#                    print "found edge"
+                    midvertices = newEdge[1]
+                    newEdge = newEdge[0]
+                    if current.edges == lastVisited:
+#                        print "repeating"
+                        res = False
+                        continue
+                    if starJump:
+                        starJump = False
+                        
+                    ####################3
+#                    print "verts", auxvertices
+                    cr += chg_cr(M, D, p, edgeCandidadte, auxvertices)
+                    update_lambda_matrix(M, D, p, edgeCandidadte, auxvertices)
+                        
+                    auxvertices = current.vertices
+                    
+                    current.jumpEdge(newEdge)
+                    for x in checkNeighbors(current, initialCr, cr, M, D, p, pts):
+                        yield x
+                    current.jumpEdge(newEdge)
+#                    yield cr, pt
+                    
+                    cr += chg_cr(M, D, p, newEdge, midvertices)
+                    update_lambda_matrix(M, D, p, newEdge, midvertices)
+                    
+#                    print "done two jumps"
+#                    yield cr, auxpt
+                    for x in checkNeighbors(current, initialCr, cr, M, D, p, pts):
+                        yield x
+                    
+                    
+                    ##########################3
+                    edge = newEdge
+                    if firstIndex == None:
+                        firstIndex = edgeIndex
+#                    if getPols:
+#                        yield Polygon(current.vertices, "blue")
+#                    else:
+#                        yield current.edges
+                    break
+                edgeIndex += 1
+#            print "res, starJump is ", res, starJump
+#            print 
+            if not res and not starJump: #We couldn't make an usual jump, try to starjump
+#                print "No res"                
+                star = False
+                
+                for i in xrange(-1,len(current.edges)-1):
+                    e1 = current.edges[i]
+                    e2 = current.edges[i+1]
+                    if e1[0] in e2 and list(e1[0]) in current.vertices:
+                        starPoint = e1[0]
+                        star = True
+                        break
+                    if e1[1] in e2 and list(e1[1]) in current.vertices:
+                        starPoint = e1[1]
+                        star = True
+                        break
+                
+#                print "star check:", star    
+                if not star:
+#                    print "Nothng else to do"
+                    break
+                
+                starEdge = i
+                
+#                print "trying starjump"
+                edge = current.edges[starEdge+1]
+                dist = jumpDistance(p, current, edge)
+                current.jumpEdge(edge)
+                
+                ###########################33
+                cr += chg_cr(M, D, p, edge, auxvertices)
+                update_lambda_matrix(M, D, p, edge, auxvertices)
+                
+                auxvertices = current.vertices
+                    
+#                yield cr, auxpt
+                for x in checkNeighbors(current, initialCr, cr, M, D, p, pts):
+                    yield x
+                ###################################
+                
+                while dist != 0: #Jumping around starPoint
+                    index = current.edges.index(edge)
+                    if starPoint in current.edges[(index+1)%len(current.edges)]:
+                        edge = current.edges[(index+1)%len(current.edges)]
+                    else:
+                        edge = current.edges[(index-1)%len(current.edges)]
+                    dist += jumpDistance(p, current, edge)
+                    current.jumpEdge(edge)
+                    ###########################33
+                    cr += chg_cr(M, D, p, edge, auxvertices)
+                    update_lambda_matrix(M, D, p, edge, auxvertices)
+                    
+                    auxvertices = current.vertices
+                        
+#                    yield cr, auxpt
+                    for x in checkNeighbors(current, initialCr, cr, M, D, p, pts):
+                        yield x
+                    ###################################
+                    
+                #We check than we landed in the right direction
+                vertexCheck = 0
+                while turn(edge[0], edge[1], current.vertices[vertexCheck]) == COLLINEAR:
+                    vertexCheck += 1
+#                print "giving to turn", p, starPoint, current.vertices[vertexCheck]
+#                print
+                if turn(p, starPoint, current.vertices[vertexCheck]) == RIGHT:
+#                    print "starjump"
+                    starJump = True
+                    res = True
+#                    print "yielding"
+#                        print "back to start"
+#                    if getPols:
+#                        yield Polygon(current.vertices, "blue")
+#                    else:
+#                        yield current.edges
+                    #We need to set the right edge
+                    index = current.edges.index(edge)
+                    if starPoint in current.edges[(index+1)%len(current.edges)]:
+                        otherEdge = current.edges[(index+1)%len(current.edges)]
+                    else:
+                        otherEdge = current.edges[(index-1)%len(current.edges)]
+                    vertexE = 0
+                    while turn(edge[0], edge[1], current.vertices[vertexE]) != COLLINEAR:
+                        vertexE += 1
+                    vertexO = 0
+                    while turn(edge[0], edge[1], current.vertices[vertexO]) != COLLINEAR:
+                        vertexO += 1
+                    if turn(starPoint, current.vertices[vertexE], current.vertices[vertexO]) == turn(starPoint, current.vertices[vertexE], p):
+                        edge = otherEdge
+                    
+                else: #The direction changed
+#                    print "wall inside, inversion"
+                    break
+#            print 'AAAAAAAAAAAAAAA'    
+            if not res:
+#                print "wall final, nothing else to do"
+                break
+        #################################################### END TO THE RIGHT ###############################################
+#        print "END LEVEL", nextFound
+        level += 1        
+        start = nextStart
+        edge = nextEdge
+        
+        M = nextM
+        cr = nextCr
+        
+def checkNeighbors(cell, initialCr, cr, M, D, p, pts):
+    #assert auxpt is not None
+    auxpt = randPointPolygon(cell.vertices)
+    
+    if cr < initialCr[0]:
+        initialCr[0] = cr        
+        if auxpt is not None:
+            yield auxpt, cr
+        else:
+            yield cell.vertices, cr
+    
+#    tryVertices = (auxpt is None)
+        
+    for e in cell.edges:
+#        if tryVertices:
+#        for auxpt in cell.vertices:
+#            if turn(e[0], e[1], auxpt) != COLLINEAR:
+#                break
+#        assert auxpt is not None
+        change = chg_cr(M, D, p, e, cell.vertices)
+        
+        if cr+change < initialCr[0]:
+#            print initialCr[0]
+            initialCr[0] = cr+change
+            cell.jumpEdge(e)
+            auxpt = randPointPolygon(cell.vertices)
+            if auxpt is not None:
+                yield auxpt, initialCr[0]
+            else:
+                yield cell.vertices, initialCr[0]
+            cell.jumpEdge(e)

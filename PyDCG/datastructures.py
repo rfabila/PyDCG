@@ -565,8 +565,8 @@ class dynamic_half_hull(object):
         #        print "deleting", p
         aux = self.Node(key=p)
         if self.root is None:#TODO: borrar
-            print "FAIL! Empty treap"
-            print self.toList()
+#            print "FAIL! Empty treap"
+#            print self.toList()
             raise Exception()
         u = self.DOWN(self.root, aux)
 #        print "DOWN gave", u
