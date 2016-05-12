@@ -2741,12 +2741,16 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
         return
         
     ################################################3
+#    for e in reversed(edge):
+#        start.jumpEdge(e)
     for i in xrange(len(edge)):
         e = edge[i][0]
         pt = edge[i][1]
         assert pt is not None
         cr+=chg_cr(M,D,p,e,pt)
         update_lambda_matrix(M,D,p,e,pt)
+#        start.jumpEdge(e)
+#        auxpt = getCenter(start.vertices)
         
     #################################################
     
@@ -2759,6 +2763,10 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
         print start.vertices
         firstEdge = edge
         auxpt = getCenter(start.vertices)
+#        if getPols:
+#            yield Polygon(start.vertices, "blue")
+#        else:
+#            yield start.edges
         
         nextStart = None
         nextFound = False
@@ -2823,11 +2831,11 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
                 res, newEdge = xJump(p, current, current.edges[edgeIndex%len(current.edges)], getAuxpt=True)
                 
                 if res:
-                    
 #                    print "found edge"
                     pt = newEdge[1]
                     newEdge = newEdge[0]
                     if current.edges == lastVisited:
+                        
                         res = False
                         continue
                     if starJump:
@@ -2946,7 +2954,9 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
                     ###########################33
                     change = chg_cr(M, D, p, edge, auxpt)
                     update_lambda_matrix(M, D, p, edge, auxpt)
+                    
                     auxpt = getCenter(current.vertices)
+    
                         
                     if cr+change < initialCr:
                         initialCr = cr+change
@@ -3018,6 +3028,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
                     for i in xrange(len(res)):
                         e = res[i][0]
                         pt = res[i][1]
+                        
                             
                         nextCr += chg_cr(nextM,D,p,e,pt)
                         update_lambda_matrix(nextM,D,p,e,pt)
@@ -3137,6 +3148,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
                 update_lambda_matrix(M, D, p, edge, auxpt)
                 
                 auxpt = getCenter(current.vertices)
+
                     
                 if cr+change < initialCr:
                     initialCr = cr+change
