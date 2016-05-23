@@ -3227,7 +3227,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
         M = nextM
         cr = nextCr
         
-def genSpiralWalkCr(p, pts, levels=float('inf')):
+def genSpiralWalkCr(p, pts, levels=float('inf'), strict=True):
     """Returns all the cells in the line array of pts whose distance from p's cell satisfies:
     distance%3 = 0 and distance/3 <= levels.
     """
@@ -3240,7 +3240,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf')):
     cr=crossing.count_crossings(pts+[p])
     initialCr = [cr]
 
-    for x in checkNeighbors(start, initialCr, cr, M, D, p, pts):
+    for x in checkNeighbors(start, initialCr, cr, M, D, p, pts, strict):
         yield x
     
     edge = moveNCells(p, start, 3, getCenters=True)
@@ -3262,7 +3262,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf')):
         auxvertices = start.vertices
         assert auxvertices is not None
         
-        for x in checkNeighbors(start, initialCr, cr, M, D, p, pts):
+        for x in checkNeighbors(start, initialCr, cr, M, D, p, pts, strict):
             yield x
         
         nextStart = None
@@ -3320,14 +3320,14 @@ def genSpiralWalkCr(p, pts, levels=float('inf')):
                     auxvertices = current.vertices
 
                     current.jumpEdge(midEdge) #TODO: Is this neccesary?
-                    for x in checkNeighbors(current, initialCr, cr, M, D, p, pts):
+                    for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
                         yield x
                     current.jumpEdge(midEdge)
                     
                     cr += chg_cr(M, D, p, midEdge, midvertices)
                     update_lambda_matrix(M, D, p, midEdge, midvertices)
 
-                    for x in checkNeighbors(current, initialCr, cr, M, D, p, pts):
+                    for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
                         yield x
                     
                     edge = midEdge
@@ -3364,7 +3364,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf')):
                 cr += chg_cr(M, D, p, edge, auxvertices)
                 update_lambda_matrix(M, D, p, edge, auxvertices)
                 auxvertices = current.vertices
-                for x in checkNeighbors(current, initialCr, cr, M, D, p, pts):
+                for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
                     yield x
                 
                 while dist != 0: #Jumping around starPoint
@@ -3378,7 +3378,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf')):
                     cr += chg_cr(M, D, p, edge, auxvertices)
                     update_lambda_matrix(M, D, p, edge, auxvertices)
                     auxvertices = current.vertices
-                    for x in checkNeighbors(current, initialCr, cr, M, D, p, pts):
+                    for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
                         yield x
                     
                 #We check than we landed in the right direction
@@ -3461,14 +3461,14 @@ def genSpiralWalkCr(p, pts, levels=float('inf')):
                     auxvertices = current.vertices
 
                     current.jumpEdge(newEdge)
-                    for x in checkNeighbors(current, initialCr, cr, M, D, p, pts):
+                    for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
                         yield x
                     current.jumpEdge(newEdge)
                     
                     cr += chg_cr(M, D, p, newEdge, midvertices)
                     update_lambda_matrix(M, D, p, newEdge, midvertices)
 
-                    for x in checkNeighbors(current, initialCr, cr, M, D, p, pts):
+                    for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
                         yield x
 
                     edge = newEdge
@@ -3506,7 +3506,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf')):
                 cr += chg_cr(M, D, p, edge, auxvertices)
                 update_lambda_matrix(M, D, p, edge, auxvertices)
                 auxvertices = current.vertices
-                for x in checkNeighbors(current, initialCr, cr, M, D, p, pts):
+                for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
                     yield x
                 
                 while dist != 0: #Jumping around starPoint
@@ -3520,7 +3520,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf')):
                     cr += chg_cr(M, D, p, edge, auxvertices)
                     update_lambda_matrix(M, D, p, edge, auxvertices)
                     auxvertices = current.vertices
-                    for x in checkNeighbors(current, initialCr, cr, M, D, p, pts):
+                    for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
                         yield x
                     
                 #We check than we landed in the right direction
@@ -3558,35 +3558,28 @@ def genSpiralWalkCr(p, pts, levels=float('inf')):
         M = nextM
         cr = nextCr
         
-def checkNeighbors(cell, initialCr, cr, M, D, p, pts):
+def checkNeighbors(cell, initialCr, cr, M, D, p, pts, strict=True):
     #assert auxpt is not None
-    yield Polygon(cell.vertices, fill="Blue")
-#     auxpt = randPointPolygon(cell.vertices)
-    
-#     if cr < initialCr[0]:
-#         initialCr[0] = cr        
-#         if auxpt is not None:
-#             yield auxpt, cr
-#         else:
-#             yield cell.vertices, cr
-    
-# #    tryVertices = (auxpt is None)
+    # yield Polygon(cell.vertices, fill="Blue")
+    auxpt = randPointPolygon(cell.vertices)
+    condition = cr < initialCr[0] if strict else cr <= initialCr[0]
+    if condition:
+        initialCr[0] = cr        
+        if auxpt is not None:
+            yield auxpt, cr
+        else:
+            yield cell.vertices, cr
         
-#     for e in cell.edges:
-# #        if tryVertices:
-# #        for auxpt in cell.vertices:
-# #            if turn(e[0], e[1], auxpt) != COLLINEAR:
-# #                break
-# #        assert auxpt is not None
-#         change = chg_cr(M, D, p, e, cell.vertices)
-        
-#         if cr+change < initialCr[0]:
-# #            print initialCr[0]
-#             initialCr[0] = cr+change
-#             cell.jumpEdge(e)
-#             auxpt = randPointPolygon(cell.vertices)
-#             if auxpt is not None:
-#                 yield auxpt, initialCr[0]
-#             else:
-#                 yield cell.vertices, initialCr[0]
-#             cell.jumpEdge(e)
+    for e in cell.edges:
+        change = chg_cr(M, D, p, e, cell.vertices)
+        condition = cr+change < initialCr[0] if strict else cr+change <= initialCr[0]
+        if condition:
+#            print initialCr[0]
+            initialCr[0] = cr+change
+            cell.jumpEdge(e)
+            auxpt = randPointPolygon(cell.vertices)
+            if auxpt is not None:
+                yield auxpt, initialCr[0]
+            else:
+                yield cell.vertices, initialCr[0]
+            cell.jumpEdge(e)
