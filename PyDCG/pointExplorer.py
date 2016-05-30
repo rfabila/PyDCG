@@ -3219,7 +3219,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
         M = nextM
         cr = nextCr
         
-def genSpiralWalkCr(p, pts, levels=float('inf')):
+def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3):
     """Returns all the cells in the line array of pts whose distance from p's cell satisfies:
     distance%3 = 0 and distance/3 <= levels.
     """
@@ -3232,6 +3232,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf')):
     M=ordertypes.lambda_matrix(pts+[p])
     D=ordertypes.points_index(pts+[p])   
     cr=crossing.count_crossings(pts+[p])
+    cr = float('inf')
 #    print "cr", cr
     initialCr = [cr]
     ################################################
@@ -3241,7 +3242,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf')):
     for x in checkNeighbors(start, initialCr, cr, M, D, p, pts):
         yield x
     
-    edge = moveNCells(p, start, 3, getCenters=True)
+    edge = moveNCells(p, start, initialJump, getCenters=True)
     
 #    auxpt = getCenter(start.vertices)
     
@@ -3696,7 +3697,7 @@ def checkNeighbors(cell, initialCr, cr, M, D, p, pts):
     auxpt = randPointPolygon(cell.vertices)
     
     if cr < initialCr[0]:
-        initialCr[0] = cr        
+        #initialCr[0] = cr        
         if auxpt is not None:
             yield auxpt, cr
         else:
@@ -3714,7 +3715,7 @@ def checkNeighbors(cell, initialCr, cr, M, D, p, pts):
         
         if cr+change < initialCr[0]:
 #            print initialCr[0]
-            initialCr[0] = cr+change
+            #initialCr[0] = cr+change
             cell.jumpEdge(e)
             auxpt = randPointPolygon(cell.vertices)
             if auxpt is not None:
