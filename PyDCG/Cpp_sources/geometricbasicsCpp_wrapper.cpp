@@ -154,13 +154,27 @@ PyObject* sort_around_point_wrapper(PyObject* self, PyObject* args, PyObject *ke
 	p[0] = PyInt_AsLong(PyList_GetItem(py_p, 0));
 	p[1] = PyInt_AsLong(PyList_GetItem(py_p, 1));
 
+	if(abs(p[0]) > max_val || abs(p[1]) > max_val)
+    {
+        PyErr_SetString(PyExc_OverflowError, max_val_error);
+        return (PyObject*)NULL;
+    }
+
 	for(int i=0; i<pts_size; i++)
 	{
 		PyObject* temp = PyList_GetItem(py_pts, i); //Borrowed Reference
 		c_pts[i][0] = PyInt_AsLong(PyList_GetItem(temp, 0)); //Borrowed References
 		c_pts[i][1] = PyInt_AsLong(PyList_GetItem(temp, 1)); //Borrowed References
+		if(abs(c_pts[i][0]) > max_val || abs(c_pts[i][1]) > max_val)
+        {
+            PyErr_SetString(PyExc_OverflowError, max_val_error);
+            return (PyObject*)NULL;
+        }
 	}
     sort_around_point(p, c_pts, pts_size);
+
+    if(PyErr_Occurred() != NULL)
+        return (PyObject*)NULL;
 
 	PyObject* res = PyList_New(pts_size);
 

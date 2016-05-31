@@ -20,7 +20,8 @@
 """Module used to count the number of crossings in the complete
 geometric graph"""
 
-from geometricbasics import *
+#from geometricbasics import *
+import geometricbasics
 import utilities
 
 if utilities.__load_extensions: #TODO: Make this a package global variable and update all modules
@@ -39,10 +40,10 @@ def count_k_edges(pts,k):
             tmp_pts[j]=pts[j][:]
         for j in range(i+1,n):
             tmp_pts[j-1]=pts[j][:]
-        tmp_pts=sort_around_point(p,tmp_pts)
+        tmp_pts=geometricbasics.sort_around_point(p,tmp_pts)
         j=0
         for i in range(len(tmp_pts)):
-            while (turn(p,tmp_pts[i],tmp_pts[(j+1)%(n-1)])<=0 and
+            while (geometricbasics.turn(p,tmp_pts[i],tmp_pts[(j+1)%(n-1)])<=0 and
                     (j+1)%(n-1)!=i):
                 j=j+1
                     
@@ -58,7 +59,7 @@ def _slow_k_edges_vector(pts):
         for j in range(i+1,len(pts)):
             k=0
             for p in pts:
-                if turn(pts[i],pts[j],p)==-1:
+                if geometricbasics.turn(pts[i],pts[j],p)==-1:
                    k=k+1
             V[k]=V[k]+1
             V[len(pts)-2-k]+=1
@@ -81,10 +82,10 @@ def k_edges_vector(pts):
             tmp_pts[j]=pts[j][:]
         for j in range(i+1,n):
             tmp_pts[j-1]=pts[j][:]
-        tmp_pts=sort_around_point(p,tmp_pts)
+        tmp_pts=geometricbasics.sort_around_point(p,tmp_pts)
         j=0
         for i in range(len(tmp_pts)):
-            while (turn(p,tmp_pts[i],tmp_pts[(j+1)%(n-1)])<=0 and
+            while (geometricbasics.turn(p,tmp_pts[i],tmp_pts[(j+1)%(n-1)])<=0 and
                     (j+1)%(n-1)!=i):
                 j=j+1
                     
@@ -117,10 +118,10 @@ def count_crossings_py(pts):
             tmp_pts[j]=pts[j][:]
         for j in range(i+1,n):
             tmp_pts[j-1]=pts[j][:]
-        tmp_pts=sort_around_point(p,tmp_pts)
+        tmp_pts=geometricbasics.sort_around_point(p,tmp_pts)
         j=0
         for i in range(len(tmp_pts)):
-            while (turn(p,tmp_pts[i],tmp_pts[(j+1)%(n-1)])<=0 and
+            while (geometricbasics.turn(p,tmp_pts[i],tmp_pts[(j+1)%(n-1)])<=0 and
                     (j+1)%(n-1)!=i):
                 j=j+1
                     
@@ -154,7 +155,7 @@ def count_crossings_candidate_list_py(point_index,candidate_list,pts):
         for x in pts_q:
             intervals_q.append([-x[0]+2*q[0],-x[1]+2*q[1], x[2], True, False ])
             intervals_q.append([x[0],x[1], x[2], True, True])
-        intervals_q=sort_around_point(q,intervals_q, speedup=False)
+        intervals_q=geometricbasics.sort_around_point(q,intervals_q, speedup=False)
         return intervals_q        
     def remove_j_sortandmark(i,pts,sortandmark=True):
         #Sort a copy the points distinct from p to tmp_pts and appened a position mark
@@ -165,7 +166,7 @@ def count_crossings_candidate_list_py(point_index,candidate_list,pts):
             tmp_pts[j-1]=pts[j][:]
         if sortandmark:    
             q=pts[i]
-            tmp_pts=sort_around_point(q,tmp_pts, speedup=False)            
+            tmp_pts=geometricbasics.sort_around_point(q,tmp_pts, speedup=False)            
             for j in range(0,len(pts)-1):
                 tmp_pts[j].append(j)
         return tmp_pts 
@@ -174,7 +175,7 @@ def count_crossings_candidate_list_py(point_index,candidate_list,pts):
         j=0
         num_pts=[0 for k in tmp_pts]
         for k in range(len(tmp_pts)):
-            while (turn(p,tmp_pts[k],tmp_pts[(j+1)%(n-1)])<=0 and
+            while (geometricbasics.turn(p,tmp_pts[k],tmp_pts[(j+1)%(n-1)])<=0 and
                     (j+1)%(n-1)!=k):
                 j=j+1
                     
@@ -189,7 +190,7 @@ def count_crossings_candidate_list_py(point_index,candidate_list,pts):
         united_pts=gen_antipodal_list(central_point,united_pts)
         united_pts.extend(candidate_list)
         united_pts.append(pts[point_index])
-        united_pts=sort_around_point(central_point,united_pts, speedup=False)
+        united_pts=geometricbasics.sort_around_point(central_point,united_pts, speedup=False)
         return united_pts    
     def change_of_cr_for_list(united_pts,candidate_list,position_p,nis):
         #We save in cr_list the change of patrons type A       
@@ -221,7 +222,7 @@ def count_crossings_candidate_list_py(point_index,candidate_list,pts):
         for q in candidate_list:
             j=0
             for k in range(len(tmp_pts)):
-                while (turn(q,tmp_pts[k],tmp_pts[(j+1)%(n-1)])<=0 and
+                while (geometricbasics.turn(q,tmp_pts[k],tmp_pts[(j+1)%(n-1)])<=0 and
                         (j+1)%(n-1)!=k):
                     j=j+1
                         
@@ -309,13 +310,13 @@ def cr_remove_point(pts):
             tmp_pts[j]=[pts[j][0], pts[j][1], j]            
         for j in range(i+1,n):
             tmp_pts[j-1]=[pts[j][0], pts[j][1], j]    
-        tmp_pts=sort_around_point(p,tmp_pts)
+        tmp_pts=geometricbasics.sort_around_point(p,tmp_pts)
         
         #Calculo de los nis
         j=0
         nis=[0 for k in tmp_pts]
         for k in range(len(tmp_pts)):
-            while (turn(p,tmp_pts[k],tmp_pts[(j+1)%(n-1)])<=0 and
+            while (geometricbasics.turn(p,tmp_pts[k],tmp_pts[(j+1)%(n-1)])<=0 and
                     (j+1)%(n-1)!=k):
                 j=j+1
                     
@@ -337,7 +338,7 @@ def cr_remove_point(pts):
             if con==1:
                 su=su+nis[k2]-1
                 
-            while (turn(p,tmp_pts[k2],tmp_pts[(j-1)%(n-1)])>=0 and
+            while (geometricbasics.turn(p,tmp_pts[k2],tmp_pts[(j-1)%(n-1)])>=0 and
                     (j-1)%(n-1)!=k2):
                 su=su-nis[(j-1)%(n-1)]+1
                 j=j-1
