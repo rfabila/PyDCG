@@ -2763,10 +2763,6 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
         print start.vertices
         firstEdge = edge
         auxpt = getCenter(start.vertices)
-#        if getPols:
-#            yield Polygon(start.vertices, "blue")
-#        else:
-#            yield start.edges
         
         nextStart = None
         nextFound = False
@@ -2835,7 +2831,6 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
                     pt = newEdge[1]
                     newEdge = newEdge[0]
                     if current.edges == lastVisited:
-                        
                         res = False
                         continue
                     if starJump:
@@ -2954,9 +2949,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
                     ###########################33
                     change = chg_cr(M, D, p, edge, auxpt)
                     update_lambda_matrix(M, D, p, edge, auxpt)
-                    
                     auxpt = getCenter(current.vertices)
-    
                         
                     if cr+change < initialCr:
                         initialCr = cr+change
@@ -3028,7 +3021,6 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
                     for i in xrange(len(res)):
                         e = res[i][0]
                         pt = res[i][1]
-                        
                             
                         nextCr += chg_cr(nextM,D,p,e,pt)
                         update_lambda_matrix(nextM,D,p,e,pt)
@@ -3148,7 +3140,6 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
                 update_lambda_matrix(M, D, p, edge, auxpt)
                 
                 auxpt = getCenter(current.vertices)
-
                     
                 if cr+change < initialCr:
                     initialCr = cr+change
@@ -3227,7 +3218,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
         M = nextM
         cr = nextCr
         
-def genSpiralWalkCr(p, pts, levels=float('inf'), strict=True):
+def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True):
     """Returns all the cells in the line array of pts whose distance from p's cell satisfies:
     distance%3 = 0 and distance/3 <= levels.
     """
@@ -3243,11 +3234,10 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), strict=True):
     for x in checkNeighbors(start, initialCr, cr, M, D, p, pts, strict):
         yield x
     
-    edge = moveNCells(p, start, 3, getCenters=True)
+    edge = moveNCells(p, start, initialJump, getCenters=True)
     
     if len(edge) == 0:
         return
-
     for i in xrange(len(edge)):
         e = edge[i][0]
         vertices = edge[i][1]
@@ -3279,7 +3269,6 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), strict=True):
         current = semiCopy(start)
         #################################################### TO THE LEFT ###############################################
         while not finished: #We go to the left
-            # print "to the left"
             lastVisited = current.edges
             if not nextFound:
                 nextStart = semiCopy(current)
