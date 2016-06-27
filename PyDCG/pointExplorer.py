@@ -3227,14 +3227,25 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True):
     level = 0
     auxvertices = None
     M=ordertypes.lambda_matrix(pts+[p])
-    D=ordertypes.points_index(pts+[p])   
+    D=ordertypes.points_index(pts+[p])
     cr=crossing.count_crossings(pts+[p])
     initialCr = [cr]
-
+    print "initial", initialCr
+    print "start", start.vertices
+    assert(initialCr[0] == crossing.count_crossings(pts+[p]))
     for x in checkNeighbors(start, initialCr, cr, M, D, p, pts, strict):
         yield x
-    
+    print "post", initialCr
+    assert(cr == crossing.count_crossings(pts+[p]))
     edge = moveNCells(p, start, initialJump, getCenters=True)
+
+    ###############3
+    print "start", start.vertices
+    for e in reversed(edge):
+        start.jumpEdge(e[0])
+    assert(cr == crossing.count_crossings(pts+[p]))
+    print "start", start.vertices
+    ############
     
     if len(edge) == 0:
         return
@@ -3243,15 +3254,26 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True):
         vertices = edge[i][1]
         cr += chg_cr(M,D,p,e,vertices)
         update_lambda_matrix(M,D,p,e,vertices)
+        ######################
+        start.jumpEdge(e)
+        z = randPointPolygon(start.vertices)
+        print cr, "     vs     ", crossing.count_crossings(pts+[z], speedup=False)        
+        assert(cr == crossing.count_crossings(pts+[z], speedup=False))
+        ##########################
+
+    z = randPointPolygon(start.vertices)
+    print cr, "     vs     ", crossing.count_crossings(pts+[z], speedup=False)
+    assert(cr == crossing.count_crossings(pts+[z], speedup=False))
     
     edge = edge[-1][0]    #edge is the edge which we jumped to land in the current cell
     
     while(level < levels and start is not None):
-        # print "level", level
+        print "level", level
         firstEdge = edge
         auxvertices = start.vertices
         assert auxvertices is not None
-        
+        z = randPointPolygon(start.vertices)
+        assert(cr == crossing.count_crossings(pts+[z]))
         for x in checkNeighbors(start, initialCr, cr, M, D, p, pts, strict):
             yield x
         
@@ -3551,23 +3573,29 @@ def checkNeighbors(cell, initialCr, cr, M, D, p, pts, strict=True):
     #assert auxpt is not None
     # yield Polygon(cell.vertices, fill="Blue")
     auxpt = randPointPolygon(cell.vertices)
-    condition = cr < initialCr[0] if strict else cr <= initialCr[0]
+    if auxpt is not None:
+        assert(cr == crossing.count_crossings(pts+[auxpt]))
+    condition = (cr < initialCr[0]) if strict else (cr <= initialCr[0])
     if condition:
-        initialCr[0] = cr        
+        print "yup first"
+        initialCr[0] = cr
         if auxpt is not None:
+            assert(cr == crossing.count_crossings(pts+[auxpt]))
             yield auxpt, cr
         else:
             yield cell.vertices, cr
         
     for e in cell.edges:
         change = chg_cr(M, D, p, e, cell.vertices)
-        condition = cr+change < initialCr[0] if strict else cr+change <= initialCr[0]
+        condition = ((cr+change) < initialCr[0]) if strict else ((cr+change) <= initialCr[0])
         if condition:
+            print "yup neighbors", cr+change
 #            print initialCr[0]
             initialCr[0] = cr+change
             cell.jumpEdge(e)
             auxpt = randPointPolygon(cell.vertices)
             if auxpt is not None:
+                assert(cr+change == crossing.count_crossings(pts+[auxpt]))
                 yield auxpt, initialCr[0]
             else:
                 yield cell.vertices, initialCr[0]
