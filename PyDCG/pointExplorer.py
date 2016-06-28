@@ -23,7 +23,6 @@ from geometricbasics import turn, sort_around_point, general_position
 import warnings
 import copy
 import datastructures
-#from . import datastructures
 import random
 import sys
 import traceback
@@ -3229,7 +3228,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
         M = nextM
         cr = nextCr
         
-def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True):
+def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, debug=False):
     """Returns all the cells in the line array of pts whose distance from p's cell satisfies:
     distance%3 = 0 and distance/3 <= levels.
     """
@@ -3245,10 +3244,11 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True):
     # print "start", start.vertices
     # assert(initialCr[0] == crossing.count_crossings(pts+[p]))
     colors = ["blue", "red", "black", "green", "cyan", "brown", "yellow", "purple", "orange", "pink"]
-    yield Polygon(start.vertices, fill = random.choice(colors))
-
-    # for x in checkNeighbors(start, initialCr, cr, M, D, p, pts, strict):
-    #     yield x
+    if debug:
+        yield Polygon(start.vertices, fill = random.choice(colors))
+    else:
+        for x in checkNeighbors(start, initialCr, cr, M, D, p, pts, strict):
+            yield x
 
     # print "post", initialCr
     # assert(cr == crossing.count_crossings(pts+[p]))
@@ -3289,9 +3289,11 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True):
         # assert auxvertices is not None
         z = randPointPolygon(start.vertices)
         # assert(cr == crossing.count_crossings(pts+[z]))
-        yield Polygon(start.vertices, fill = random.choice(colors))
-        # for x in checkNeighbors(start, initialCr, cr, M, D, p, pts, strict):
-        #     yield x
+        if debug:
+            yield Polygon(start.vertices, fill = random.choice(colors))
+        else:
+            for x in checkNeighbors(start, initialCr, cr, M, D, p, pts, strict):
+                yield x
         
         nextStart = None
         nextFound = False
@@ -3348,17 +3350,22 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True):
                     auxvertices = current.vertices
 
                     current.jumpEdge(midEdge) #TODO: Is this neccesary?
-                    yield Polygon(current.vertices, fill = random.choice(colors))
-                    # for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
-                    #     yield x
+                    
+                    if debug:
+                        yield Polygon(current.vertices, fill = random.choice(colors))
+                    else:
+                        for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
+                            yield x
                     current.jumpEdge(midEdge)
                     
                     cr += chg_cr(M, D, p, midEdge, midvertices)
                     update_lambda_matrix(M, D, p, midEdge, midvertices)
 
-                    yield Polygon(current.vertices, fill = random.choice(colors))
-                    # for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
-                    #     yield x
+                    if debug:
+                        yield Polygon(current.vertices, fill = random.choice(colors))
+                    else:
+                        for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
+                            yield x
                     
                     edge = midEdge
                     if firstIndex == None:
@@ -3395,9 +3402,11 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True):
                 update_lambda_matrix(M, D, p, edge, auxvertices)
                 auxvertices = current.vertices
 
-                yield Polygon(current.vertices, fill = random.choice(colors))
-                # for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
-                #     yield x
+                if debug:
+                    yield Polygon(current.vertices, fill = random.choice(colors))
+                else:
+                    for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
+                        yield x
                 
                 while dist != 0: #Jumping around starPoint
                     index = current.edges.index(edge)
@@ -3411,9 +3420,11 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True):
                     update_lambda_matrix(M, D, p, edge, auxvertices)
                     auxvertices = current.vertices
 
-                    yield Polygon(current.vertices, fill = random.choice(colors))
-                    # for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
-                    #     yield x
+                    if debug:
+                        yield Polygon(current.vertices, fill = random.choice(colors))
+                    else:
+                        for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
+                            yield x
                     
                 #We check than we landed in the right direction
                 auxVertex = 0
@@ -3496,17 +3507,21 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True):
 
                     current.jumpEdge(newEdge)
 
-                    yield Polygon(current.vertices, fill = random.choice(colors))
-                    # for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
-                    #     yield x
+                    if debug:
+                        yield Polygon(current.vertices, fill = random.choice(colors))
+                    else:
+                        for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
+                            yield x
                     current.jumpEdge(newEdge)
                     
                     cr += chg_cr(M, D, p, newEdge, midvertices)
                     update_lambda_matrix(M, D, p, newEdge, midvertices)
 
-                    yield Polygon(current.vertices, fill = random.choice(colors))
-                    # for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
-                    #     yield x
+                    if debug:
+                        yield Polygon(current.vertices, fill = random.choice(colors))
+                    else:
+                        for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
+                            yield x
 
                     edge = newEdge
                     if firstIndex == None:
@@ -3544,9 +3559,11 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True):
                 update_lambda_matrix(M, D, p, edge, auxvertices)
                 auxvertices = current.vertices
 
-                yield Polygon(current.vertices, fill = random.choice(colors))
-                # for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
-                #     yield x
+                if debug:
+                    yield Polygon(current.vertices, fill = random.choice(colors))
+                else:
+                    for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
+                        yield x
                 
                 while dist != 0: #Jumping around starPoint
                     index = current.edges.index(edge)
@@ -3560,9 +3577,11 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True):
                     update_lambda_matrix(M, D, p, edge, auxvertices)
                     auxvertices = current.vertices
 
-                    yield Polygon(current.vertices, fill = random.choice(colors))
-                    # for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
-                    #     yield x
+                    if debug:
+                        yield Polygon(current.vertices, fill = random.choice(colors))
+                    else:
+                        for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
+                            yield x
                     
                 #We check than we landed in the right direction
                 vertexCheck = 0
