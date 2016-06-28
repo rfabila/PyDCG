@@ -3228,7 +3228,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
         M = nextM
         cr = nextCr
         
-def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, debug=False):
+def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, debug=False, verbose=False):
     """Returns all the cells in the line array of pts whose distance from p's cell satisfies:
     distance%3 = 0 and distance/3 <= levels.
     """
@@ -3283,7 +3283,8 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, deb
     edge = edge[-1][0]    #edge is the edge which we jumped to land in the current cell
     
     while(level < levels and start is not None):
-        print "level", level
+        if verbose:
+            print "level", level
         firstEdge = edge
         auxvertices = start.vertices
         # assert auxvertices is not None
@@ -3309,7 +3310,8 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, deb
         current = semiCopy(start)
         #################################################### TO THE LEFT ###############################################
         while not finished: #We go to the left
-            print "To the left"
+            if verbose:
+                print "To the left"
             lastVisited = current.edges
             if not nextFound:
                 nextStart = semiCopy(current)
@@ -3464,7 +3466,8 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, deb
         auxvertices = current.vertices
         #################################################### TO THE RIGHT ###############################################
         while not finished: #We go to the right
-            print "to the right"
+            if verbose:
+                print "to the right"
             lastVisited = current.edges
             if not nextFound:
                 nextStart = semiCopy(current)
