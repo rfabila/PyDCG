@@ -143,7 +143,7 @@ def sort_around_point_py(p, points, join=True):
 
     return r
 
-def sort_around_point(p, points, join=True, speedup=True):
+def sort_around_point(p, points, join=True, speedup=False):
     """Sorts `points` around `p` in CCW order."""
     if not join or utilities.__config['PURE_PYTHON'] or not speedup:
         return sort_around_point_py(p, points, join)
