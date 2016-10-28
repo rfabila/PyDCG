@@ -376,7 +376,7 @@ def _pack_sp(pts,species,comment="",user_id=None):
         #this should probably be an exception
         print "Point set not in general position!! I ain't sending nothing."
 
-        return None
+        return False
     sp={}
     sp['comment']=comment
     sp['pts']=pts
@@ -396,6 +396,8 @@ def _submit_point_set_list(P,species,comment=" ",user_id=None):
     os.system("mkdir temp_subs")
     for pts in P:
         sp=_pack_sp(pts,species,comment=comment,user_id=user_id)
+        if not sp:
+            return None
         #to avoid collisions
         date_discovered=datetime.datetime.today()
         idx=''.join(random.choice(string.ascii_letters + string.digits) for _ in range(10))
