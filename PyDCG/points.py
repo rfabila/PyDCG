@@ -348,7 +348,10 @@ def read_species(name):
 
 def best_specimen(name,n):
     D=read_species(name)
-    return D[n]["pts"]
+    if n in D:
+        return D[n]["pts"]
+    else:
+        return None
     
 #functions for specific species
 
