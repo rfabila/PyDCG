@@ -33,6 +33,7 @@ import holes
 import kgons
 import line
 import fractions
+from fractions import gcd
 
 sqrt_3=fractions.Fraction(173205,100000)
 
@@ -94,7 +95,7 @@ def point_set_iterator(n):
             pts.append([point[0],point[1]])
         return pts
     
-    file_name = os.path.join(os.path.dirname(__file__), "point_sets/otypes")
+    file_name = os.path.join(config.pydcgDir, "point_sets/otypes")
     
     if n<3 or n>10:
         raise OutOfBoundsError()
@@ -113,12 +114,17 @@ def point_set_iterator(n):
         b=4
         t="HH"
     
-    pts_file=open(file_name,"rb")  
-    pts=read_point_set()
-    while pts!="EOF":
-        yield pts
+    try:
+        pts_file=open(file_name,"rb")
         pts=read_point_set()
-    pts_file.close()  
+        while pts!="EOF":
+            yield pts
+            pts=read_point_set()
+        pts_file.close()
+    except IOError:
+        #TODO: finish this!
+        pass
+
 
 def point_set_array(n):
     """Returns an an array with integer coordinate realizations of every
@@ -342,7 +348,10 @@ def read_species(name):
 
 def best_specimen(name,n):
     D=read_species(name)
-    return D[n]["pts"]
+    if n in D:
+        return D[n]["pts"]
+    else:
+        return None
     
 #functions for specific species
 
@@ -770,6 +779,108 @@ def ES(r):
         T.append(pts)
     #print T
     return Q
-    
 
-#
+############################################################################
+
+def createUpperVisibleVectors(n):
+    vectors = []
+    k = 1
+    vectors += [[1,0], [0,1]]
+    while True:
+        k += 1
+        for i in xrange(1, k):
+            j = k - i
+            if (gcd(i, j) == 1):
+                if len(vectors) < n:
+                    vectors.append([i,j])
+                else:
+                    break
+                if len(vectors) < n:
+                    vectors.append([-i, j])
+                else:
+                    break
+        if len(vectors) >= n:
+            break
+    vectors = geometricbasics.sort_around_point_py([0,0], vectors)
+    return vectors
+
+def createVisibleVectors(n):
+    vectors = createUpperVisibleVectors(n)
+    for i in xrange(n):
+        p = vectors[i][:]
+        p[0]-=1
+        p[1]-=1
+        vectors.append(p)
+    return vectors
+
+def zigzagVectors(vectors):
+    for i in xrange(len(vectors)-1, 2):
+        w_i_3 = [vectors[i+1][0]*2 + vectors[i][0], vectors[i+1][1]*2 + vectors[i][1]]
+        w_i1_3 = [vectors[i+1][0] + vectors[i][0]*2, vectors[i+1][1] + vectors[i][1]*2]
+        vectors[i] = w_i_3
+        vectors[i+1] = w_i1_3
+
+def generateDoubleCirclePoints(set_size):
+    points = []
+    if set_size % 2:
+        return #not implemented
+
+    vectors = createVisibleVectors(set_size/2)
+  
+    zigzagVectors(vectors)
+    points.append([0,0])
+    set_size -= 1
+
+    it = 0
+    x_smallest = 0
+    while set_size:
+        p = [0,0]
+        p[0] = points[-1][0] + vectors[it][0]
+        p[1] = points[-1][1] + vectors[it][1]
+        if p[0] < x_smallest:
+            x_smallest = p[0]
+        points.append(p);
+        it += 1
+        set_size -= 1
+
+    for p in points:
+        p -= x_smallest
+
+    return points
+
+def generateDoubleChain(a, b, zigzag = False):
+    points = []
+    if a < b:
+        a, b = b, a
+
+    vectors = createUpperVisibleVectors(a*2)
+
+    points_a = []
+    points_b = []
+  
+    if zigzag:
+        zigzagVectors(vectors)
+  
+    points_a.append([0,0])
+    it = a/2+1
+    if zigzag:
+        it -= (a/2 + 1) % 2
+    for i in xrange(a-1):
+        points_a.append([points_a[-1][0]+vectors[it][0], points_a[-1][1]+vectors[it][1]])
+        it += 1
+    points_b.append([0,0])
+    it = a - (b-1)/2
+    if zigzag:
+        it += (a - (b-1)/2) % 2
+
+    for i in xrange(b-1):
+        points_b.append([points_b[-1][0] - vectors[it][0], points_b[-1][1] + vectors[it][1]])
+        it += 1
+  
+    diff = points_a[-1][1] - points_b[-1][1];
+    diff /= 2;
+    for pb in points_b:
+        pb[1] += diff
+        pb[0] += points_a[-1][1]+1
+    
+    return points_a+points_b
