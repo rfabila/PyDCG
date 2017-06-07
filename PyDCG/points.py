@@ -30,12 +30,6 @@ import ConfigParser
 import random
 import string
 import holes
-import kgons
-import line
-import fractions
-from fractions import gcd
-
-sqrt_3=fractions.Fraction(173205,100000)
 
 def horton_set(n):
     """Returns a set of n points with the same order type
@@ -95,7 +89,7 @@ def point_set_iterator(n):
             pts.append([point[0],point[1]])
         return pts
     
-    file_name = os.path.join(config.pydcgDir, "point_sets/otypes")
+    file_name = os.path.join(os.path.dirname(__file__), "point_sets/otypes")
     
     if n<3 or n>10:
         raise OutOfBoundsError()
@@ -114,17 +108,12 @@ def point_set_iterator(n):
         b=4
         t="HH"
     
-    try:
-        pts_file=open(file_name,"rb")
+    pts_file=open(file_name,"rb")  
+    pts=read_point_set()
+    while pts!="EOF":
+        yield pts
         pts=read_point_set()
-        while pts!="EOF":
-            yield pts
-            pts=read_point_set()
-        pts_file.close()
-    except IOError:
-        #TODO: finish this!
-        pass
-
+    pts_file.close()  
 
 def point_set_array(n):
     """Returns an an array with integer coordinate realizations of every
@@ -348,10 +337,7 @@ def read_species(name):
 
 def best_specimen(name,n):
     D=read_species(name)
-    if n in D:
-        return D[n]["pts"]
-    else:
-        return None
+    return D[n]["pts"]
     
 #functions for specific species
 
@@ -375,17 +361,13 @@ def best_empty_convex_hexagons_pts(n):
     """Returns the best known example for empty convex hexagons."""
     return best_specimen("empty_convex_hexagons",n)
 
-def best_halving_lines_pts(n):
-    """Returns the best known example for halving lines."""
-    return best_specimen("halving_lines",n)
-
 #submitting functions
 def _pack_sp(pts,species,comment="",user_id=None):
     if not geometricbasics.general_position(pts):
         #this should probably be an exception
         print "Point set not in general position!! I ain't sending nothing."
 
-        return False
+        return None
     sp={}
     sp['comment']=comment
     sp['pts']=pts
@@ -405,8 +387,6 @@ def _submit_point_set_list(P,species,comment=" ",user_id=None):
     os.system("mkdir temp_subs")
     for pts in P:
         sp=_pack_sp(pts,species,comment=comment,user_id=user_id)
-        if not sp:
-            return None
         #to avoid collisions
         date_discovered=datetime.datetime.today()
         idx=''.join(random.choice(string.ascii_letters + string.digits) for _ in range(10))
@@ -451,9 +431,6 @@ def submit_empty_convex_quadrilaterals(pts,user_id=None,comment=None):
 
 def submit_empty_convex_hexagons(pts,user_id=None,comment=None):
     _submit_point_set(pts,"empty_convex_hexagons",comment=comment,user_id=user_id)
-    
-def submit_halving_lines(pts,user_id=None,comment=None):
-    _submit_point_set(pts,"halving_lines",comment=comment,user_id=user_id)
     
 #SQUARED HORTON SET FUNCTIONS
 
@@ -628,259 +605,4 @@ def _canonic_tree(k):
     T2=_canonic_tree(k-1)
     return [val,T1,T2]
 
-#ERDOS-SZEKERES constructions
 
-def _split_index(k,l):
-    idx=math.factorial(k+l-5)/(math.factorial(l-2)*(math.factorial(k-3)))
-    return (idx-1,idx)
-
-def _separate_sets(L,R,k,l,dx):
-    
-    max_dy=1
-    #print "separating",k,l,dx
-    if len(L)>=2:
-        (i,j)=_split_index(k-1,l)
-        lx=R[-1][0]
-        ly=R[-1][1]
-        ll=line.Line(p=L[i],q=L[j], inf_precision=True)
-        dy=int(ll.m*(lx+dx)+ll.b-ly+1)
-        #print "L", i,j
-        #print "dy",dy
-        if dy>max_dy:
-            max_dy=dy
-    
-    R=[[x[0]+dx,x[1]] for x in R]
-    
-    if len(R)>=2:
-        (i,j)=_split_index(k,l-1)
-        ll=line.Line(p=R[i],q=R[j], inf_precision=True)
-        dy=abs(ll.b)+1
-        #print dy
-        dy=int(dy)
-        #print dy
-        #print R[i], R[j]
-        #print L[0]
-        #print "R", i,j
-        #print "dy",dy
-        if dy>max_dy:
-            max_dy=dy
-    
-    R=[[x[0],x[1]+max_dy] for x in R]
-    L=[x[:] for x in L]
-    L.extend(R)
-    return L
-
-
-
-def _X_kl_array(s,test=False):
-    """Auxiliary function to construct the sets described by Erdos and Szkeres with no k_cup or k_cap.
-       It returns an array that contains each set $X_{i,j}$ with $i+j\le k+l$."""
-    P=[[None for i in range(s+1)] for j in range(s+1)]
-    
-    for i in range(3):
-        for j in range(s+1):
-            P[i][j]=[[0,0]]
-            
-    for j in range(3):
-        for i in range(s+1):
-            P[i][j]=[[0,0]]
-    
-    P[3][3]=[[0,0], [1,0]]
-            
-    for t in range(3,s+1):
-        for i in range(3,t-2):
-            #print "%%%%%"
-            j=t-i
-            #print i,j
-            if P[i][j]==None:
-                L=[x[:] for x in P[i-1][j]]
-                R=[x[:] for x in P[i][j-1]]
-                
-                if t!=s:
-                    dx=(L[-1][0]+R[-1][0])/2+1
-                    #print dx
-                    dx=sqrt_3*dx+L[-1][0]
-                    #print float(dx)
-                    dx=int(dx)
-                    #print dx
-                else:
-                    #print "t=",s
-                    #print i,j
-                    dx=1+L[-1][0]
-                    #print dx
-                    
-                pts=_separate_sets(L,R,i,j,dx)
-                
-                if test:
-                    if not geometricbasics.general_position(pts):
-                        print "GENERAL POSITION FAILED!"
-                        print i,j
-                    if (kgons.max_cup(pts)!=i-1 or
-                        kgons.max_cap(pts)!=j-1):
-                        print "CAPS and CUPS FAILED!"
-                        print i,j
-                        
-                P[i][j]=pts
-                
-    return P
-
-def _get_origins(lstP):
-    """Auxiliary function used to construct the set by Erdos and Szekeres.
-       It creates the points by which we translate copies of X_{k,l},"""
-    V=[]
-    v=[0,0]
-    for i in range(1,len(lstP)):
-       # print "corner",v
-        v=[v[0]-1,v[1]-1]
-        tx=lstP[i][-1][0]
-        ty=lstP[i][-1][1]
-        v=[v[0]-tx,v[1]-ty]
-        #print "origin",v
-        V.append(v)
-        tx=lstP[i-1][-1][0]
-        ty=lstP[i-1][-1][1]
-        v=[v[0]-tx,v[1]-ty]
-        
-    
-    #print V
-    
-    dx=-v[0]+1
-    V=[[x[0]+dx,x[1]-1] for x in V]
-    
-    origins=[[0,0]]
-    for v in V:
-        u=origins[-1]
-        u=[u[0]+v[0],u[1]+v[1]]
-        origins.append(u)
-    
-    #print V
-    #print origins
-    
-    return origins
-def X(k,l):
-    """Returns the set $X_{k,l}$ described by Erdos and Szekers. It does not contain
-    a k-cup nor a l-cap"""
-    P=_X_kl_array(k+l)
-    return P[k][l]
-
-def ES(r):
-    """Constructs the set of $2^{r-2}$ points described by Erdos and Szekeres with
-    no $r$-gon."""
-    P=_X_kl_array(r+2)
-    lstP=[P[r-i][i+2] for i in range(r)]
-    #print [x[-1] for x in lstP]
-    origins=_get_origins(lstP)
-    Q=[]
-    T=[]
-    for i in range(r-1):
-        o=origins[i]
-        pts=[[x[0]+o[0],x[1]+o[1]] for x in P[r-i][i+2]]
-        Q.extend(pts)
-        T.append(pts)
-    #print T
-    return Q
-
-############################################################################
-
-def createUpperVisibleVectors(n):
-    vectors = []
-    k = 1
-    vectors += [[1,0], [0,1]]
-    while True:
-        k += 1
-        for i in xrange(1, k):
-            j = k - i
-            if (gcd(i, j) == 1):
-                if len(vectors) < n:
-                    vectors.append([i,j])
-                else:
-                    break
-                if len(vectors) < n:
-                    vectors.append([-i, j])
-                else:
-                    break
-        if len(vectors) >= n:
-            break
-    vectors = geometricbasics.sort_around_point_py([0,0], vectors)
-    return vectors
-
-def createVisibleVectors(n):
-    vectors = createUpperVisibleVectors(n)
-    for i in xrange(n):
-        p = vectors[i][:]
-        p[0]-=1
-        p[1]-=1
-        vectors.append(p)
-    return vectors
-
-def zigzagVectors(vectors):
-    for i in xrange(len(vectors)-1, 2):
-        w_i_3 = [vectors[i+1][0]*2 + vectors[i][0], vectors[i+1][1]*2 + vectors[i][1]]
-        w_i1_3 = [vectors[i+1][0] + vectors[i][0]*2, vectors[i+1][1] + vectors[i][1]*2]
-        vectors[i] = w_i_3
-        vectors[i+1] = w_i1_3
-
-def generateDoubleCirclePoints(set_size):
-    points = []
-    if set_size % 2:
-        return #not implemented
-
-    vectors = createVisibleVectors(set_size/2)
-  
-    zigzagVectors(vectors)
-    points.append([0,0])
-    set_size -= 1
-
-    it = 0
-    x_smallest = 0
-    while set_size:
-        p = [0,0]
-        p[0] = points[-1][0] + vectors[it][0]
-        p[1] = points[-1][1] + vectors[it][1]
-        if p[0] < x_smallest:
-            x_smallest = p[0]
-        points.append(p);
-        it += 1
-        set_size -= 1
-
-    for p in points:
-        p -= x_smallest
-
-    return points
-
-def generateDoubleChain(a, b, zigzag = False):
-    points = []
-    if a < b:
-        a, b = b, a
-
-    vectors = createUpperVisibleVectors(a*2)
-
-    points_a = []
-    points_b = []
-  
-    if zigzag:
-        zigzagVectors(vectors)
-  
-    points_a.append([0,0])
-    it = a/2+1
-    if zigzag:
-        it -= (a/2 + 1) % 2
-    for i in xrange(a-1):
-        points_a.append([points_a[-1][0]+vectors[it][0], points_a[-1][1]+vectors[it][1]])
-        it += 1
-    points_b.append([0,0])
-    it = a - (b-1)/2
-    if zigzag:
-        it += (a - (b-1)/2) % 2
-
-    for i in xrange(b-1):
-        points_b.append([points_b[-1][0] - vectors[it][0], points_b[-1][1] + vectors[it][1]])
-        it += 1
-  
-    diff = points_a[-1][1] - points_b[-1][1];
-    diff /= 2;
-    for pb in points_b:
-        pb[1] += diff
-        pb[0] += points_a[-1][1]+1
-    
-    return points_a+points_b
