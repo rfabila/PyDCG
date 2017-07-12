@@ -606,3 +606,44 @@ def _canonic_tree(k):
     return [val,T1,T2]
 
 
+#Export to geogebra
+def _point_txt(p):
+    p_str="""<coords x=X y=Y z="1.0"/>"""
+    file_name = os.path.join(os.path.dirname(__file__), "geogebra/point.txt")
+    point_file=open(file_name,"r")
+    point_str=""
+    for s in point_file:
+        if "coords" in s:
+            s=p_str.replace('X','\"'+str(p[0])+'.0\"')
+            s=s.replace('Y','\"'+str(p[1])+'.0\"')
+        point_str+=s
+    return point_str
+
+
+def _geo_text(pts):
+    file_name = os.path.join(os.path.dirname(__file__), "geogebra/preamble.txt")
+    pre_file=open(file_name,"r")
+    pre_str=""
+    for s in pre_file:
+        pre_str+=s
+    pre_file.close()
+    text=pre_str
+    label=0
+    for p in pts:
+        text+=point_txt(p).replace("A",str(label))
+        label+=1
+        
+    file_name = os.path.join(os.path.dirname(__file__), "geogebra/postamble.txt")
+    post_file=open(file_name,"r")
+    for s in post_file:
+        text+=s
+    post_file.close()
+    return text
+    
+def xml_file(pts,name="pts.ggb"):
+    file_xml=open("geogebra.xml","w")
+    txt=geo_text(pts)
+    file_xml.write(txt)
+    file_xml.close()
+    os.system("zip "+name+" geogebra.xml geogebra_javascript.js geogebra_thumbnail.png ")
+
