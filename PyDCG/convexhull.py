@@ -3,7 +3,7 @@
 # convex hull (Graham scan by x-coordinate) and diameter of a set of points
 # David Eppstein, UC Irvine, 7 Mar 2002
 
-from __future__ import generators
+
 
 def CH(pts):
     """Returns the convex hull of pts"""

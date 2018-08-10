@@ -17,8 +17,8 @@
 #    with this program; if not, write to the Free Software Foundation, Inc.,
 #    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-from Tkinter import *
-from tkFileDialog import *
+from tkinter import *
+from tkinter.filedialog import *
 #CHANGE ZOOM TO Fraction!!!!
 
 class Vis:
@@ -28,7 +28,7 @@ class Vis:
         self.paper=Canvas(self.root,background="white",
                           height=h,
                           width=w)
-        print self.paper['width'], self.paper['height']
+        print(self.paper['width'], self.paper['height'])
         self.center=[0,0]
         self.points=points
         self.zoom=zoom

@@ -22,14 +22,16 @@
 
 """Implementation of the basic geometric primitives"""
 
-import utilities
+from . import utilities
+from functools import cmp_to_key
 
 LEFT = -1
 COLLINEAR = 0
 RIGHT = 1
 
 if utilities.__load_extensions:
-    import geometricbasicsCpp as gbCpp
+    print(("Loading extensions", utilities.__load_extensions))
+    from . import geometricbasicsCpp as gbCpp
 
 
 def turn_py(p0, p1, p2):
@@ -56,7 +58,7 @@ def turn(p, q, r, speedup=False):
 
 def isSorted(p, pts):
     """Checks whether the point set is sorted around p"""
-    for i in xrange(len(pts) - 1):
+    for i in range(len(pts) - 1):
         if turn(p, pts[i], pts[i + 1]) > 0:
             return False
     return True
@@ -89,7 +91,7 @@ def sap(p, pts, join=True, checkConcave=True):
 
     if checkConcave:
         start = None
-        for i in xrange(len(tpts)-1):
+        for i in range(len(tpts)-1):
             if turn(tpts[i], p, tpts[i+1]) < 0:
                 start = i
                 break
@@ -122,9 +124,9 @@ def sort_around_point_py(p, points, join=True):
         else:
             r.append(q[:])
 
-    l.sort(lambda v1, v2: turn(p, v1, v2))
-    r.sort(lambda v1, v2: turn(p, v1, v2))
-    r = [p[:] for i in xrange(same)] + r
+    l.sort(key=cmp_to_key(lambda v1, v2: turn(p, v1, v2)))
+    r.sort(key=cmp_to_key(lambda v1, v2: turn(p, v1, v2)))
+    r = [p[:] for i in range(same)] + r
     
     if not join:
         return r, l
@@ -133,7 +135,7 @@ def sort_around_point_py(p, points, join=True):
 
     concave = False
     i = 0
-    for i in xrange(len(r)-1):
+    for i in range(len(r)-1):
         if turn(r[i], p, r[i + 1]) < 0:
             concave = True
             break
@@ -159,7 +161,7 @@ def iterate_over_points(pts, f):
     res = []
     tmp = [x[:] for x in pts[1:]]
     newVal = pts[0][:]
-    for i in xrange(len(tmp)):
+    for i in range(len(tmp)):
         res.append(f(newVal, tmp))
         newVal, tmp[i] = tmp[i][:], newVal[:]        
     res.append(f(newVal, tmp))
@@ -172,7 +174,7 @@ def general_position(pts, report=False):
     def f(p, pts):
         triples = []
         tmp_pts = sort_around_point(p, pts)
-        for i in xrange(len(tmp_pts) - 1):
+        for i in range(len(tmp_pts) - 1):
             if turn(p, tmp_pts[i], tmp_pts[i + 1]) == COLLINEAR:
                 if report:
                     triples.append((p, tmp_pts[i], tmp_pts[i + 1]))

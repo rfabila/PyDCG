@@ -20,7 +20,7 @@
 from distutils.core import setup, Extension
 import sys
 import pickle
-import urllib2
+# import urllib2
 import os
 
 options = {}
@@ -33,18 +33,18 @@ with open("options.cfg") as options_file:
 
 #download = None
 
-if options['DOWNLOAD_POINT_SETS'] == 1 and 'install' in sys.argv:
-    names = ['03.b08', '04.b08', '05.b08', '06.b08', '07.b08', '08.b08', '09.b16', '10.b16']
-    route = os.path.join(os.path.dirname(__file__), "PyDCG/point_sets/otypes")
+# if options['DOWNLOAD_POINT_SETS'] == 1 and 'install' in sys.argv:
+#     names = ['03.b08', '04.b08', '05.b08', '06.b08', '07.b08', '08.b08', '09.b16', '10.b16']
+#     route = os.path.join(os.path.dirname(__file__), "PyDCG/point_sets/otypes")
     
-    for file_name in names:
-        if not os.path.exists('PyDCG/point_sets/otypes' + file_name):
-            print "Downloading otypes" + file_name + "..."
-            f = urllib2.urlopen('http://www.ist.tugraz.at/aichholzer/research/rp/triangulations/ordertypes/data/otypes' + file_name)
-            data = f.read()
-            with open(route + file_name, "wb") as dest:
-                dest.write(data)
-    print "Done."
+#     for file_name in names:
+#         if not os.path.exists('PyDCG/point_sets/otypes' + file_name):
+#             print("Downloading otypes" + file_name + "...")
+#             f = urllib2.urlopen('http://www.ist.tugraz.at/aichholzer/research/rp/triangulations/ordertypes/data/otypes' + file_name)
+#             data = f.read()
+#             with open(route + file_name, "wb") as dest:
+#                 dest.write(data)
+#     print("Done.")
 
 arch = "-DINT32"
 config = {}

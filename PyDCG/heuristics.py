@@ -20,7 +20,7 @@
 import random
 import math
 import time
-import crossing
+from . import crossing
 #import holes
 
 def kirkpatrick_cooling(start_temp,alpha):
@@ -92,9 +92,9 @@ def simmulated_annealing(n=10,pts=[],run_time=10,k=10000000,k_f=kirkpatrick_cool
         idxp=random.randint(0,n-1)
         p=pts[idxp]
         q=p[:]
-        rand_move(p,int(k_f.next()))
+        rand_move(p,int(next(k_f)))
         vnew=f(pts)
-        if P(vcurrent,vnew,T.next(),minimize=minimize):
+        if P(vcurrent,vnew,next(T),minimize=minimize):
             if vnew!=vcurrent:
                 if print_function==None:
                     print (vnew)
@@ -121,7 +121,7 @@ def greedy(n,pts=[],k=1000000,run_time=10,f=crossing.count_crossings,t=1000000,m
         
     start_time=time.time()
     current_val=f(pts)
-    print current_val
+    print(current_val)
     while time.time()-start_time<run_time:
         idxp=random.randint(0,n-1)
         p=pts[idxp]
@@ -133,7 +133,7 @@ def greedy(n,pts=[],k=1000000,run_time=10,f=crossing.count_crossings,t=1000000,m
             if temp_val<=current_val:
                 if temp_val<current_val:
                     current_val=temp_val
-                    print current_val
+                    print(current_val)
                 elif cmp_f!=None:
                     prev_pts=[x[:] for x in pts]
                     prev_pts[idxp]=q
@@ -146,7 +146,7 @@ def greedy(n,pts=[],k=1000000,run_time=10,f=crossing.count_crossings,t=1000000,m
             if temp_val>=current_val:
                 if temp_val>current_val:
                     current_val=temp_val
-                    print current_val
+                    print(current_val)
                 elif cmp_f!=None:
                     prev_pts=[x[:] for x in pts]
                     prev_pts[idxp]=q

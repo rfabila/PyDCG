@@ -19,13 +19,13 @@
 
 """This is the original visualizer module extended to handle
    lines. In the future it will substitute the module visualizer"""
-from Tkinter import *
-from tkFileDialog import *
+from tkinter import *
+from tkinter.filedialog import *
 from fractions import *
 import os
-import line
-import geometricbasics
-import convexhull
+from . import line
+from . import geometricbasics
+from . import convexhull
 
 
 class Vis:
@@ -38,7 +38,7 @@ class Vis:
         self.paper=Canvas(self.root,background="white",
                           height=h,
                           width=w)
-        print self.paper['width'], self.paper['height']
+        print(self.paper['width'], self.paper['height'])
         
         self.points=points
         
@@ -47,7 +47,7 @@ class Vis:
         else:
             self.center=self.compute_center()
         
-        print "center",self.center
+        print("center",self.center)
             
         if zoom!=None:
             self.zoom=zoom
@@ -434,15 +434,19 @@ class Vis:
             if len(p)<=2:
                 self.drawnpoints.append(self.paper.create_oval(x-self.t,y-self.t,x+self.t,y+self.t,fill="black"))
             else:
-                if p[2]==0:
-                    self.drawnpoints.append(self.paper.create_oval(x-self.t,y-self.t,x+self.t,y+self.t,
-                                                                   outline="red",fill="red"))
-                if p[2]==1:
-                    self.drawnpoints.append(self.paper.create_oval(x-self.t,y-self.t,x+self.t,y+self.t,
-                                                                   outline="blue",fill="blue"))
-                if p[2]==2:
-                    self.drawnpoints.append(self.paper.create_oval(x-self.t,y-self.t,x+self.t,y+self.t,
-                                                                   outline="green",fill="green"))
+                colors = ['red', 'blue', 'green', 'orange', 'cyan', 'purple', 'yellow', 'magenta', 'pale green', 'plum1', 'slate blue', 'violet red',
+                 'brown4', 'gold', 'coral', 'SeaGreen1', 'RoyalBlue1', 'turquoise1', 'khaki1', 'OliveDrab1', 'DeepPink2', 'chocolate1', 'SteelBlue1', 'cyan3', 'PaleGreen1']
+                self.drawnpoints.append(self.paper.create_oval(x-self.t,y-self.t,x+self.t,y+self.t,
+                                                                   outline=colors[p[2]],fill=colors[p[2]]))
+                # if p[2]==0:
+                #     self.drawnpoints.append(self.paper.create_oval(x-self.t,y-self.t,x+self.t,y+self.t,
+                #                                                    outline="red",fill="red"))
+                # if p[2]==1:
+                #     self.drawnpoints.append(self.paper.create_oval(x-self.t,y-self.t,x+self.t,y+self.t,
+                #                                                    outline="blue",fill="blue"))
+                # if p[2]==2:
+                #     self.drawnpoints.append(self.paper.create_oval(x-self.t,y-self.t,x+self.t,y+self.t,
+                                                                   # outline="green",fill="green"))
         self.root.update()
                     
                     
@@ -459,7 +463,7 @@ class Vis:
                                                                  x1+self.t/2,
                                                                  y1+self.t/2,
                                                                  fill=s[2],
-                                                                 width=[3]))#TODO: restore this part, it was width=s[3])
+                                                                 width=s[3] if len(s) > 3 else 3))#TODO: restore this part, it was width=s[3])
             else:
                 self.drawnsegments.append(self.paper.create_line(x0+self.t/2,
                                                                  y0+self.t/2,
@@ -535,37 +539,36 @@ class Vis:
             if distance*self.zoom<=self.max_distance:
                 self.points.pop(q)
                 self.draw()
-            
-            
-    def convert_from_screen_coordinates(self,point):
-        x=int(point[0])
-        y=int(point[1])
-        x=x-self.paper.winfo_width()/2
-        y=y-self.paper.winfo_height()/2
-        x=x/self.zoom
-        y=y/self.zoom
-        x=x+self.center[0]
-        y=-y+self.center[1]
-        x=int(round(x))
-        y=int(round(y))
-        return [x,y]
-    
+
+    def convert_from_screen_coordinates(self, point):
+        x = int(point[0])
+        y = int(point[1])
+        x = x - self.paper.winfo_width() / 2
+        y = y - self.paper.winfo_height() / 2
+        x = x / self.zoom
+        y = y / self.zoom
+        x = x + self.center[0]
+        y = -y + self.center[1]
+        x = int(round(x))
+        y = int(round(y))
+        return [x, y]
+
     def doublezoomin(self):
         self.setzoom(2*self.zoom)
-        
+
     def doublezoomout(self):
         self.setzoom(self.zoom/2)
-        
-    def rightclick(self,event):
+
+    def rightclick(self, event):
         self.doublezoomout()
-        
-    def doubleclickleft(self,event):
-        start=[int(self.paper.canvasx(event.x)),int(self.paper.canvasy(event.y))]
-        end=[self.paper.winfo_width()/2,self.paper.winfo_height()/2]
-        v=[-(end[0]-start[0]),(end[1]-start[1])]
-        self.moveCenter([v[0],v[1]])
+
+    def doubleclickleft(self, event):
+        start = [int(self.paper.canvasx(event.x)), int(self.paper.canvasy(event.y))]
+        end = [self.paper.winfo_width()/2, self.paper.winfo_height()/2]
+        v = [-(end[0]-start[0]), (end[1]-start[1])]
+        self.moveCenter([v[0], v[1]])
         self.doublezoomin()
-        
+
     def release(self,event):
         if self.state=="view":
             global end
@@ -593,15 +596,11 @@ class Vis:
         if self.zoom >= 1.0:
             self.setzoom(self.zoom+self.deltazoom*self.zoom)
         else:
-            zoominv=1/self.zoom
-            newzoominv=zoominv-self.deltazoom*zoominv
-            self.setzoom(1/(newzoominv))
-    
-        
-            
+            zoominv = 1 / self.zoom
+            newzoominv = zoominv - self.deltazoom * zoominv
+            self.setzoom(1 / newzoominv)
+
     def take_picture(self):
         """Saves the current view as an ps file"""
-        filename=asksaveasfilename(filetypes=[("postscript","*.ps *.eps")],defaultextension=".ps")
+        filename=asksaveasfilename(filetypes = [("postscript", "*.ps *.eps")], defaultextension=".ps")
         self.paper.postscript(file=filename)
-
-        

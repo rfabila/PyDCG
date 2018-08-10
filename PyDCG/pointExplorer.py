@@ -19,20 +19,22 @@
 #    with this program; if not, write to the Free Software Foundation, Inc.,
 #    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-from geometricbasics import turn, sort_around_point, general_position
+from .geometricbasics import turn, sort_around_point, general_position
 import warnings
 import copy
-import datastructures
+from . import datastructures
 import random
 import sys
 import traceback
 import decimal
 import bisect
-from line import Line
+from .line import Line
 from collections import deque
 from math import ceil, floor
-import ordertypes
-import crossing
+from fractions import Fraction as frac
+from . import ordertypes
+from . import crossing
+from functools import reduce
 
 LEFT = -1
 RIGHT = 1
@@ -127,7 +129,7 @@ class rational(object):
         self.b /= aux
 
     def __lt__(self, other):
-        if isinstance(other, int) or isinstance(other, long):
+        if isinstance(other, int) or isinstance(other, int):
             return self.a < other * self.b
         return self.a * other.b < other.a * self.b
 
@@ -135,7 +137,7 @@ class rational(object):
         return not self < other
 
     def __le__(self, other):
-        if isinstance(other, int) or isinstance(other, long):
+        if isinstance(other, int) or isinstance(other, int):
             return self.a <= other * self.b
         return self.a * other.b <= other.a * self.b
 
@@ -143,7 +145,7 @@ class rational(object):
         return not self <= other
 
     def __eq__(self, other):
-        if isinstance(other, int) or isinstance(other, long):
+        if isinstance(other, int) or isinstance(other, int):
             return self.a == other * self.b
         return self.a * other.b == other.a * self.b
 
@@ -151,7 +153,7 @@ class rational(object):
         return not self == other
 
     def __add__(self, other):
-        if isinstance(other, int) or isinstance(other, long):
+        if isinstance(other, int) or isinstance(other, int):
             return rational(self.a + other * self.b, self.b)
         den = self.b * other.b
         num = self.a * other.b + other.a * self.b
@@ -161,7 +163,7 @@ class rational(object):
         return self + other
 
     def __sub__(self, other):
-        if isinstance(other, int) or isinstance(other, long):
+        if isinstance(other, int) or isinstance(other, int):
             return rational(self.a - other * self.b, self.b)
         den = self.b * other.b
         num = self.a * other.b - other.a * self.b
@@ -171,7 +173,7 @@ class rational(object):
         return self - other
 
     def __mul__(self, other):
-        if isinstance(other, int) or isinstance(other, long):
+        if isinstance(other, int) or isinstance(other, int):
             return rational(self.a * other, self.b)
         den = self.b * other.b
         num = self.a * other.a
@@ -181,7 +183,7 @@ class rational(object):
         return self * other
 
     def __div__(self, other):
-        if isinstance(other, int) or isinstance(other, long):
+        if isinstance(other, int) or isinstance(other, int):
             return rational(self.a * other, self.b)
         den = self.b * other.a
         num = self.a * other.b
@@ -198,8 +200,8 @@ class rational(object):
             self.simplify()
             return float(self.a) / float(self.b)
         except Exception as e:
-            print self.a
-            print self.b
+            print(self.a)
+            print(self.b)
             raise e
 
     #TODO: Check if this is necessary (I think so, since somehere I use rationals as keys but Iḿ not sure anymore)
@@ -226,7 +228,11 @@ class line(object):
         self.q = list(q)
         if self.p > self.q:
             self.p, self.q = self.q, self.p
-        self.m = rational(self.p[1] - self.q[1], self.p[0] - self.q[0], True)
+        try:
+            self.m = rational(self.p[1] - self.q[1], self.p[0] - self.q[0], True)
+        except:
+            print("Infinite slope", p, q)
+            raise
         self.b = self.m * (-self.p[0]) + self.p[1]
         self.b.simplify()
 
@@ -278,7 +284,7 @@ def dualize(obj):
     if isinstance(obj, line):
         return [obj.m, obj.b * -1]
 #    elif isinstance(obj, list):
-    print "Got", obj, type(obj), isinstance(obj, line)
+    print("Got", obj, type(obj), isinstance(obj, line))
     raise Exception("Not implemented yet!")
     
 #        return #TODO: write this!
@@ -294,7 +300,7 @@ def getPointRegion(q, sortedpoints, indices):
     lower = []
     counters = {}
 
-    for (p, pts) in sortedpoints.iteritems():
+    for (p, pts) in sortedpoints.items():
         pred, succ = indices[tuple(p)][0]
         predline = line(list(p), pts[pred])
         succline = line(list(p), pts[succ])
@@ -353,7 +359,7 @@ def getRegionR(upper, lower, toList = True):
         if len(env) == 0:
             return []
         aux = [env[0]]
-        for i in xrange(1, len(env)):
+        for i in range(1, len(env)):
             if i < len(env)-1:
                 int1 = aux[-1][1].intersection(env[i][1])
                 int2 = env[i][1].intersection(env[i + 1][1])
@@ -532,7 +538,7 @@ def crossEdge(n, p1, p2, side, upper, lower, indices, ordered):
     
 def getPolygonKey(pol):
     key = []
-    for i in xrange(3):
+    for i in range(3):
         x, y = pol[i][0].copy(), pol[i][1].copy()
         x.simplify()
         y.simplify()
@@ -697,7 +703,7 @@ def orderAllPoints(q, points):
     for p in points:
         indices[tuple(p)] = [[], []]
 
-    for i in xrange(len(points)):
+    for i in range(len(points)):
         revert = {}
         p = points[i]
         pts = points[:i] + points[i + 1:]
@@ -711,7 +717,7 @@ def orderAllPoints(q, points):
         pts.extend(antipodals)
         ordered = sort_around_point(p, pts)
 
-        for i in xrange(len(ordered)):  # TODO: Another binary search
+        for i in range(len(ordered)):  # TODO: Another binary search
             if turn(
                 p, ordered[i], q) == LEFT and turn(
                 p, ordered[
@@ -720,7 +726,7 @@ def orderAllPoints(q, points):
                 indices[tuple(p)][0] = [i, (i + 1) % len(ordered)] #TODO: Rewrite this, there's no point in having an antipodal list. Just mark the points directly
                 break
 
-        for i in xrange(len(ordered)):
+        for i in range(len(ordered)):
             key = tuple(ordered[i])
             if key in revert:
                 ordered[i] = revert[key]
@@ -747,7 +753,7 @@ def tester(pts):
     res = []
     cont = 0
     for p in pts:
-        print "\nPOINT", cont
+        print("\nPOINT", cont)
         cont += 1
         ordered, indices = orderAllPoints(p, pts)
         upper, lower, counters = getPointRegion(p, ordered, indices)
@@ -788,9 +794,9 @@ def getPolygon(U, L, k=10000):
         return
 
     upts, lpts = [], []
-    for i in xrange(len(U) - 1):
+    for i in range(len(U) - 1):
         upts.append(U[i][1].intersection(U[i + 1][1]))
-    for i in xrange(len(L) - 1):
+    for i in range(len(L) - 1):
         lpts.append(L[i][1].intersection(L[i + 1][1]))
     lpts.reverse()
 
@@ -885,7 +891,7 @@ def getPolygon(U, L, k=10000):
 
 def pointInPolygon(p, pol):
     t = turn(pol[0],pol[1],p)
-    for i in xrange(len(pol)):
+    for i in range(len(pol)):
         aux = turn(pol[i],pol[(i+1)%len(pol)],p)
         if t != aux:
             return False
@@ -923,9 +929,37 @@ def getCenter(polygon):
 #    print "Warning, no center found", polygon
     return None
 
-def getPolSegs(polygon, w=3):
+def getCenterFraction(polygon):
+    n = len(polygon)
+    res = [0, 0]
+    for pt in polygon:
+        res[0] += pt[0]
+        res[1] += pt[1]
+        
+    # res[0].simplify()
+    # res[1].simplify()
+
+    res[0] = res[0]
+    res[1] = res[1]
+
+    # print type(res[0])
+    # print type(res[0].a)
+    # print type(res[0].b)
+
+
+    cx = frac(res[0].a, res[0].b)*frac(1,n)
+    cy = frac(res[1].a, res[1].b)*frac(1,n)
+
+    return [cx,cy]
+
+
+
+def getPolSegs(polygon, w=3, randCols=True):
     colors = ["green", "red", "blue", "black", "orange", "brown", "cyan"]
-    color = random.choice(colors)
+    if randCols:
+        color = random.choice(colors)
+    else:
+        color = 'blue'
     pol = []
     n = len(polygon)
     for i in range(len(polygon)):
@@ -959,7 +993,7 @@ def generateRandomWalk(p, pts, steps=10):
     last = None
     visitedPolygons = set()
     for i in range(steps):
-        print k
+        print(k)
         k+=1
         last = randMove(upper, lower, indices, ordered, U, L, set(), last)
         yield getPolygon(U, L)
@@ -967,15 +1001,15 @@ def generateRandomWalk(p, pts, steps=10):
 
 def getLineArray(p, pts):
     lines = []
-    for i in xrange(len(pts) - 1):
-        for j in xrange(i + 1, len(pts)):
+    for i in range(len(pts) - 1):
+        for j in range(i + 1, len(pts)):
             if pts[i] != p and pts[j] != p:
                 lines.append(line(pts[i], pts[j]))
     return getLines(lines, mode=0)
     
 def getPolygonArray(pts):
     lines = []
-    for i in xrange(len(pts)):
+    for i in range(len(pts)):
         lines.append(line(pts[i], pts[(i+1)%len(pts)]))
     return getLines(lines, mode=0)
 
@@ -985,19 +1019,19 @@ def segmentsInOrder(visualizer, segs):
     visualizer.segments = segs[0]
     visualizer.draw()
     previous = ""
-    inst = raw_input("Instruction: ")
+    inst = input("Instruction: ")
     while inst != 'q':
         ask = True
         if inst == "":
             inst = previous
         if inst == 'c':
             if index == len(segs) - 1:
-                print "Index out of range"
+                print("Index out of range")
             else:
                 index += 1
         elif inst == 'p':
             if index == 0:
-                print "Index out of range"
+                print("Index out of range")
             else:
                 index -= 1
         elif inst == 'q':
@@ -1006,12 +1040,12 @@ def segmentsInOrder(visualizer, segs):
             try:
                 index = int(inst)
             except ValueError:
-                print "Wrong instruction"
+                print("Wrong instruction")
         visualizer.segments = segs[index]
         visualizer.draw()
         previous = inst
         if ask:
-            inst = raw_input("Instruction: ")
+            inst = input("Instruction: ")
 
 
 def checkConvex(pol):
@@ -1040,7 +1074,7 @@ def profile(n=50, w=1000, functions=None, fileName="profiler_res"):
         prof.add_function(getPolygon)
         prof.add_function(randMove)
 
-    pts = [datastructures.randPoint(1000000) for i in xrange(n)]
+    pts = [datastructures.randPoint(1000000) for i in range(n)]
     p = random.choice(pts)
 
     prof.runctx(
@@ -1049,7 +1083,7 @@ def profile(n=50, w=1000, functions=None, fileName="profiler_res"):
     f = open(fileName, "w")
     prof.print_stats(f)
     f.close()
-    print "Done. Stats saved in '%s'" % fileName
+    print("Done. Stats saved in '%s'" % fileName)
 
 
 def getRandomWalkDFS2(p, pts, length=10, maxDepth=2000, getPolygon = True):
@@ -1066,7 +1100,7 @@ def getRandomWalkDFS2(p, pts, length=10, maxDepth=2000, getPolygon = True):
     depth = [0]
     
     def DFS(lastEdge=None):
-        print "level",depth[0]
+        print("level",depth[0])
         if len(regions) >= length:
             return
         regionU, regionL = getRegionR(upper, lower)      
@@ -1076,7 +1110,7 @@ def getRandomWalkDFS2(p, pts, length=10, maxDepth=2000, getPolygon = True):
         
         edgeIndex = random.randint(0, total-1)
                 
-        for i in xrange(total):
+        for i in range(total):
             if len(regions) >= length:
                 return
             edgeIndex += 1
@@ -1162,7 +1196,7 @@ def getRandomWalkDFS2(p, pts, length=10, maxDepth=2000, getPolygon = True):
             if triang not in visitedPolygons:
                 visitedPolygons.add(triang)
                 regions.append(poly)
-                print "                       van", len(regions)
+                print("                       van", len(regions))
                 if depth[0] < maxDepth:
                     depth[0] += 1
                     DFS(sorted([p1,p2]))
@@ -1200,14 +1234,14 @@ def getRandomWalkDFS2(p, pts, length=10, maxDepth=2000, getPolygon = True):
     try:
         DFS()
     except Exception as e:
-        print str(e)
-        print traceback.format_exc()
-        print "fail!"
+        print(str(e))
+        print(traceback.format_exc())
+        print("fail!")
         return regions, visitedPolygons
         
     return regions, visitedPolygons
     
-def getRandomWalkDFS(p, pts, length=10, getPolygons=True):
+def getRandomWalkDFS(p, pts, length=10, getPolygons=True, tellCrossingEdge = False, tellBacktrack = False):
     """The non-recursive version, it's a generator"""
     ordered, indices = orderAllPoints(p, pts)
     upper, lower, counters = getPointRegion(p, ordered, indices)
@@ -1216,15 +1250,7 @@ def getRandomWalkDFS(p, pts, length=10, getPolygons=True):
     
     start = getPolygon(U, L)
     regions = 1
-    if getPolygons:
-        yield start
-    else:
-        res = []
-        for l in U:
-            res.append([l[1].p, l[1].q])
-        for l in L:
-            res.append([l[1].p, l[1].q])
-        yield res
+
     visitedPolygons = set()
     visitedPolygons.add(getPolygonKey(start))
     
@@ -1307,10 +1333,33 @@ def getRandomWalkDFS(p, pts, length=10, getPolygons=True):
                 
     S = deque()
     S.append(region(U, L))
-    
+
+    newAdded = True
     while len(S) > 0:
-        
         current = S[-1]
+
+        if newAdded:
+            regions += 1
+            poly = getPolygon(current.regionU,current.regionL)
+            if getPolygons:
+                if tellCrossingEdge:
+                    yield current.lastEdge, start
+                else:
+                    yield poly
+            else:
+                res = []
+                for l in current.regionU:
+                    res.append([l[1].p, l[1].q])
+                for l in current.regionL:
+                    res.append([l[1].p, l[1].q])
+                if tellCrossingEdge:
+                    yield current.lastEdge, res, poly
+                else:
+                    yield res
+            if regions >= length and length>=0:
+                break
+            newAdded = False
+        
         regionU, regionL = current.regionU, current.regionL
         
         if current.i < current.total:
@@ -1354,26 +1403,11 @@ def getRandomWalkDFS(p, pts, length=10, getPolygons=True):
             triang = getPolygonKey(poly)
             
             if triang not in visitedPolygons:
+                newAdded = True
                 visitedPolygons.add(triang)
-                if getPolygons:
-                    yield poly
-                else:
-                    res = []
-                    for l in U:
-                        res.append([l[1].p, l[1].q])
-                    for l in L:
-                        res.append([l[1].p, l[1].q])
-                    yield res
-                regions += 1
-#                regions.append(poly)
-#                print "                               van", len(regions)
-#                print " "*len(S), "push!, I crossed", crossingEdge
                 S.append( region( U, L, [p1,p2], side, (ant1, suc1), (ant2, suc2), lines1, lines2 ) )
-#                print "level", len(S)
-                if regions >= length and length>=0:
-                   # print "found enough regions"
-                    break
             else:
+                newAdded = False
 #                print " "*len(S), "already visited"
                 indices[tuple(p1)][0] = [ant1, suc1]
                 indices[tuple(p2)][0] = [ant2, suc2]
@@ -1388,7 +1422,18 @@ def getRandomWalkDFS(p, pts, length=10, getPolygons=True):
                     upper.delete(dualize(crossingEdge))
                     lower.insert(dualize(crossingEdge), crossingEdge)
         else:
-#            print " "*len(S), "done"
+            #Backtrack
+            if len(S) > 1 and tellBacktrack:
+            ######################################3
+                aux = S[-2]
+                poly = getPolygon(aux.regionU, aux.regionL)
+                backtrackCell = []
+                for l in aux.regionU:
+                    backtrackCell.append([l[1].p, l[1].q])
+                for l in aux.regionL:
+                    backtrackCell.append([l[1].p, l[1].q])
+                yield current.lastEdge, backtrackCell, poly, None
+            ###################################
             if len(S) > 1:
                 p1 = current.lastEdge[0]
                 p2 = current.lastEdge[1]
@@ -1408,9 +1453,8 @@ def getRandomWalkDFS(p, pts, length=10, getPolygons=True):
                     upper.delete(dualize(edge))
                     lower.insert(dualize(edge), edge)
 #            print " "*len(S), "pop!"
+
             S.pop()
-            
-#    return regions, visitedPolygons
     
 
 #pts = [[8172, -9003], [7480, -1467], [-9326, -111], [1880, 4958], [9628, 7411]]
@@ -1423,8 +1467,8 @@ def getRandomWalkN2(p, pts, length=10):
     upper = datastructures.dynamic_half_hull(datastructures.UPPER)
     lower = datastructures.dynamic_half_hull(datastructures.LOWER)
     
-    for i in xrange(len(pts)):
-        for j in xrange(i+1, len(pts)):
+    for i in range(len(pts)):
+        for j in range(i+1, len(pts)):
             l = line(pts[i], pts[j])
             intersection = l.evalx(p[0])
             if intersection > p[1]:
@@ -1529,7 +1573,7 @@ def getRandomWalkPent(pts):
     upper = datastructures.dynamic_half_hull(datastructures.UPPER)
     lower = datastructures.dynamic_half_hull(datastructures.LOWER)
     
-    for i in xrange(len(pts)):
+    for i in range(len(pts)):
         l = line(pts[i], pts[(i+1)%len(pts)])
         intersection = l.evalx(p[0])
         if intersection > p[1]:
@@ -1637,8 +1681,8 @@ def getRandomWalkN2Graham(p, pts, length=10):
     upper = []
     lower = []
     
-    for i in xrange(len(pts)):
-        for j in xrange(i+1, len(pts)):
+    for i in range(len(pts)):
+        for j in range(i+1, len(pts)):
             l = line(pts[i], pts[j])
             intersection = l.evalx(p[0])
             if intersection > p[1]:
@@ -1804,7 +1848,7 @@ def getRandomWalkN2Graham(p, pts, length=10):
 
 def factorial(n):
     res = 1
-    for i in xrange(1, n+1):
+    for i in range(1, n+1):
         res *= i
     return res
     
@@ -1817,13 +1861,13 @@ def cellsNumber(n):
     return cellsNumber(n-1) + (n-1)*(choose(n-1, 2)-n+5)-1
     
 def randPointPolygon(poly, tries=100):
-    triangs = [[poly[0], poly[i], poly[i+1]] for i in xrange(1, len(poly)-1)]
+    triangs = [[poly[0], poly[i], poly[i+1]] for i in range(1, len(poly)-1)]
     
-    weights = map(triangArea, triangs)
+    weights = list(map(triangArea, triangs))
     
     totalArea = reduce(lambda a,b : a+b, weights)
-    weights = map(lambda x : x/totalArea, weights)
-    weights = [sum(weights[:i]) for i in xrange(1, len(weights)+1 )]
+    weights = [x/totalArea for x in weights]
+    weights = [sum(weights[:i]) for i in range(1, len(weights)+1 )]
     
     while tries > 0:
         index = bisect.bisect(weights, random.random())
@@ -1872,7 +1916,8 @@ def triangArea(triang):
         area /= 2
     else:
         area /= 2.0
-    return abs(float(area))
+    # return abs(float(area))
+    return area if area > 0 else -ares
 
 #Added by Ruy
 
@@ -1886,7 +1931,7 @@ def get_all_extensions(pts,debug=False):
     min_y=min(pts,key=lambda x:x[1])[1]
     max_y=max(pts,key=lambda x:x[1])[1]
     if debug:
-        print min_x,max_x,min_y,max_y
+        print(min_x,max_x,min_y,max_y)
     p=[random.randint(min_x,max_x),random.randint(min_y,max_y)]
     pts.append(p)
     while not general_position(pts):
@@ -1901,7 +1946,7 @@ def get_all_extensions(pts,debug=False):
     for Q in W:
         i=i+1
         if debug:
-            print i, r
+            print(i, r)
         Qt=[[r*x[0],r*x[1]] for x in Q]
         p=randPointPolygon(Qt,tries=10)
         while p==None:
@@ -2297,9 +2342,9 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols = False):
     
     
     while(level < levels and start is not None):
-        print "                                           level", level+1
-        print "starting with"
-        print start.vertices
+        print("                                           level", level+1)
+        print("starting with")
+        print(start.vertices)
         firstEdge = edge
         
         if getPols:
@@ -2318,15 +2363,15 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols = False):
         #################################################### TO THE LEFT ###############################################
         while not finished: #We go to the left
             lastVisited = current.edges
-            print "To the left!                               "
+            print("To the left!                               ")
 #            print "current pre", current.edges
             if not nextFound:
-                print "                                not found yet"
+                print("                                not found yet")
                 nextStart = semiCopy(current)
                 res = moveNCells(p, nextStart, 3)
                 if len(res) > 0:
-                    print "                                     FOUNDNEXT"
-                    print nextStart.vertices
+                    print("                                     FOUNDNEXT")
+                    print(nextStart.vertices)
                     nextFound = True
                     nextEdge = res[-1]
                 else:
@@ -2335,7 +2380,7 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols = False):
             edgeIndex = current.edges.index(edge)
                 
             #Try an usual jump over every edge
-            for i in xrange(len(current.edges)):
+            for i in range(len(current.edges)):
 #                print "index", edgeIndex
                 res, newEdge = xJump(p, current, current.edges[edgeIndex%len(current.edges)])
                 
@@ -2363,7 +2408,7 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols = False):
 #                print "No res"                
                 star = False
                 
-                for i in xrange(-1,len(current.edges)-1):
+                for i in range(-1,len(current.edges)-1):
                     e1 = current.edges[i]
                     e2 = current.edges[i+1]
                     if e1[0] in e2 and list(e1[0]) in current.vertices:
@@ -2442,15 +2487,15 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols = False):
         #################################################### TO THE RIGHT ###############################################
         while not finished: #We go to the right
             lastVisited = current.edges 
-            print "To the right!                              "
+            print("To the right!                              ")
 #            print "current pre", current.edges
             if not nextFound:
                 nextStart = semiCopy(current)
-                print "                                        Not found yet!"
+                print("                                        Not found yet!")
                 res = moveNCells(p, nextStart, 3)
                 if len(res) > 0:
-                    print "                                     FOUNDNEXT"
-                    print nextStart.vertices
+                    print("                                     FOUNDNEXT")
+                    print(nextStart.vertices)
 #                    nextStart = semiCopy(current)
                     nextFound = True
                     nextEdge = res[-1]
@@ -2462,7 +2507,7 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols = False):
                 
             #Try an usual jump over every edge
 #            print "trying usual"
-            for i in xrange(len(current.edges)):
+            for i in range(len(current.edges)):
 #                print "index", edgeIndex
                 res, newEdge = xJump(p, current, current.edges[edgeIndex%len(current.edges)], -1)
                 
@@ -2488,7 +2533,7 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols = False):
 #                print "No res"                
                 star = False
                 
-                for i in xrange(-1,len(current.edges)-1):
+                for i in range(-1,len(current.edges)-1):
                     e1 = current.edges[i]
                     e2 = current.edges[i+1]
                     if e1[0] in e2 and list(e1[0]) in current.vertices:
@@ -2560,7 +2605,7 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols = False):
 #                print "wall final, nothing else to do"
                 break
         #################################################### END TO THE RIGHT ###############################################
-        print "END LEVEL", nextFound
+        print("END LEVEL", nextFound)
         level += 1        
         start = nextStart
         edge = nextEdge
@@ -2753,7 +2798,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
     ################################################3
 #    for e in reversed(edge):
 #        start.jumpEdge(e)
-    for i in xrange(len(edge)):
+    for i in range(len(edge)):
         e = edge[i][0]
         pt = edge[i][1]
         assert pt is not None
@@ -2768,9 +2813,9 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
     
     
     while(level < levels and start is not None):
-        print "                                           level", level+1
-        print "starting with"
-        print start.vertices
+        print("                                           level", level+1)
+        print("starting with")
+        print(start.vertices)
         firstEdge = edge
         auxpt = getCenter(start.vertices)
         
@@ -2803,7 +2848,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
                     current.jumpEdge(e)
                     
             lastVisited = current.edges
-            print "To the left!                               "
+            print("To the left!                               ")
 #            print "current pre", current.edges
             if not nextFound:
 #                print "                                not found yet"
@@ -2812,7 +2857,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
                 if len(res) > 0:
                     nextM = copy.deepcopy(M)
                     nextCr = cr
-                    for i in xrange(len(res)):
+                    for i in range(len(res)):
                         e = res[i][0]
                         pt = res[i][1]
                         
@@ -2831,7 +2876,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
             edgeIndex = current.edges.index(edge)
                 
             #Try an usual jump over every edge
-            for i in xrange(len(current.edges)):
+            for i in range(len(current.edges)):
 #                print "index", edgeIndex
                 edgeCandidadte = current.edges[edgeIndex%len(current.edges)]
                 res, newEdge = xJump(p, current, current.edges[edgeIndex%len(current.edges)], getAuxpt=True)
@@ -2910,7 +2955,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
 #                print "No res"                
                 star = False
                 
-                for i in xrange(-1,len(current.edges)-1):
+                for i in range(-1,len(current.edges)-1):
                     e1 = current.edges[i]
                     e2 = current.edges[i+1]
                     if e1[0] in e2 and list(e1[0]) in current.vertices:
@@ -3019,16 +3064,16 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
         #################################################### TO THE RIGHT ###############################################
         while not finished: #We go to the right
             lastVisited = current.edges 
-            print "To the right!                              "
+            print("To the right!                              ")
 #            print "current pre", current.edges
             if not nextFound:
                 nextStart = semiCopy(current)
-                print "                                        Not found yet!"
+                print("                                        Not found yet!")
                 res = moveNCells(p, nextStart, 3, getCenters=True)
                 if len(res) > 0:
                     nextM = copy.deepcopy(M)
                     nextCr = cr
-                    for i in xrange(len(res)):
+                    for i in range(len(res)):
                         e = res[i][0]
                         pt = res[i][1]
                             
@@ -3048,7 +3093,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
                 
             #Try an usual jump over every edge
 #            print "trying usual"
-            for i in xrange(len(current.edges)):
+            for i in range(len(current.edges)):
 #                print "index", edgeIndex
                 edgeCandidadte = current.edges[edgeIndex%len(current.edges)]
                 res, newEdge = xJump(p, current, current.edges[edgeIndex%len(current.edges)], -1, getAuxpt=True)
@@ -3121,7 +3166,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
 #                print "No res"                
                 star = False
                 
-                for i in xrange(-1,len(current.edges)-1):
+                for i in range(-1,len(current.edges)-1):
                     e1 = current.edges[i]
                     e2 = current.edges[i+1]
                     if e1[0] in e2 and list(e1[0]) in current.vertices:
@@ -3220,7 +3265,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
 #                print "wall final, nothing else to do"
                 break
         #################################################### END TO THE RIGHT ###############################################
-        print "END LEVEL", nextFound
+        print("END LEVEL", nextFound)
         level += 1        
         start = nextStart
         edge = nextEdge
@@ -3264,7 +3309,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, deb
     
     if len(edge) == 0:
         return
-    for i in xrange(len(edge)):
+    for i in range(len(edge)):
         e = edge[i][0]
         vertices = edge[i][1]
         cr += chg_cr(M,D,p,e,vertices)
@@ -3284,7 +3329,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, deb
     
     while(level < levels and start is not None):
         if verbose:
-            print "level", level
+            print("level", level)
         firstEdge = edge
         auxvertices = start.vertices
         # assert auxvertices is not None
@@ -3311,7 +3356,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, deb
         #################################################### TO THE LEFT ###############################################
         while not finished: #We go to the left
             if verbose:
-                print "To the left"
+                print("To the left")
             lastVisited = current.edges
             if not nextFound:
                 nextStart = semiCopy(current)
@@ -3319,7 +3364,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, deb
                 if len(jumps) > 0:
                     nextM = copy.deepcopy(M)
                     nextCr = cr
-                    for i in xrange(len(jumps)):
+                    for i in range(len(jumps)):
                         e = jumps[i][0]
                         vertices = jumps[i][1]
                         nextCr += chg_cr(nextM,D,p,e,vertices)
@@ -3332,7 +3377,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, deb
             edgeIndex = current.edges.index(edge)
                 
             #Try an usual jump over every edge
-            for i in xrange(len(current.edges)):
+            for i in range(len(current.edges)):
                 edgeCandidadte = current.edges[edgeIndex%len(current.edges)]
                 jumps, midEdge = xJump(p, current, current.edges[edgeIndex%len(current.edges)], getAuxpt=True)
                 
@@ -3380,7 +3425,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, deb
             if not jumps and not starJump: #We couldn't make an usual jump, try to starjump  
                 star = False
                 
-                for i in xrange(-1,len(current.edges)-1):
+                for i in range(-1,len(current.edges)-1):
                     e1 = current.edges[i]
                     e2 = current.edges[i+1]
                     if e1[0] in e2 and list(e1[0]) in current.vertices:
@@ -3467,7 +3512,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, deb
         #################################################### TO THE RIGHT ###############################################
         while not finished: #We go to the right
             if verbose:
-                print "to the right"
+                print("to the right")
             lastVisited = current.edges
             if not nextFound:
                 nextStart = semiCopy(current)
@@ -3475,7 +3520,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, deb
                 if len(jumps) > 0:
                     nextM = copy.deepcopy(M)
                     nextCr = cr
-                    for i in xrange(len(jumps)):
+                    for i in range(len(jumps)):
                         e = jumps[i][0]
                         vertices = jumps[i][1]
                         nextCr += chg_cr(nextM,D,p,e,vertices)
@@ -3488,7 +3533,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, deb
             edgeIndex = current.edges.index(edge)
                 
             #Try an usual jump over every edge
-            for i in xrange(len(current.edges)):
+            for i in range(len(current.edges)):
                 edgeCandidadte = current.edges[edgeIndex%len(current.edges)]
                 jump, newEdge = xJump(p, current, current.edges[edgeIndex%len(current.edges)], -1, getAuxpt=True)
 
@@ -3536,7 +3581,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, deb
             if not jump and not starJump: #We couldn't make an usual jump, try to starjump
                 star = False
                 
-                for i in xrange(-1,len(current.edges)-1):
+                for i in range(-1,len(current.edges)-1):
                     e1 = current.edges[i]
                     e2 = current.edges[i+1]
                     if e1[0] in e2 and list(e1[0]) in current.vertices:

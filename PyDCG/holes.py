@@ -18,13 +18,14 @@
 #    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 from math import sqrt
-from geometricbasics import sort_around_point, turn
+from .geometricbasics import sort_around_point, turn
 from collections import deque
-import utilities
-from utilities import cppWrapper
+from . import utilities
+from .utilities import cppWrapper
+from functools import cmp_to_key
 
 if utilities.__load_extensions:
-    import holesCpp
+    from . import holesCpp
 
 def count_four_islands(pts,colored=False):
     """Counts the number of four-islands in a point set."""
@@ -221,28 +222,29 @@ def scale(p,r):
 #regresa un arreglo de los puntos ordenados por angulo alrededor de x
 # en dos listas
 def orderandsplit(points):
-    
     orderedpoints = []
     for p in points:
-        l=[]
-        r=[]
-        p1=[p[0],p[1]+1]
-        
+        l = []
+        r = []
+        p1 = [p[0], p[1]+1]
+
         for x in points:
             if not p is x:
-                if turn(p,p1,x) > 0:
+                if turn(p, p1, x) > 0:
                     r.append(x)
                 else:
-                    if turn(p,p1,x) <  0:
+                    if turn(p, p1, x) < 0:
                         l.append(x)
                     else:
                         if p[1] >= x[1]:
                             l.append(x)
                         else:
                             r.append(x)
-                            
-        l.sort(lambda v1,v2:turn(p,v1,v2))
-        r.sort(lambda v1,v2:turn(p,v1,v2))
+
+        l.sort(key=cmp_to_key(lambda v1, v2: turn(p, v1, v2)))
+        r.sort(key=cmp_to_key(lambda v1, v2: turn(p, v1, v2)))
+        # l.sort(lambda v1,v2:turn(p,v1,v2))
+        # r.sort(lambda v1,v2:turn(p,v1,v2))
         orderedpoints.append([p,r,l])
         
     return orderedpoints
@@ -463,14 +465,14 @@ def debug_count_empty_triangles_around_p(points):
     L=[]
     pt=points[0]
     for i in range(len(points)):
-        print "punto:",points[i]
+        print("punto:",points[i])
         pt=points[i]
         points[i]=points[0]
         points[0]=pt
         c=count_empty_triangles_around_p(points[0],points[1:])
         s=slow_count_empty_triangles_around_p(points[0],points[1:])
         if c!=s:
-            print "diff=",s-c          
+            print("diff=",s-c)          
             L.append(points[0][:])
         pt=points[i]
         points[i]=points[0]
@@ -550,12 +552,12 @@ def visibility_graph_around_p(p,points,debug=False):
 
     
     if debug:
-        print "PRIMER COLA"
+        print("PRIMER COLA")
     
         for x in range(len(sorted_points)):
-            print "cola de", x
+            print("cola de", x)
             for q in Q[x]:
-                print "cola:",q
+                print("cola:",q)
     
     for i in range(limit):
         vis_graph[i][1]=[]
@@ -564,16 +566,16 @@ def visibility_graph_around_p(p,points,debug=False):
     proceed(len(sorted_points)-1,0,False)
     
     if debug:
-        print "SEGUNDA COLA"
+        print("SEGUNDA COLA")
     
         for x in range(len(sorted_points)):
-            print "cola de", x
+            print("cola de", x)
             for q in Q[x]:
-                print "cola:",q
+                print("cola:",q)
     
     for j in range(limit-1):
         if debug:
-            print j
+            print(j)
         proceed(j,j+1,False)
     
     for i in range(limit):
@@ -677,80 +679,80 @@ def compute_visibility_graph(sorted_points):
         
     return G
 
-#@accelerate(holesCpp.count_convex_rholes)
+# @accelerate(holesCpp.count_convex_rholes)
 def count_convex_rholes_py(points,r,mono=False):
     """Counts the number of rholes in points; as described
         in search for empty convex polygons"""
-     
-    total=0  
-    sorted_points=orderandsplit(points)
-    G=compute_visibility_graph(sorted_points)
-    L_array=[]
-    #Start of MAX CHAIN
+
+    total = 0
+    sorted_points = orderandsplit(points)
+    G = compute_visibility_graph(sorted_points)
+    L_array = []
+    # Start of MAX CHAIN
     for p in range(len(points)):
-        right_points=sorted_points[p][1]
-        L={}
-        idx_list=range(len(right_points))
+        right_points = sorted_points[p][1]
+        L = {}
+        idx_list = list(range(len(right_points)))
         idx_list.reverse()
         for q in idx_list:
-            outgoing_vertices=G[p][q][1]
-            incoming_vertices=G[p][q][0]
-            max=0
-            l=len(outgoing_vertices)-1
-            idx_inc=range(len(incoming_vertices))
+            outgoing_vertices = G[p][q][1]
+            incoming_vertices = G[p][q][0]
+            max = 0
+            l = len(outgoing_vertices) - 1
+            idx_inc = list(range(len(incoming_vertices)))
             idx_inc.reverse()
             for vi in idx_inc:
-                L[(incoming_vertices[vi],q)]=max+1
-                while l>=0 and turn(right_points[incoming_vertices[vi]],
+                L[(incoming_vertices[vi], q)] = max+1
+                while l >= 0 and turn(right_points[incoming_vertices[vi]],
                                          right_points[q],
-                                         right_points[outgoing_vertices[l]])==-1:
-                    if L[(q,outgoing_vertices[l])]>max:
-                        max=L[(q,outgoing_vertices[l])]
-                        L[(incoming_vertices[vi],q)]=max+1
-                    l=l-1
+                                         right_points[outgoing_vertices[l]]) == -1:
+                    if L[(q,outgoing_vertices[l])] > max:
+                        max = L[(q, outgoing_vertices[l])]
+                        L[(incoming_vertices[vi], q)] = max+1
+                    l = l - 1
         L_array.append(L)
-    #print L_array
-    
-    #END OF MAX CHAIN
-        
-    #We will implement using pythons native list
-    #In later revisions we should use proper lists
-    #Actually for the time being since we are only counting
-    #We may ommit the use of lists for creating the
-    #convex chains.
+    # print L_array
+
+    # END OF MAX CHAIN
+
+    # We will implement using pythons native list
+    # In later revisions we should use proper lists
+    # Actually for the time being since we are only counting
+    # We may ommit the use of lists for creating the
+    # convex chains.
     for p in range(len(points)):
         if mono:
-            color=points[p][2]
-        right_points=sorted_points[p][1]
-        L=L_array[p]
-        #We create the sets holding the convex chains
-        C={}
-        #If we follow the exposition of Searching for Empty Convex Polygons
-        #here would the treat proceedure (the one after chains) start.
+            color = points[p][2]
+        right_points = sorted_points[p][1]
+        L = L_array[p]
+        # We create the sets holding the convex chains
+        C = {}
+        # If we follow the exposition of Searching for Empty Convex Polygons
+        # here would the treat proceedure (the one after chains) start.
         for q in range(len(right_points)-1):
-          
-            outgoing_vertices=G[p][q][1]
-            incoming_vertices=G[p][q][0]
-            
-            idx=range(len(outgoing_vertices))
-            
-            idx.sort(lambda x,y:L[(q,outgoing_vertices[y])]-L[q,outgoing_vertices[x]])
-            outgoing_by_W=[outgoing_vertices[i] for i in idx]
-                
+            outgoing_vertices = G[p][q][1]
+            incoming_vertices = G[p][q][0]
+
+            idx = list(range(len(outgoing_vertices)))
+
+            idx.sort(key=cmp_to_key(lambda x, y: L[(q, outgoing_vertices[y])] - L[q, outgoing_vertices[x]]))
+            # l.sort(key=cmp_to_key(lambda v1, v2: turn(p, v1, v2)))
+            outgoing_by_W = [outgoing_vertices[i] for i in idx]
+
             for vo in outgoing_vertices:
-                if L[(q,vo)]>=r-2:
+                if L[(q, vo)] >= r - 2:
                     if mono:
-                        if (right_points[q][2]==color and
-                             right_points[vo][2]==color):
-                            C[(q,vo)]=[1]
+                        if (right_points[q][2] == color and
+                             right_points[vo][2] == color):
+                            C[(q, vo)] = [1]
                         else:
-                            C[(q,vo)]=[]
+                            C[(q, vo)] = []
                     else:
-                        C[(q,vo)]=[1]
+                        C[(q, vo)] = [1]
                 else:
-                    C[(q,vo)]=[]
+                    C[(q, vo)] = []
             
-            m=0
+            m = 0
             mprime=len(outgoing_vertices)
             for vi in incoming_vertices:
                     
@@ -828,14 +830,14 @@ def report_convex_rholes_py(points,r,mono=False):
     for p in range(len(points)):
         right_points=sorted_points[p][1]
         L={}
-        idx_list=range(len(right_points))
+        idx_list=list(range(len(right_points)))
         idx_list.reverse()
         for q in idx_list:
             outgoing_vertices=G[p][q][1]
             incoming_vertices=G[p][q][0]
             max=0
             l=len(outgoing_vertices)-1
-            idx_inc=range(len(incoming_vertices))
+            idx_inc=list(range(len(incoming_vertices)))
             idx_inc.reverse()
             for vi in idx_inc:
                 L[(incoming_vertices[vi],q)]=max+1
@@ -865,7 +867,7 @@ def report_convex_rholes_py(points,r,mono=False):
             outgoing_vertices = G[p][q][1]
             incoming_vertices = G[p][q][0]
             
-            idx = range(len(outgoing_vertices))
+            idx = list(range(len(outgoing_vertices)))
             
             idx.sort(lambda x,y:L[(q,outgoing_vertices[y])]-L[q,outgoing_vertices[x]])
             outgoing_by_W = [outgoing_vertices[i] for i in idx]
@@ -1062,7 +1064,7 @@ def slow_count_monoquad(points):
                             
                                 if convex and empty:
                                     quads=quads+1
-                                    print points[i],points[j],points[k],points[l]
+                                    print(points[i],points[j],points[k],points[l])
     return quads
     
 ##TALLER DE OAXACA CAMBIAR A OTRO MODULO LO RESCATABLE
@@ -1357,7 +1359,7 @@ def count_convex_rholes_p_py(p, points, r, mono = False):
                         if turn(sorted_points[chp[-1]], sorted_points[chp[0]], p)<0 and \
                         (turn(sorted_points[chp[-2]], sorted_points[chp[-1]], sorted_points[chp[0]])<0 and \
                         turn(sorted_points[chp[-1]], sorted_points[chp[0]], sorted_points[chp[1]])<0) and \
-                        L.has_key((chp[-1], chp[0])):
+                        (chp[-1], chp[0]) in L:
                             if mono:
                                 if sorted_points[ch[0]][2]==sorted_points[Sop[t]][2]:
                                     #Se checa si forma un r-hoyo convexo con p en su interior

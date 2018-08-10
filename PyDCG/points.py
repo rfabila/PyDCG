@@ -20,18 +20,18 @@
 """Module providing point set generators to many families of point sets.
    It also provides access to Graz's order point database for n=6,7,8,9,10"""
 import struct
-import geometricbasics
-import crossing
+from . import geometricbasics
+from . import crossing
 import math
 import os
 import pickle
 import datetime
-import ConfigParser
+import configparser
 import random
 import string
-import holes
-import kgons
-import line
+from . import holes
+from . import kgons
+from . import line
 import fractions
 
 sqrt_3=fractions.Fraction(173205,100000)
@@ -374,7 +374,7 @@ def best_halving_lines_pts(n):
 def _pack_sp(pts,species,comment="",user_id=None):
     if not geometricbasics.general_position(pts):
         #this should probably be an exception
-        print "Point set not in general position!! I ain't sending nothing."
+        print("Point set not in general position!! I ain't sending nothing.")
 
         return None
     sp={}
@@ -383,12 +383,12 @@ def _pack_sp(pts,species,comment="",user_id=None):
     date_discovered=datetime.datetime.today()
     sp['date_discovered']=date_discovered
     if user_id==None:
-        config=ConfigParser.RawConfigParser()
+        config=configparser.RawConfigParser()
         home=os.path.expanduser("~")
-        print home+'.pydcg/pydcg.cfg'
+        print(home+'.pydcg/pydcg.cfg')
         config.read(home+'/.pydcg/pydcg.cfg')
         user_id=config.get('user info','user_id')
-        print user_id
+        print(user_id)
     sp['user_id']=user_id
     return sp
 
@@ -401,14 +401,16 @@ def _submit_point_set_list(P,species,comment=" ",user_id=None):
         idx=''.join(random.choice(string.ascii_letters + string.digits) for _ in range(10))
         name=str(len(pts))+"_"+species+"_"+str(date_discovered.date())+"_"+idx+".sp"
         name="temp_subs/"+name
-        print name
+        print(name)
         file_sp=open(name,"w")
         pickle.dump((species,sp),file_sp)
         file_sp.close()
+    print("Copying to monk...")
     com="scp temp_subs/* naturalist@monk.math.cinvestav.mx:~/naturalist/captured_specimens/"
     os.system(com)
     os.system("rm temp_subs/*")
     os.system("rmdir temp_subs")
+    print("Done")
         
 
 def _submit_point_set(pts,species,comment=" ",user_id=None):
@@ -526,7 +528,7 @@ def _check_hortoness(pts):
             for k in range(len(H_odd)):
                 sign2=geometricbasics.turn(H_even[i],H_even[j],H_odd[k])
                 if sign*sign2<=0:
-                    print (H_even[i],H_even[j],H_odd[k])
+                    print((H_even[i],H_even[j],H_odd[k]))
                     return False
                     
     sign=geometricbasics.turn(H_odd[0],H_odd[1],H_even[0])
@@ -535,7 +537,7 @@ def _check_hortoness(pts):
             for k in range(len(H_even)):
                 sign2=geometricbasics.turn(H_odd[i],H_odd[j],H_even[k])
                 if sign*sign2<=0:
-                    print (H_odd[i],H_odd[j],H_even[k])
+                    print((H_odd[i],H_odd[j],H_even[k]))
                     return False
                 
     if check_hortoness(H_even) and check_hortoness(H_odd):
@@ -702,12 +704,12 @@ def _X_kl_array(s,test=False):
                 
                 if test:
                     if not geometricbasics.general_position(pts):
-                        print "GENERAL POSITION FAILED!"
-                        print i,j
+                        print("GENERAL POSITION FAILED!")
+                        print(i,j)
                     if (kgons.max_cup(pts)!=i-1 or
                         kgons.max_cap(pts)!=j-1):
-                        print "CAPS and CUPS FAILED!"
-                        print i,j
+                        print("CAPS and CUPS FAILED!")
+                        print(i,j)
                         
                 P[i][j]=pts
                 

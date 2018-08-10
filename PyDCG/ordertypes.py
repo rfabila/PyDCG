@@ -1,11 +1,11 @@
-import geometricbasics
+from . import geometricbasics
 import hashlib
-import convexhull
+from . import convexhull
 
 def points_index(pts):
     """Returns a dictionary with the indices of the points in pts"""
     D={}
-    for i in xrange(len(pts)):
+    for i in range(len(pts)):
         q=(pts[i][0],pts[i][1])
         D[q]=i
     return D
@@ -13,17 +13,17 @@ def points_index(pts):
 def lambda_matrix(pts):
     """M[i,j] is the number of points of pts that lie to the LEFT
     of the edge (pts[i],pts[j])."""
-    M=[[0 for i in xrange(len(pts))] for j in xrange(len(pts))]
+    M=[[0 for i in range(len(pts))] for j in range(len(pts))]
     D=points_index(pts)
     n=len(pts)
-    for i in xrange(n):
+    for i in range(n):
         tpts=pts[:i]
         tpts.extend(pts[i+1:])
         p=pts[i]
         #check whether we have the C++ version running correctly
         pts_sorted=geometricbasics.sort_around_point(p,tpts)
         k=0 
-        for j in xrange(n-1):
+        for j in range(n-1):
             while (geometricbasics.turn(p,pts_sorted[j],pts_sorted[(k+1)%(n-1)])<=0 and
                     (k+1)%(n-1)!=j):
                 k=k+1
@@ -37,10 +37,10 @@ def signature(pts):
     M=lambda_matrix(pts)
     s=""
     n=len(pts)
-    for i in xrange(n):
-        for j in xrange(i+1,n):
+    for i in range(n):
+        for j in range(i+1,n):
             s=s+str(M[i][j])+"|"
-    return hashlib.md5(s).hexdigest()
+    return hashlib.md5(s.encode('utf-8')).hexdigest()
 
 def unique_signature(pts):
     """Similar to signature, it produces a string associated to the point set,
@@ -57,7 +57,7 @@ def unique_signature(pts):
         pts2=geometricbasics.sort_around_point(p,pts2)
         pts2.append(p)
         S.append(signature(pts2))
-    print S
+    print(S)
     return min(S)
 
 
@@ -66,6 +66,6 @@ def remove_duplicates(P):
     D={}
     for pts in P:
         D[signature(pts)]=pts
-    return D.values()
+    return list(D.values())
     
         

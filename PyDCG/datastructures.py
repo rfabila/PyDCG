@@ -23,7 +23,7 @@
 
 import random
 import warnings
-from geometricbasics import turn
+from .geometricbasics import turn
 
 # TODO: cambiar bridge a miembro o sacarla de la clase (actualmente es
 # miembro de clase)
@@ -163,7 +163,7 @@ class Treap(object):
                 self.rotate_right(node)
 
     def show(self):
-        print self.root.__str__()
+        print(self.root.__str__())
 
     def compare_priorities(self, x, y):
         if x == y or x is None or y is None:
@@ -312,8 +312,8 @@ class Treap(object):
         node = self.find(key)
         if node is not None:
             return self.split_at_node(node)
-        print "\n", key, "not found", "in", self
-        print "Split returns NONE"
+        print("\n", key, "not found", "in", self)
+        print("Split returns NONE")
         return (self, None, None)
 
     def paste(self, node, T2):
@@ -423,9 +423,9 @@ class Treap(object):
 # Test functions
 def treap_sort(s, t=100):
     treap = Treap(max_size=s)
-    for i in xrange(t):
+    for i in range(t):
         #        print "sort",i
-        for j in xrange(s):
+        for j in range(s):
             treap.insert(random.randint(0, 2 * s))
         while not treap.empty:
             node = treap.min()
@@ -536,9 +536,9 @@ class dynamic_half_hull(object):
             v.parent = aux
             if v.key[0] >= u.key[0]:
                 if v.key[0] == u.key[0]:
-                    print "Same Coordinate"
-                    print "v:J", v.J, "v.data", v.obj, "v.points", v.obj.getPoints()
-                    print "u:J", u.J, "u.data", u.obj, "u.points", u.obj.getPoints()
+                    print("Same Coordinate")
+                    print("v:J", v.J, "v.data", v.obj, "v.points", v.obj.getPoints())
+                    print("u:J", u.J, "u.data", u.obj, "u.points", u.obj.getPoints())
                     raise Exception("Trying to insert a point with the same x-coordinate as an existing one") #TODO: This means that there are points with the same x-coordinate. 
                                     #Make a descriptive exception or find a way to handle this case
                 aux.key = [u.key[0], 0]
@@ -763,7 +763,7 @@ class dynamic_half_hull(object):
                 aq = q[1] - qM[1]
                 bq = q[0] - qM[0]
                 if bp == 0 or bq == 0:
-                    print "Recta vertical"
+                    print("Recta vertical")
                 if (ap / bq) == (aq / bq):
                     warnings.warn("Misma pendiente")
                 # Each line equation looks like ax - by = ax_0 - by_0, we store
@@ -930,7 +930,7 @@ class dynamic_convex_hull(object):
         return u
 
     def __str__(self):
-        print self.toList()
+        print(self.toList())
 
 
 def compute_height(node):
@@ -944,11 +944,11 @@ def compute_height(node):
 
 def in_order_priorities(node):
     if node.right is None and node.left is None:
-        print node.priority
+        print(node.priority)
         return
     if node.left is not None:
         in_order_priorities(node.left)
-    print node.priority
+    print(node.priority)
     if node.right is not None:
         in_order_priorities(node.right)
 
@@ -970,9 +970,9 @@ def time_test(n=100, k=100000, skip=1, fileName="tests.txt"):
     pts = []
     cont = 0
     ch = dynamic_convex_hull()
-    for i in xrange(n):
+    for i in range(n):
         if not i % skip:
-            print cont,
+            print(cont, end=' ')
             f.write("%d," % (cont))
             cont += 1
         p = randPoint(k)
@@ -981,7 +981,7 @@ def time_test(n=100, k=100000, skip=1, fileName="tests.txt"):
         ch.insert(p)
         t1 = time.time()
         if not i % skip:
-            print t1 - t0,
+            print(t1 - t0, end=' ')
             f.write("%.10f," % (t1 - t0))
 
         s = copy.deepcopy(pts)
@@ -989,7 +989,7 @@ def time_test(n=100, k=100000, skip=1, fileName="tests.txt"):
         U, L = convexhull.hulls(s)
         t1 = time.time()
         if not i % skip:
-            print t1 - t0
+            print(t1 - t0)
             f.write("%.10f\n" % (t1 - t0))
     f.close()
 
@@ -1007,12 +1007,12 @@ def profile(n=1000, k=1000000, functions=None, fileName="profiler_res"):
 #        prof.add_function(dynamic_half_hull.DOWN)
 
     ch = dynamic_convex_hull()
-    pts = [randPoint(k) for i in xrange(n)]
+    pts = [randPoint(k) for i in range(n)]
 
-    for i in xrange(len(pts)):
-        for j in xrange(i + 1, len(pts)):
+    for i in range(len(pts)):
+        for j in range(i + 1, len(pts)):
             if pts[i][0] == pts[j][0]:
-                print "Misma coordenada x:", pts[i], pts[j]
+                print("Misma coordenada x:", pts[i], pts[j])
 
     def aux(ch, pts):
         for p in pts:
@@ -1023,7 +1023,7 @@ def profile(n=1000, k=1000000, functions=None, fileName="profiler_res"):
     f = open(fileName, "w")
     prof.print_stats(f)
     f.close()
-    print "Done. Stats saved in '%s'" % fileName
+    print("Done. Stats saved in '%s'" % fileName)
 
 
 def verifyBinaryTree(T):
@@ -1046,14 +1046,14 @@ def verifyBinaryTree(T):
 
         if resL and resR:
             return True and check(node.left) and check(node.right)
-        print "fail at node", node
+        print("fail at node", node)
         return False
     res = check(T.root)
     if not res:
-        print "FAIL!", T
+        print("FAIL!", T)
         raise Exception
     else:
-        print "ALL GOOD"
+        print("ALL GOOD")
 
 def inOrder(node):
     if node.right is None and node.left is None:

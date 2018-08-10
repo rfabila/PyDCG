@@ -21,11 +21,11 @@
 geometric graph"""
 
 #from geometricbasics import *
-import geometricbasics
-import utilities
+from . import geometricbasics
+from . import utilities
 
 if utilities.__load_extensions: #TODO: Make this a package global variable and update all modules
-    import crossingCpp
+    from . import crossingCpp
 
 def count_k_edges(pts,k):
     """Returns the number of k edges in the point set pts"""

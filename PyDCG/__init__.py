@@ -6,7 +6,7 @@
 #
 #    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation version 2. 
+#    the Free Software Foundation version 2.
 #
 #    This program is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,19 +20,20 @@
 '''
 PyDCG, a collection of Discrete and Computational Geometry tools
 '''
-import crossing
-import geometricbasics
-import points
-import combinatorics
-import datastructures
-import line
-import visualizer
-import visualizer2
-import holes
-import heuristics
-import convexhull
-import pointExplorer
-import utilities
-import extendSet
-import ordertypes
-import kgons
+
+from . import crossing
+from . import geometricbasics
+from . import points
+from . import combinatorics
+from . import datastructures
+from . import line
+from . import visualizer
+from . import visualizer2
+from . import holes
+from . import heuristics
+from . import convexhull
+from . import pointExplorer
+from . import utilities
+from . import extendSet
+from . import ordertypes
+from . import kgons

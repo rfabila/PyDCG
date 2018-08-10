@@ -20,8 +20,8 @@
 #    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 from fractions import *
-import geometricbasics
-import holes
+from . import geometricbasics
+from . import holes
 
 def dual_point_to_line(point):
     l=Line(p=[0,point[1]],q=[1,point[0]+point[1]])
