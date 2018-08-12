@@ -232,7 +232,8 @@ class line(object):
         if self.p > self.q:
             self.p, self.q = self.q, self.p
         try:
-            self.m = rational(self.p[1] - self.q[1], self.p[0] - self.q[0], True)
+            self.m = rational(self.p[1] - self.q[1],
+                              self.p[0] - self.q[0], True)
         except Exception as e:
             print("Infinite slope", p, q)
             raise e
@@ -592,7 +593,8 @@ def randMove(upper, lower, indices, ordered, regionU, regionL, visitedPolygons, 
         ant1, suc1 = indices[tuple(p1)][0]
         ant2, suc2 = indices[tuple(p2)][0]
 
-        line1, line2, U, L = crossEdge(n, p1, p2, side, upper, lower, indices, ordered)
+        line1, line2, U, L = crossEdge(
+            n, p1, p2, side, upper, lower, indices, ordered)
         poly = getPolygon(U, L)
 
         triang = getPolygonKey(poly)
@@ -735,7 +737,8 @@ def orderAllPoints(q, points):
                 p, ordered[
                     (i + 1) %
                     len(ordered)], q) == RIGHT:
-                indices[tuple(p)][0] = [i, (i + 1) % len(ordered)]  # TODO: Rewrite this, there's no point in having an antipodal list. Just mark the points directly
+                # TODO: Rewrite this, there's no point in having an antipodal list. Just mark the points directly
+                indices[tuple(p)][0] = [i, (i + 1) % len(ordered)]
                 break
 
         for i in range(len(ordered)):
@@ -993,7 +996,8 @@ def getRandomWalk(p, pts, steps=10):
     last = None
     visitedPolygons = set()
     for i in range(steps):
-        last, polygon = randMove(upper, lower, indices, ordered, U, L, visitedPolygons, last)
+        last, polygon = randMove(
+            upper, lower, indices, ordered, U, L, visitedPolygons, last)
         regions.append(polygon)
     return regions, visitedPolygons
 
@@ -1173,7 +1177,8 @@ def getRandomWalkDFS2(p, pts, length=10, maxDepth=2000, getPolygon=True):
                         upper.delete(dualize(oldline))
                         oldSide = UP
                     except Exception as e:
-                        lower.delete(dualize(oldline))  # TODO: Should know whether it's inside upper or lower
+                        # TODO: Should know whether it's inside upper or lower
+                        lower.delete(dualize(oldline))
                         oldSide = DOWN
 
                 keynew = tuple(dualize(newline))
@@ -1242,7 +1247,8 @@ def getRandomWalkDFS2(p, pts, length=10, maxDepth=2000, getPolygon=True):
 
             if side == UP:
                 lower.delete(dualize(crossingEdge))
-                upper.insert(dualize(crossingEdge), crossingEdge)  # TODO: should be able to dualize the point instead of adding the line as an object, right?
+                # TODO: should be able to dualize the point instead of adding the line as an object, right?
+                upper.insert(dualize(crossingEdge), crossingEdge)
             else:
                 upper.delete(dualize(crossingEdge))
                 lower.insert(dualize(crossingEdge), crossingEdge)
@@ -1314,7 +1320,8 @@ def getRandomWalkDFS(p, pts, length=10, getPolygons=True, tellCrossingEdge=False
                 upper.delete(dualize(oldline))
                 oldSide = UP
             except:
-                lower.delete(dualize(oldline))  # TODO: Should know whether it's inside upper or lower
+                # TODO: Should know whether it's inside upper or lower
+                lower.delete(dualize(oldline))
                 oldSide = DOWN
 
         keynew = tuple(dualize(newline))
@@ -1421,7 +1428,8 @@ def getRandomWalkDFS(p, pts, length=10, getPolygons=True, tellCrossingEdge=False
             if triang not in visitedPolygons:
                 newAdded = True
                 visitedPolygons.add(triang)
-                S.append(region(U, L, [p1, p2], side, (ant1, suc1), (ant2, suc2), lines1, lines2))
+                S.append(
+                    region(U, L, [p1, p2], side, (ant1, suc1), (ant2, suc2), lines1, lines2))
             else:
                 newAdded = False
 #                print " "*len(S), "already visited"
@@ -1433,14 +1441,15 @@ def getRandomWalkDFS(p, pts, length=10, getPolygons=True, tellCrossingEdge=False
 
                 if side == UP:
                     lower.delete(dualize(crossingEdge))
-                    upper.insert(dualize(crossingEdge), crossingEdge)  # TODO: should be able to dualize the point instead of adding the line as an object, right?
+                    # TODO: should be able to dualize the point instead of adding the line as an object, right?
+                    upper.insert(dualize(crossingEdge), crossingEdge)
                 else:
                     upper.delete(dualize(crossingEdge))
                     lower.insert(dualize(crossingEdge), crossingEdge)
         else:
             # Backtrack
             if len(S) > 1 and tellBacktrack:
-            ######################################
+                ######################################
                 aux = S[-2]
                 poly = getPolygon(aux.regionU, aux.regionL)
                 backtrackCell = []
@@ -1453,8 +1462,10 @@ def getRandomWalkDFS(p, pts, length=10, getPolygons=True, tellCrossingEdge=False
             if len(S) > 1:
                 p1 = current.lastEdge[0]
                 p2 = current.lastEdge[1]
-                indices[tuple(p1)][0] = [current.neighbors1[0], current.neighbors1[1]]
-                indices[tuple(p2)][0] = [current.neighbors2[0], current.neighbors2[1]]
+                indices[tuple(p1)][0] = [current.neighbors1[0],
+                                         current.neighbors1[1]]
+                indices[tuple(p2)][0] = [current.neighbors2[0],
+                                         current.neighbors2[1]]
 
                 restore(current.lines1)
                 restore(current.lines2)
@@ -1464,7 +1475,8 @@ def getRandomWalkDFS(p, pts, length=10, getPolygons=True, tellCrossingEdge=False
 
                 if current.side == UP:
                     lower.delete(dualize(edge))
-                    upper.insert(dualize(edge), edge)  # TODO: should be able to dualize the point instead of adding the line as an object, right?
+                    # TODO: should be able to dualize the point instead of adding the line as an object, right?
+                    upper.insert(dualize(edge), edge)
                 else:
                     upper.delete(dualize(edge))
                     lower.insert(dualize(edge), edge)
@@ -1478,7 +1490,7 @@ def getRandomWalkDFS(p, pts, length=10, getPolygons=True, tellCrossingEdge=False
 #walk, visited = getRandomWalkDFS(p, pts, 17)
 
 def getRandomWalkN2(p, pts, length=10):
-#    p = [random.randint(-100000000, 100000000), random.randint(-100000000, 100000000)]
+    #    p = [random.randint(-100000000, 100000000), random.randint(-100000000, 100000000)]
 
     upper = datastructures.dynamic_half_hull(datastructures.UPPER)
     lower = datastructures.dynamic_half_hull(datastructures.LOWER)
@@ -1500,7 +1512,7 @@ def getRandomWalkN2(p, pts, length=10):
     visitedPolygons.add(getPolygonKey(start))
 
     class region(object):
-        def __init__(self, regionU, regionL, lastEdge = None, side = None):
+        def __init__(self, regionU, regionL, lastEdge=None, side=None):
             self.regionU = regionU
             self.regionL = regionL
             self.total = len(regionU) + len(regionL)
@@ -1531,8 +1543,8 @@ def getRandomWalkN2(p, pts, length=10):
             if p1 > p2:
                 p1, p2 = p2, p1
             if [p1, p2] == current.lastEdge:
-#                print " "*len(S), "points", p1, p2, [p1, p2]
-#                print " "*len(S), "lastedge!"
+                #                print " "*len(S), "points", p1, p2, [p1, p2]
+                #                print " "*len(S), "lastedge!"
                 continue
 #            print "next line"
 
@@ -1553,32 +1565,36 @@ def getRandomWalkN2(p, pts, length=10):
                 yield poly
                 if len(visitedPolygons) > length:
                     break
-                S.append( region( U, L, [p1, p2], side) )
+                S.append(region(U, L, [p1, p2], side))
 #                print "level", len(S)
             else:
                 if side == UP:
                     lower.delete(dualize(crossingEdge))
-                    upper.insert(dualize(crossingEdge), crossingEdge)  # TODO: should be able to dualize the point instead of adding the line as an object, right?
+                    # TODO: should be able to dualize the point instead of adding the line as an object, right?
+                    upper.insert(dualize(crossingEdge), crossingEdge)
                 else:
                     upper.delete(dualize(crossingEdge))
                     lower.insert(dualize(crossingEdge), crossingEdge)
         else:
-#            print " "*len(S), "done"
+            #            print " "*len(S), "done"
             if len(S) > 1:
                 p1, p2 = current.lastEdge
                 edge = line(p1, p2)
 
                 if current.side == UP:
                     lower.delete(dualize(edge))
-                    upper.insert(dualize(edge), edge)  # TODO: should be able to dualize the point instead of adding the line as an object, right?
+                    # TODO: should be able to dualize the point instead of adding the line as an object, right?
+                    upper.insert(dualize(edge), edge)
                 else:
                     upper.delete(dualize(edge))
                     lower.insert(dualize(edge), edge)
 #            print " "*len(S), "pop!"
             S.pop()
 
+
 def getRandomWalkPent(pts):
-    p = [random.randint(-100000000, 100000000), random.randint(-100000000, 100000000)]
+    p = [random.randint(-100000000, 100000000),
+         random.randint(-100000000, 100000000)]
 
     def search(p):
         for pt in pts:
@@ -1590,7 +1606,7 @@ def getRandomWalkPent(pts):
     lower = datastructures.dynamic_half_hull(datastructures.LOWER)
 
     for i in range(len(pts)):
-        l = line(pts[i], pts[(i+1)%len(pts)])
+        l = line(pts[i], pts[(i+1) % len(pts)])
         intersection = l.evalx(p[0])
         if intersection > p[1]:
             upper.insert(dualize(l), l)
@@ -1611,7 +1627,7 @@ def getRandomWalkPent(pts):
     visitedPolygons.add(getPolygonKey(start))
 
     class region(object):
-        def __init__(self, regionU, regionL, lastEdge = None, side = None):
+        def __init__(self, regionU, regionL, lastEdge=None, side=None):
             self.regionU = regionU
             self.regionL = regionL
             self.total = len(regionU) + len(regionL)
@@ -1642,8 +1658,8 @@ def getRandomWalkPent(pts):
             if p1 > p2:
                 p1, p2 = p2, p1
             if [p1, p2] == current.lastEdge:
-#                print " "*len(S), "points", p1, p2, [p1, p2]
-#                print " "*len(S), "lastedge!"
+                #                print " "*len(S), "points", p1, p2, [p1, p2]
+                #                print " "*len(S), "lastedge!"
                 continue
 #            print "next line"
 
@@ -1667,32 +1683,35 @@ def getRandomWalkPent(pts):
                         originalPoints += 1
                 if originalPoints != 2:
                     yield poly
-                S.append( region( U, L, [p1, p2], side) )
+                S.append(region(U, L, [p1, p2], side))
 #                print "level", len(S)
             else:
                 if side == UP:
                     lower.delete(dualize(crossingEdge))
-                    upper.insert(dualize(crossingEdge), crossingEdge)  # TODO: should be able to dualize the point instead of adding the line as an object, right?
+                    # TODO: should be able to dualize the point instead of adding the line as an object, right?
+                    upper.insert(dualize(crossingEdge), crossingEdge)
                 else:
                     upper.delete(dualize(crossingEdge))
                     lower.insert(dualize(crossingEdge), crossingEdge)
         else:
-#            print " "*len(S), "done"
+            #            print " "*len(S), "done"
             if len(S) > 1:
                 p1, p2 = current.lastEdge
                 edge = line(p1, p2)
 
                 if current.side == UP:
                     lower.delete(dualize(edge))
-                    upper.insert(dualize(edge), edge)  # TODO: should be able to dualize the point instead of adding the line as an object, right?
+                    # TODO: should be able to dualize the point instead of adding the line as an object, right?
+                    upper.insert(dualize(edge), edge)
                 else:
                     upper.delete(dualize(edge))
                     lower.insert(dualize(edge), edge)
 #            print " "*len(S), "pop!"
             S.pop()
 
+
 def getRandomWalkN2Graham(p, pts, length=10):
-#    p = [random.randint(-100000000, 100000000), random.randint(-100000000, 100000000)]
+    #    p = [random.randint(-100000000, 100000000), random.randint(-100000000, 100000000)]
 
     upper = []
     lower = []
@@ -1712,9 +1731,11 @@ def getRandomWalkN2Graham(p, pts, length=10):
         Points.sort()
         for p in Points:
             if side == datastructures.UPPER:
-                while len(H) > 1 and turn(H[-2][0], H[-1][0], p[0]) <= 0: H.pop()
+                while len(H) > 1 and turn(H[-2][0], H[-1][0], p[0]) <= 0:
+                    H.pop()
             if side == datastructures.LOWER:
-                while len(H) > 1 and turn(H[-2][0], H[-1][0], p[0]) >= 0: H.pop()
+                while len(H) > 1 and turn(H[-2][0], H[-1][0], p[0]) >= 0:
+                    H.pop()
             H.append(p)
         if side == datastructures.LOWER:
             H.reverse()
@@ -1730,7 +1751,7 @@ def getRandomWalkN2Graham(p, pts, length=10):
     visitedPolygons.add(getPolygonKey(start))
 
     class region(object):
-        def __init__(self, regionU, regionL, lastEdge = None, side = None):
+        def __init__(self, regionU, regionL, lastEdge=None, side=None):
             self.regionU = regionU
             self.regionL = regionL
             self.total = len(regionU) + len(regionL)
@@ -1760,8 +1781,8 @@ def getRandomWalkN2Graham(p, pts, length=10):
             if p1 > p2:
                 p1, p2 = p2, p1
             if [p1, p2] == current.lastEdge:
-#                print " "*len(S), "points", p1, p2, [p1, p2]
-#                print " "*len(S), "lastedge!"
+                #                print " "*len(S), "points", p1, p2, [p1, p2]
+                #                print " "*len(S), "lastedge!"
                 continue
 #            print "next line"
 
@@ -1784,17 +1805,19 @@ def getRandomWalkN2Graham(p, pts, length=10):
                 yield poly
                 if len(visitedPolygons) > length:
                     break
-                S.append( region( U, L, [p1, p2], side) )
+                S.append(region(U, L, [p1, p2], side))
 #                print "level", len(S)
             else:
                 if side == UP:
-                    lower.pop(lower.index([dualize(crossingEdge), crossingEdge]))
+                    lower.pop(lower.index(
+                        [dualize(crossingEdge), crossingEdge]))
                     upper.append([dualize(crossingEdge), crossingEdge])
                 else:
-                    upper.pop(upper.index([dualize(crossingEdge), crossingEdge]))
+                    upper.pop(upper.index(
+                        [dualize(crossingEdge), crossingEdge]))
                     lower.append([dualize(crossingEdge), crossingEdge])
         else:
-#            print " "*len(S), "done"
+            #            print " "*len(S), "done"
             if len(S) > 1:
                 p1, p2 = current.lastEdge
                 edge = line(p1, p2)
@@ -1808,7 +1831,7 @@ def getRandomWalkN2Graham(p, pts, length=10):
 #            print " "*len(S), "pop!"
             S.pop()
 
-#def generateSpiralWalk(p, pts, length = 10):
+# def generateSpiralWalk(p, pts, length = 10):
 #    ordered, indices = orderAllPoints(p, pts)
 #    upper, lower, counter = getPointRegion(p, ordered, indices)  # TODO: USE COUNTER!!!
 #    U, L = getRegionR(upper, lower)
@@ -1828,8 +1851,8 @@ def getRandomWalkN2Graham(p, pts, length=10):
 #    for edge in current:
 #        forbiddenEdges.add(tuple(sorted(edge)))
 #
-##    for edge in forbiddenEdges:
-##        print edge
+# for edge in forbiddenEdges:
+# print edge
 #
 #    while length > 0:
 #        if jump < len(U)-1:
@@ -1851,10 +1874,10 @@ def getRandomWalkN2Graham(p, pts, length=10):
 #        print
 #        jump = current.index(list(last))
 #        jump += 1
-##        print current[jump], "vs", last
-##        while tuple(current[jump]) != last:
-##            jump = (jump+1)%len(current)
-##            print tuple(current[jump]), "vs", last, tuple(current[jump]) != last
+# print current[jump], "vs", last
+# while tuple(current[jump]) != last:
+#            jump = (jump+1)%len(current)
+# print tuple(current[jump]), "vs", last, tuple(current[jump]) != last
 #        while tuple(current[jump]) in forbiddenEdges:
 #            jump = (jump+1)%len(current)
 #        last = tuple(current[jump])
@@ -1862,14 +1885,17 @@ def getRandomWalkN2Graham(p, pts, length=10):
 #        print "jump", jump
 #        print
 
+
 def factorial(n):
     res = 1
     for i in range(1, n+1):
         res *= i
     return res
 
+
 def choose(n, k):
     return factorial(n)//(factorial(n-k)*factorial(k))
+
 
 def cellsNumber(n):
     if n == 2:
@@ -1923,12 +1949,14 @@ def randPointTriang(triang, tries=100):
         try:
             p[0] = a * float(v1[0]) + b * float(v2[0]) + float(triang[0][0])
         except Exception as e:
-            p[0] = decimal.Decimal(a) * v1[0].toDecimal() + decimal.Decimal(b) * v2[0].toDecimal() + triang[0][0].toDecimal()
+            p[0] = decimal.Decimal(a) * v1[0].toDecimal() + decimal.Decimal(b) * \
+                v2[0].toDecimal() + triang[0][0].toDecimal()
 
         try:
             p[1] = a * float(v1[1]) + b * float(v2[1]) + float(triang[0][1])
         except Exception as e:
-            p[1] = decimal.Decimal(a) * v1[1].toDecimal() + decimal.Decimal(b) * v2[1].toDecimal() + triang[0][1].toDecimal()
+            p[1] = decimal.Decimal(a) * v1[1].toDecimal() + decimal.Decimal(b) * \
+                v2[1].toDecimal() + triang[0][1].toDecimal()
 
         for f in funcs:
             for g in funcs:
@@ -1950,43 +1978,44 @@ def triangArea(triang):
     # return abs(float(area))
     return area if area > 0 else -area
 
-#Added by Ruy
+# Added by Ruy
+
 
 def get_all_extensions(pts, debug=False):
     """Returns (pts,C) where pts is a posibly scaled copy of pts
     and C is a list of all the posible extentions of pts. That is
     one point with integer coordinates per cell of the arrengement
     generated by pts"""
-    min_x=min(pts, key=lambda x: x[0])[0]
-    max_x=max(pts, key=lambda x: x[0])[0]
-    min_y=min(pts, key=lambda x: x[1])[1]
-    max_y=max(pts, key=lambda x: x[1])[1]
+    min_x = min(pts, key=lambda x: x[0])[0]
+    max_x = max(pts, key=lambda x: x[0])[0]
+    min_y = min(pts, key=lambda x: x[1])[1]
+    max_y = max(pts, key=lambda x: x[1])[1]
     if debug:
         print(min_x, max_x, min_y, max_y)
-    p=[random.randint(min_x, max_x), random.randint(min_y, max_y)]
+    p = [random.randint(min_x, max_x), random.randint(min_y, max_y)]
     pts.append(p)
     while not general_position(pts):
         pts.pop()
-        p=[random.randint(min_x, max_x), random.randint(min_y, max_y)]
+        p = [random.randint(min_x, max_x), random.randint(min_y, max_y)]
         pts.append(p)
     pts.pop()
-    W=getRandomWalkDFS(p, pts, length=-1)
-    C=[]
-    r=1
-    i=0
+    W = getRandomWalkDFS(p, pts, length=-1)
+    C = []
+    r = 1
+    i = 0
     for Q in W:
-        i=i+1
+        i = i+1
         if debug:
             print(i, r)
-        Qt=[[r*x[0], r*x[1]] for x in Q]
-        p=randPointPolygon(Qt, tries=10)
-        while p==None:
-            r=r*2
-            Qt=[[r*x[0], r*x[1]] for x in Q]
-            p=randPointPolygon(Qt, tries=10)
+        Qt = [[r*x[0], r*x[1]] for x in Q]
+        p = randPointPolygon(Qt, tries=10)
+        while p is None:
+            r = r*2
+            Qt = [[r*x[0], r*x[1]] for x in Q]
+            p = randPointPolygon(Qt, tries=10)
         C.append([p, r])
-    pts=[[r*x[0], r*x[1]] for x in pts]
-    C=[[x[0][0]*(r/x[1]), x[0][1]*(r/x[1])] for x in C]
+    pts = [[r*x[0], r*x[1]] for x in pts]
+    C = [[x[0][0]*(r/x[1]), x[0][1]*(r/x[1])] for x in C]
     return (pts, C)
 
 # def _test_extentions(pts,C):
@@ -1996,7 +2025,8 @@ def get_all_extensions(pts, debug=False):
 #         D[x]=pts.index([x[0],x[1]])
 #     return D
 
-def getAndPaintPolygons(p, pts, distance=float('inf'), strict = False, getPairs = False):
+
+def getAndPaintPolygons(p, pts, distance=float('inf'), strict=False, getPairs=False):
     """Returns all the cells in the line array at distance at most `distance`, as
     Polyons colored in the following way:
      -green if the distance is 0 mod 3
@@ -2012,7 +2042,7 @@ def getAndPaintPolygons(p, pts, distance=float('inf'), strict = False, getPairs 
     colors = {0: "green", 1: "purple", 2: "red"}
     currDistance = 0
     if not strict or currDistance == distance:
-#    if not strict or currDistance%3 == 0:
+        #    if not strict or currDistance%3 == 0:
         if getPairs:
             res = []
             for l in U:
@@ -2030,9 +2060,8 @@ def getAndPaintPolygons(p, pts, distance=float('inf'), strict = False, getPairs 
     visitedPolygons = set()
     visitedPolygons.add(getPolygonKey(start))
 
-
     class region(object):
-        def __init__(self, regionU, regionL, lastEdge = None, side = None, neighbors1=None, neighbors2=None, lines1=None, lines2=None):
+        def __init__(self, regionU, regionL, lastEdge=None, side=None, neighbors1=None, neighbors2=None, lines1=None, lines2=None):
             self.regionU = regionU
             self.regionL = regionL
             self.total = len(regionU) + len(regionL)
@@ -2075,7 +2104,8 @@ def getAndPaintPolygons(p, pts, distance=float('inf'), strict = False, getPairs 
                 upper.delete(dualize(oldline))
                 oldSide = UP
             except:
-                lower.delete(dualize(oldline))  # TODO: Should know whether it's inside upper or lower
+                # TODO: Should know whether it's inside upper or lower
+                lower.delete(dualize(oldline))
                 oldSide = DOWN
 
         keynew = tuple(dualize(newline))
@@ -2133,8 +2163,8 @@ def getAndPaintPolygons(p, pts, distance=float('inf'), strict = False, getPairs 
             inc = turn(p1, p2, p)*side
 
             if [p1, p2] == current.lastEdge or currDistance+inc > distance:
-#                print " "*len(S), "points", p1, p2, [p1, p2]
-#                print " "*len(S), "lastedge!"
+                #                print " "*len(S), "points", p1, p2, [p1, p2]
+                #                print " "*len(S), "lastedge!"
                 continue
 #            print "next line"
 
@@ -2164,32 +2194,35 @@ def getAndPaintPolygons(p, pts, distance=float('inf'), strict = False, getPairs 
                 currDistance += inc
 #                print "found one, distance", currDistance
                 if not strict or currDistance == distance:
-#                if not strict or currDistance%3 == 0:
+                    #                if not strict or currDistance%3 == 0:
                     if getPairs:
                         res = []
                         for l in U:
                             endpoints = l[1].getPoints()
-                            endpoints = tuple(endpoints[0]), tuple(endpoints[1])
+                            endpoints = tuple(
+                                endpoints[0]), tuple(endpoints[1])
                             res.append(endpoints)
                         for l in L:
                             endpoints = l[1].getPoints()
-                            endpoints = tuple(endpoints[0]), tuple(endpoints[1])
+                            endpoints = tuple(
+                                endpoints[0]), tuple(endpoints[1])
                             res.append(endpoints)
                         yield res
                     else:
-                        yield Polygon(poly, colors[currDistance%3])
+                        yield Polygon(poly, colors[currDistance % 3])
 
                 #regions += 1
 #                regions.append(poly)
 #                print "                               van", len(regions)
 #                print " "*len(S), "push!, I crossed", crossingEdge
-                S.append( region( U, L, [p1, p2], side, (ant1, suc1), (ant2, suc2), lines1, lines2 ) )
+                S.append(
+                    region(U, L, [p1, p2], side, (ant1, suc1), (ant2, suc2), lines1, lines2))
 #                print "level", len(S)
                # if regions >= length and length>=0:
-                   # print "found enough regions"
-                    #break
+                # print "found enough regions"
+                # break
             else:
-#                print " "*len(S), "already visited"
+                #                print " "*len(S), "already visited"
                 indices[tuple(p1)][0] = [ant1, suc1]
                 indices[tuple(p2)][0] = [ant2, suc2]
 
@@ -2198,18 +2231,21 @@ def getAndPaintPolygons(p, pts, distance=float('inf'), strict = False, getPairs 
 
                 if side == UP:
                     lower.delete(dualize(crossingEdge))
-                    upper.insert(dualize(crossingEdge), crossingEdge)  # TODO: should be able to dualize the point instead of adding the line as an object, right?
+                    # TODO: should be able to dualize the point instead of adding the line as an object, right?
+                    upper.insert(dualize(crossingEdge), crossingEdge)
                 else:
                     upper.delete(dualize(crossingEdge))
                     lower.insert(dualize(crossingEdge), crossingEdge)
         else:
-#            print " "*len(S), "done"
+            #            print " "*len(S), "done"
             if len(S) > 1:
 
                 p1 = current.lastEdge[0]
                 p2 = current.lastEdge[1]
-                indices[tuple(p1)][0] = [current.neighbors1[0], current.neighbors1[1]]
-                indices[tuple(p2)][0] = [current.neighbors2[0], current.neighbors2[1]]
+                indices[tuple(p1)][0] = [current.neighbors1[0],
+                                         current.neighbors1[1]]
+                indices[tuple(p2)][0] = [current.neighbors2[0],
+                                         current.neighbors2[1]]
 
                 restore(current.lines1)
                 restore(current.lines2)
@@ -2222,22 +2258,25 @@ def getAndPaintPolygons(p, pts, distance=float('inf'), strict = False, getPairs 
 
                 if current.side == UP:
                     lower.delete(dualize(edge))
-                    upper.insert(dualize(edge), edge)  # TODO: should be able to dualize the point instead of adding the line as an object, right?
+                    # TODO: should be able to dualize the point instead of adding the line as an object, right?
+                    upper.insert(dualize(edge), edge)
                 else:
                     upper.delete(dualize(edge))
                     lower.insert(dualize(edge), edge)
 #            print " "*len(S), "pop!"
             S.pop()
 
+
 def jumpDistance(p, cell, edge):
     """Returns FARTHER or CLOSER, depending on the distance of the region adjacent to cell at edge"""
     #assert edge[0] < edge[1]
     return FARTHER if (cell.edgeIndices[edge][1] == UP and turn(edge[0], edge[1], p) == RIGHT) or \
-                          (cell.edgeIndices[edge][1] == DOWN and turn (edge[0], edge[1], p) == LEFT) \
-                       else CLOSER
+        (cell.edgeIndices[edge][1] == DOWN and turn(edge[0], edge[1], p) == LEFT) \
+        else CLOSER
 
 
-def moveNCells(p, cell, jumps=3, forbiddenEdge = None, getCenters = False):  # , reclevel=1):
+# , reclevel=1):
+def moveNCells(p, cell, jumps=3, forbiddenEdge=None, getCenters=False):
     """
     Tries to jump `jumps` cells, relative to p. If succesfull, it returns a list
     where each element is a pair (edge, vertices), with the edge jumped and the vertices
@@ -2252,25 +2291,26 @@ def moveNCells(p, cell, jumps=3, forbiddenEdge = None, getCenters = False):  # ,
     for edge in cell.edges:
         # print "*"*reclevel, "checking edge", i, "of", cell.edges
         # i += 1
-#        if edge == forbiddenEdge:
-#            continue
-#        print "side", cell.edgeIndices[edge]
-#        print "turn", turn(edge[0], edge[1], p)
+        #        if edge == forbiddenEdge:
+        #            continue
+        #        print "side", cell.edgeIndices[edge]
+        #        print "turn", turn(edge[0], edge[1], p)
         # assert edge in cell.edges
         # assert edge in cell.edgeIndices
         move = jumpDistance(p, cell, edge)
 #        print "edge", edge, "moves", "farther" if move == FARTHER else "closer"
         if (move == FARTHER and jumps > 0) or (move == CLOSER and jumps < 0):
-#            print "One jump!", edge
-#            center = randPointPolygon(cell.vertices)
-#            assert center is not None
+            #            print "One jump!", edge
+            #            center = randPointPolygon(cell.vertices)
+            #            assert center is not None
             current = [[edge, copy.deepcopy(cell.vertices)]]
             cell.jumpEdge(edge)
             if abs(jumps) == 1:
                 if getCenters:
                     return current
                 return [edge]
-            res =  moveNCells(p, cell, jumps+inc, forbiddenEdge, getCenters)  # , reclevel+1)
+            res = moveNCells(p, cell, jumps+inc, forbiddenEdge,
+                             getCenters)  # , reclevel+1)
             if len(res) > 0:
                 if getCenters:
                     return current + res
@@ -2279,7 +2319,8 @@ def moveNCells(p, cell, jumps=3, forbiddenEdge = None, getCenters = False):  # ,
                 cell.jumpEdge(edge)
     return []
 
-def xJump(p, cell, edge, jumpDir = 1, getAuxpt = False):
+
+def xJump(p, cell, edge, jumpDir=1, getAuxpt=False):
     """Tries to make an -+ x jump. Returns True and last jumped edge if succesful, else False and None"""
     dist = jumpDistance(p, cell, edge)
     if dist != CLOSER:
@@ -2288,7 +2329,7 @@ def xJump(p, cell, edge, jumpDir = 1, getAuxpt = False):
         return False, None
     cell.jumpEdge(edge)
     nextEdge = cell.edges.index(edge)
-    nextEdge = cell.edges[(nextEdge+jumpDir)%len(cell.edges)]
+    nextEdge = cell.edges[(nextEdge+jumpDir) % len(cell.edges)]
     dist += jumpDistance(p, cell, nextEdge)
     auxvertices = cell.vertices
 #    assert auxpt is not None
@@ -2319,12 +2360,12 @@ def semiCopy(cell):
 
 
 def testCr(startp, newp, pts, M, D, cr, edge):
-    if  ordertypes.lambda_matrix(pts+[newp])!=M:
+    if ordertypes.lambda_matrix(pts+[newp]) != M:
         return False, "Matrix"
-    if crossing.count_crossings(pts+[newp])!=cr:
+    if crossing.count_crossings(pts+[newp]) != cr:
         return False, "CR"
-    ch_cr=chg_cr(M, D, startp, edge, newp)
-    cr=cr+ch_cr
+    ch_cr = chg_cr(M, D, startp, edge, newp)
+    cr = cr+ch_cr
     update_lambda_matrix(M, D, startp, edge, newp)
     return True, cr
 
@@ -2342,7 +2383,7 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols=False):
     else:
         yield start.edges
 
-    ################################################33
+    # 33
 #    auxpt = p
 #    M=ordertypes.lambda_matrix(pts+[p])
 #    D=ordertypes.points_index(pts+[p])
@@ -2354,7 +2395,7 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols=False):
     if len(edge) == 0:
         return
 
-    ################################################3
+    # 3
 #    for e in reversed(edge):
 #        start.jumpEdge(e)
 #    for e in edge:
@@ -2369,8 +2410,8 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols=False):
 
     #################################################
 
-    edge = edge[-1]  # edge is the edge which we jumped to land in the current cell
-
+    # edge is the edge which we jumped to land in the current cell
+    edge = edge[-1]
 
     while(level < levels and start is not None):
         print("                                           level", level+1)
@@ -2410,10 +2451,11 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols=False):
 
             edgeIndex = current.edges.index(edge)
 
-            #Try an usual jump over every edge
+            # Try an usual jump over every edge
             for i in range(len(current.edges)):
-#                print "index", edgeIndex
-                res, newEdge = xJump(p, current, current.edges[edgeIndex%len(current.edges)])
+                #                print "index", edgeIndex
+                res, newEdge = xJump(
+                    p, current, current.edges[edgeIndex % len(current.edges)])
 
                 if res:
                     if current.edges == lastVisited:
@@ -2422,7 +2464,7 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols=False):
                     if starJump:
                         starJump = False
                     edge = newEdge
-                    if firstIndex == None:
+                    if firstIndex is None:
                         firstIndex = edgeIndex
                     if current.edges != start.edges:
                         if getPols:
@@ -2430,13 +2472,13 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols=False):
                         else:
                             yield current.edges
                     else:
-#                        print "back to start"
+                        #                        print "back to start"
                         finished = True
                     break
                 edgeIndex -= 1
 
             if not res and not starJump:  # We couldn't make an usual jump, try to starjump
-#                print "No res"
+                #                print "No res"
                 star = False
 
                 for i in range(-1, len(current.edges)-1):
@@ -2453,7 +2495,7 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols=False):
 
 #                print "star check:", star
                 if not star:
-#                    print "Nothng else to do"
+                    #                    print "Nothng else to do"
                     break
 
                 starEdge = i
@@ -2465,35 +2507,37 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols=False):
 
                 while dist != 0:  # Jumping around starPoint
                     index = current.edges.index(edge)
-                    if starPoint in current.edges[(index+1)%len(current.edges)]:
-                        edge = current.edges[(index+1)%len(current.edges)]
+                    if starPoint in current.edges[(index+1) % len(current.edges)]:
+                        edge = current.edges[(index+1) % len(current.edges)]
                     else:
-                        edge = current.edges[(index-1)%len(current.edges)]
+                        edge = current.edges[(index-1) % len(current.edges)]
                     dist += jumpDistance(p, current, edge)
                     current.jumpEdge(edge)
 
-                #We check than we landed in the right direction
+                # We check than we landed in the right direction
                 vertexCheck = 0
                 while turn(edge[0], edge[1], current.vertices[vertexCheck]) == COLLINEAR:
                     vertexCheck += 1
 #                print "giving to turn", p, starPoint, current.vertices[vertexCheck]
 #                print
                 if turn(p, starPoint, current.vertices[vertexCheck]) == LEFT:
-#                    print "starjump"
+                    #                    print "starjump"
                     starJump = True
                     res = True
                     if current.edges != start.edges:
-    #                        print "back to start"
+                        #                        print "back to start"
                         if getPols:
                             yield Polygon(current.vertices, "blue")
                         else:
                             yield current.edges
-                        #We need to set the right edge
+                        # We need to set the right edge
                         index = current.edges.index(edge)
-                        if starPoint in current.edges[(index+1)%len(current.edges)]:
-                            otherEdge = current.edges[(index+1)%len(current.edges)]
+                        if starPoint in current.edges[(index+1) % len(current.edges)]:
+                            otherEdge = current.edges[(
+                                index+1) % len(current.edges)]
                         else:
-                            otherEdge = current.edges[(index-1)%len(current.edges)]
+                            otherEdge = current.edges[(
+                                index-1) % len(current.edges)]
                         vertexE = 0
                         while turn(edge[0], edge[1], current.vertices[vertexE]) != COLLINEAR:
                             vertexE += 1
@@ -2505,11 +2549,11 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols=False):
                     else:
                         finished = True
                 else:  # The direction changed
-#                    print "wall inside, inversion"
+                    #                    print "wall inside, inversion"
                     break
 
             if not res:
-#                print "wall final, nothing else to do"
+                #                print "wall final, nothing else to do"
                 break
         #################################################### END TO THE LEFT ###############################################
 #        print "finished?", finished
@@ -2531,26 +2575,27 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols=False):
                     nextFound = True
                     nextEdge = res[-1]
                 else:
-#                    print "                                       Set to None"
+                    #                    print "                                       Set to None"
                     nextStart = None
 
             edgeIndex = current.edges.index(edge)
 
-            #Try an usual jump over every edge
+            # Try an usual jump over every edge
 #            print "trying usual"
             for i in range(len(current.edges)):
-#                print "index", edgeIndex
-                res, newEdge = xJump(p, current, current.edges[edgeIndex%len(current.edges)], -1)
+                #                print "index", edgeIndex
+                res, newEdge = xJump(
+                    p, current, current.edges[edgeIndex % len(current.edges)], -1)
 
                 if res:
                     if current.edges == lastVisited:
-#                        print "repeating"
+                        #                        print "repeating"
                         res = False
                         continue
                     if starJump:
                         starJump = False
                     edge = newEdge
-                    if firstIndex == None:
+                    if firstIndex is None:
                         firstIndex = edgeIndex
                     if getPols:
                         yield Polygon(current.vertices, "blue")
@@ -2561,7 +2606,7 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols=False):
 #            print "res, starJump is ", res, starJump
 #            print
             if not res and not starJump:  # We couldn't make an usual jump, try to starjump
-#                print "No res"
+                #                print "No res"
                 star = False
 
                 for i in range(-1, len(current.edges)-1):
@@ -2578,7 +2623,7 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols=False):
 
 #                print "star check:", star
                 if not star:
-#                    print "Nothng else to do"
+                    #                    print "Nothng else to do"
                     break
 
                 starEdge = i
@@ -2590,21 +2635,21 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols=False):
 
                 while dist != 0:  # Jumping around starPoint
                     index = current.edges.index(edge)
-                    if starPoint in current.edges[(index+1)%len(current.edges)]:
-                        edge = current.edges[(index+1)%len(current.edges)]
+                    if starPoint in current.edges[(index+1) % len(current.edges)]:
+                        edge = current.edges[(index+1) % len(current.edges)]
                     else:
-                        edge = current.edges[(index-1)%len(current.edges)]
+                        edge = current.edges[(index-1) % len(current.edges)]
                     dist += jumpDistance(p, current, edge)
                     current.jumpEdge(edge)
 
-                #We check than we landed in the right direction
+                # We check than we landed in the right direction
                 vertexCheck = 0
                 while turn(edge[0], edge[1], current.vertices[vertexCheck]) == COLLINEAR:
                     vertexCheck += 1
 #                print "giving to turn", p, starPoint, current.vertices[vertexCheck]
 #                print
                 if turn(p, starPoint, current.vertices[vertexCheck]) == RIGHT:
-#                    print "starjump"
+                    #                    print "starjump"
                     starJump = True
                     res = True
 #                    print "yielding"
@@ -2613,12 +2658,14 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols=False):
                         yield Polygon(current.vertices, "blue")
                     else:
                         yield current.edges
-                    #We need to set the right edge
+                    # We need to set the right edge
                     index = current.edges.index(edge)
-                    if starPoint in current.edges[(index+1)%len(current.edges)]:
-                        otherEdge = current.edges[(index+1)%len(current.edges)]
+                    if starPoint in current.edges[(index+1) % len(current.edges)]:
+                        otherEdge = current.edges[(
+                            index+1) % len(current.edges)]
                     else:
-                        otherEdge = current.edges[(index-1)%len(current.edges)]
+                        otherEdge = current.edges[(
+                            index-1) % len(current.edges)]
                     vertexE = 0
                     while turn(edge[0], edge[1], current.vertices[vertexE]) != COLLINEAR:
                         vertexE += 1
@@ -2629,11 +2676,11 @@ def genSpiralWalk(p, pts, levels=float('inf'), getPols=False):
                         edge = otherEdge
 
                 else:  # The direction changed
-#                    print "wall inside, inversion"
+                    #                    print "wall inside, inversion"
                     break
 #            print 'AAAAAAAAAAAAAAA'
             if not res:
-#                print "wall final, nothing else to do"
+                #                print "wall final, nothing else to do"
                 break
         #################################################### END TO THE RIGHT ###############################################
         print("END LEVEL", nextFound)
@@ -2647,7 +2694,8 @@ class Cell(object):
         self.points = copy.deepcopy(points)
         self.p = copy.deepcopy(p)
         self.ordered, self.indices = orderAllPoints(p, points)
-        self.upper, self.lower, self.counters = getPointRegion(self.p, self.ordered, self.indices)
+        self.upper, self.lower, self.counters = getPointRegion(
+            self.p, self.ordered, self.indices)
         self.U, self.L = getRegionR(self.upper, self.lower)
         self.vertices = getPolygon(self.U, self.L)
         self.edges = []
@@ -2723,14 +2771,16 @@ class Cell(object):
             try:
                 self.upper.delete(dualize(oldline))
             except:
-                self.lower.delete(dualize(oldline))  # TODO: Should know whether it's inside upper or lower
+                # TODO: Should know whether it's inside upper or lower
+                self.lower.delete(dualize(oldline))
 
         newDual = tuple(dualize(newline))
         self.counters[newDual] = self.counters.setdefault(newDual, 0) + 1
 
         if sameTurn == antipodal:  # TODO: check this part
             if self.counters[newDual] == 1:
-                self.upper.insert(dualize(newline), newline)  # new goes to up, old was in oldside
+                # new goes to up, old was in oldside
+                self.upper.insert(dualize(newline), newline)
         else:
             if self.counters[newDual] == 1:
                 self.lower.insert(dualize(newline), newline)
@@ -2749,47 +2799,50 @@ def chg_cr(M, D, p, edge, vertices):
     for point in vertices:
         if turn(edge[0], edge[1], point) != COLLINEAR:
             break
-    edge2=([edge[0][0], edge[0][1]], [edge[1][0], edge[1][1]])
-    if turn(edge2[0], edge2[1], point)>0:
-        p0=D[edge[0]]
-        p1=D[edge[1]]
-    elif turn(edge2[0], edge2[1], point)<0:
-        p0=D[edge[1]]
-        p1=D[edge[0]]
-    pi=D[(p[0], p[1])]
-    #Esto es para calcular el cambio en cr al cruzar edge
-    ch_cr=0
-    ch_cr= ch_cr + M[p0][p1]
-    ch_cr= ch_cr - M[p1][p0] +1
-    ch_cr= ch_cr - M[p0][pi] +1
-    ch_cr= ch_cr + M[pi][p0]
-    ch_cr= ch_cr + M[p1][pi]
-    ch_cr= ch_cr - M[pi][p1] +1
+    edge2 = ([edge[0][0], edge[0][1]], [edge[1][0], edge[1][1]])
+    if turn(edge2[0], edge2[1], point) > 0:
+        p0 = D[edge[0]]
+        p1 = D[edge[1]]
+    elif turn(edge2[0], edge2[1], point) < 0:
+        p0 = D[edge[1]]
+        p1 = D[edge[0]]
+    pi = D[(p[0], p[1])]
+    # Esto es para calcular el cambio en cr al cruzar edge
+    ch_cr = 0
+    ch_cr = ch_cr + M[p0][p1]
+    ch_cr = ch_cr - M[p1][p0] + 1
+    ch_cr = ch_cr - M[p0][pi] + 1
+    ch_cr = ch_cr + M[pi][p0]
+    ch_cr = ch_cr + M[p1][pi]
+    ch_cr = ch_cr - M[pi][p1] + 1
     return ch_cr
-    #----------------------------------------------------------------
+    # ----------------------------------------------------------------
+
+
 def update_lambda_matrix(M, D, p, edge, vertices):
     assert len(vertices) > 2
     for point in vertices:
         if turn(edge[0], edge[1], point) != COLLINEAR:
             break
-    edge2=([edge[0][0], edge[0][1]], [edge[1][0], edge[1][1]])
-    if turn(edge2[0], edge2[1], point)>0:
-        p0=D[edge[0]]
-        p1=D[edge[1]]
-    elif turn(edge2[0], edge2[1], point)<0:
-        p0=D[edge[1]]
-        p1=D[edge[0]]
-    pi=D[(p[0], p[1])]
-    #Esto es para actualizar la lambda matriz
-    M[p0][p1]=M[p0][p1]+1
-    M[p1][p0]=M[p1][p0]-1
-    M[p0][pi]=M[p0][pi]-1
-    M[pi][p0]=M[pi][p0]+1
-    M[p1][pi]=M[p1][pi]+1
-    M[pi][p1]=M[pi][p1]-1
-    #-----------------------------------------------------------------
+    edge2 = ([edge[0][0], edge[0][1]], [edge[1][0], edge[1][1]])
+    if turn(edge2[0], edge2[1], point) > 0:
+        p0 = D[edge[0]]
+        p1 = D[edge[1]]
+    elif turn(edge2[0], edge2[1], point) < 0:
+        p0 = D[edge[1]]
+        p1 = D[edge[0]]
+    pi = D[(p[0], p[1])]
+    # Esto es para actualizar la lambda matriz
+    M[p0][p1] = M[p0][p1]+1
+    M[p1][p0] = M[p1][p0]-1
+    M[p0][pi] = M[p0][pi]-1
+    M[pi][p0] = M[pi][p0]+1
+    M[p1][pi] = M[p1][pi]+1
+    M[pi][p1] = M[pi][p1]-1
+    # -----------------------------------------------------------------
 
-def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
+
+def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols=False):
     """Returns all the cells in the line array of pts whose distance from p's cell satisfies:
     distance%3 = 0 and distance/3 <= levels.
     """
@@ -2802,16 +2855,15 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
 #    else:
 #        yield start.edges
 
-
-    ################################################33
+    # 33
     auxpt = None
-    M=ordertypes.lambda_matrix(pts+[p])
-    D=ordertypes.points_index(pts+[p])
-    cr=crossing.count_crossings(pts+[p])
+    M = ordertypes.lambda_matrix(pts+[p])
+    D = ordertypes.points_index(pts+[p])
+    cr = crossing.count_crossings(pts+[p])
     initialCr = cr
     ################################################
 
-    #yield auxpt, initialCr, initialCr, cr
+    # yield auxpt, initialCr, initialCr, cr
 
     for e in start.edges:
         change = chg_cr(M, D, p, e, p)
@@ -2828,22 +2880,22 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
     if len(edge) == 0:
         return
 
-    ################################################3
+    # 3
 #    for e in reversed(edge):
 #        start.jumpEdge(e)
     for i in range(len(edge)):
         e = edge[i][0]
         pt = edge[i][1]
         assert pt is not None
-        cr+=chg_cr(M, D, p, e, pt)
+        cr += chg_cr(M, D, p, e, pt)
         update_lambda_matrix(M, D, p, e, pt)
 #        start.jumpEdge(e)
 #        auxpt = getCenter(start.vertices)
 
     #################################################
 
-    edge = edge[-1][0]    #edge is the edge which we jumped to land in the current cell
-
+    # edge is the edge which we jumped to land in the current cell
+    edge = edge[-1][0]
 
     while(level < levels and start is not None):
         print("                                           level", level+1)
@@ -2855,7 +2907,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
         nextStart = None
         nextFound = False
         nextEdge = None
-        ################3
+        # 3
         nextM = None
         nextCr = None
         bakM = copy.deepcopy(M)
@@ -2884,7 +2936,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
             print("To the left!                               ")
 #            print "current pre", current.edges
             if not nextFound:
-#                print "                                not found yet"
+                #                print "                                not found yet"
                 nextStart = semiCopy(current)
                 res = moveNCells(p, nextStart, 3, getCenters=True)
                 if len(res) > 0:
@@ -2908,14 +2960,15 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
 
             edgeIndex = current.edges.index(edge)
 
-            #Try an usual jump over every edge
+            # Try an usual jump over every edge
             for i in range(len(current.edges)):
-#                print "index", edgeIndex
-                edgeCandidadte = current.edges[edgeIndex%len(current.edges)]
-                res, newEdge = xJump(p, current, current.edges[edgeIndex%len(current.edges)], getAuxpt=True)
+                #                print "index", edgeIndex
+                edgeCandidadte = current.edges[edgeIndex % len(current.edges)]
+                res, newEdge = xJump(
+                    p, current, current.edges[edgeIndex % len(current.edges)], getAuxpt=True)
 
                 if res:
-#                    print "found edge"
+                    #                    print "found edge"
                     pt = newEdge[1]
                     newEdge = newEdge[0]
                     if current.edges == lastVisited:
@@ -2924,7 +2977,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
                     if starJump:
                         starJump = False
 
-                    ####################3
+                    # 3
                     cr += chg_cr(M, D, p, edgeCandidadte, auxpt)
                     update_lambda_matrix(M, D, p, edgeCandidadte, auxpt)
 
@@ -2966,11 +3019,10 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
 #                    print "done two jumps"
 #                    yield cr, auxpt
 
-
-                    ##########################3
+                    # 3
 
                     edge = newEdge
-                    if firstIndex == None:
+                    if firstIndex is None:
                         firstIndex = edgeIndex
 
 #                    if current.edges != start.edges:
@@ -2979,13 +3031,13 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
 #                        else:
 #                            yield current.edges
                     if current.edges == start.edges:
-#                        print "back to start"
+                        #                        print "back to start"
                         finished = True
                     break
                 edgeIndex -= 1
 
             if not res and not starJump:  # We couldn't make an usual jump, try to starjump
-#                print "No res"
+                #                print "No res"
                 star = False
 
                 for i in range(-1, len(current.edges)-1):
@@ -3002,7 +3054,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
 
 #                print "star check:", star
                 if not star:
-#                    print "Nothng else to do"
+                    #                    print "Nothng else to do"
                     break
 
                 starEdge = i
@@ -3012,7 +3064,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
                 dist = jumpDistance(p, current, edge)
                 current.jumpEdge(edge)
 
-                ###########################33
+                # 33
                 change = chg_cr(M, D, p, edge, auxpt)
                 update_lambda_matrix(M, D, p, edge, auxpt)
                 auxpt = getCenter(current.vertices)
@@ -3028,47 +3080,50 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
 
                 while dist != 0:  # Jumping around starPoint
                     index = current.edges.index(edge)
-                    if starPoint in current.edges[(index+1)%len(current.edges)]:
-                        edge = current.edges[(index+1)%len(current.edges)]
+                    if starPoint in current.edges[(index+1) % len(current.edges)]:
+                        edge = current.edges[(index+1) % len(current.edges)]
                     else:
-                        edge = current.edges[(index-1)%len(current.edges)]
+                        edge = current.edges[(index-1) % len(current.edges)]
                     dist += jumpDistance(p, current, edge)
                     current.jumpEdge(edge)
-                    ###########################33
+                    # 33
                     change = chg_cr(M, D, p, edge, auxpt)
                     update_lambda_matrix(M, D, p, edge, auxpt)
                     auxpt = getCenter(current.vertices)
 
                     if cr+change < initialCr:
                         initialCr = cr+change
-                        assert crossing.count_crossings(pts+[auxpt]) == initialCr
+                        assert crossing.count_crossings(
+                            pts+[auxpt]) == initialCr
                         yield auxpt, initialCr
 
                     cr += change
                     ###################################
 
-                #We check than we landed in the right direction
+                # We check than we landed in the right direction
                 vertexCheck = 0
                 while turn(edge[0], edge[1], current.vertices[vertexCheck]) == COLLINEAR:
                     vertexCheck += 1
 #                print "giving to turn", p, starPoint, current.vertices[vertexCheck]
 #                print
                 if turn(p, starPoint, current.vertices[vertexCheck]) == LEFT:
-#                    print "starjump"
+                    #                    print "starjump"
                     starJump = True
                     res = True
                     if current.edges != start.edges:
-    #                        print "back to start"
-#                        if getPols:
-#                            yield Polygon(current.vertices, "blue")
-#                        else:
-#                            yield current.edges
-                        #We need to set the right edge
+                        #                        print "back to start"
+                        #                        if getPols:
+                        #                            yield Polygon(current.vertices, "blue")
+                        #                        else:
+                        #                            yield current.edges
+                        # We need to set the right edge
                         index = current.edges.index(edge)
-                        if starPoint in current.edges[(index+1)%len(current.edges)]:
-                            otherEdge = current.edges[(index+1)%len(current.edges)]
+                        if starPoint in current.edges[(index+1) % len(current.edges)]:
+                            otherEdge = current.edges[(
+                                index+1) % len(current.edges)]
                         else:
-                            otherEdge = current.edges[(index-1)%len(current.edges)]
+                            otherEdge = current.edges[(
+                                index-1) % len(current.edges)]
                         vertexE = 0
                         while turn(edge[0], edge[1], current.vertices[vertexE]) != COLLINEAR:
                             vertexE += 1
@@ -3080,11 +3135,11 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
                     else:
                         finished = True
                 else:  # The direction changed
-#                    print "wall inside, inversion"
+                    #                    print "wall inside, inversion"
                     break
 
             if not res:
-#                print "wall final, nothing else to do"
+                #                print "wall final, nothing else to do"
                 break
         #################################################### END TO THE LEFT ###############################################
 #        print "finished?", finished
@@ -3119,30 +3174,31 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
                     nextFound = True
                     nextEdge = res[-1][0]
                 else:
-#                    print "                                       Set to None"
+                    #                    print "                                       Set to None"
                     nextStart = None
 
             edgeIndex = current.edges.index(edge)
 
-            #Try an usual jump over every edge
+            # Try an usual jump over every edge
 #            print "trying usual"
             for i in range(len(current.edges)):
-#                print "index", edgeIndex
-                edgeCandidadte = current.edges[edgeIndex%len(current.edges)]
-                res, newEdge = xJump(p, current, current.edges[edgeIndex%len(current.edges)], -1, getAuxpt=True)
+                #                print "index", edgeIndex
+                edgeCandidadte = current.edges[edgeIndex % len(current.edges)]
+                res, newEdge = xJump(
+                    p, current, current.edges[edgeIndex % len(current.edges)], -1, getAuxpt=True)
 
                 if res:
-#                    print "found edge"
+                    #                    print "found edge"
                     pt = newEdge[1]
                     newEdge = newEdge[0]
                     if current.edges == lastVisited:
-#                        print "repeating"
+                        #                        print "repeating"
                         res = False
                         continue
                     if starJump:
                         starJump = False
 
-                    ####################3
+                    # 3
                     cr += chg_cr(M, D, p, edgeCandidadte, auxpt)
                     update_lambda_matrix(M, D, p, edgeCandidadte, auxpt)
 
@@ -3166,7 +3222,8 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
 
                     if cr+change < initialCr:
                         initialCr = cr+change
-                        assert crossing.count_crossings(pts+[auxpt]) == initialCr
+                        assert crossing.count_crossings(
+                            pts+[auxpt]) == initialCr
                         yield auxpt, initialCr
                     cr += change
 
@@ -3175,17 +3232,17 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
                         if cr+change < initialCr:
                             initialCr = cr+change
                             current.jumpEdge(e)
-                            assert crossing.count_crossings(pts+[getCenter(current.vertices)]) == initialCr
+                            assert crossing.count_crossings(
+                                pts+[getCenter(current.vertices)]) == initialCr
                             yield getCenter(current.vertices), initialCr
                             current.jumpEdge(e)
 
 #                    print "done two jumps"
 #                    yield cr, auxpt
 
-
-                    ##########################3
+                    # 3
                     edge = newEdge
-                    if firstIndex == None:
+                    if firstIndex is None:
                         firstIndex = edgeIndex
 #                    if getPols:
 #                        yield Polygon(current.vertices, "blue")
@@ -3196,7 +3253,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
 #            print "res, starJump is ", res, starJump
 #            print
             if not res and not starJump:  # We couldn't make an usual jump, try to starjump
-#                print "No res"
+                #                print "No res"
                 star = False
 
                 for i in range(-1, len(current.edges)-1):
@@ -3213,7 +3270,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
 
 #                print "star check:", star
                 if not star:
-#                    print "Nothng else to do"
+                    #                    print "Nothng else to do"
                     break
 
                 starEdge = i
@@ -3223,7 +3280,7 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
                 dist = jumpDistance(p, current, edge)
                 current.jumpEdge(edge)
 
-                ###########################33
+                # 33
                 change = chg_cr(M, D, p, edge, auxpt)
                 update_lambda_matrix(M, D, p, edge, auxpt)
 
@@ -3239,13 +3296,13 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
 
                 while dist != 0:  # Jumping around starPoint
                     index = current.edges.index(edge)
-                    if starPoint in current.edges[(index+1)%len(current.edges)]:
-                        edge = current.edges[(index+1)%len(current.edges)]
+                    if starPoint in current.edges[(index+1) % len(current.edges)]:
+                        edge = current.edges[(index+1) % len(current.edges)]
                     else:
-                        edge = current.edges[(index-1)%len(current.edges)]
+                        edge = current.edges[(index-1) % len(current.edges)]
                     dist += jumpDistance(p, current, edge)
                     current.jumpEdge(edge)
-                    ###########################33
+                    # 33
                     change = chg_cr(M, D, p, edge, auxpt)
                     update_lambda_matrix(M, D, p, edge, auxpt)
 
@@ -3253,20 +3310,21 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
 
                     if cr+change < initialCr:
                         initialCr = cr+change
-                        assert crossing.count_crossings(pts+[auxpt]) == initialCr
+                        assert crossing.count_crossings(
+                            pts+[auxpt]) == initialCr
                         yield auxpt, initialCr
 
                     cr += change
                     ###################################
 
-                #We check than we landed in the right direction
+                # We check than we landed in the right direction
                 vertexCheck = 0
                 while turn(edge[0], edge[1], current.vertices[vertexCheck]) == COLLINEAR:
                     vertexCheck += 1
 #                print "giving to turn", p, starPoint, current.vertices[vertexCheck]
 #                print
                 if turn(p, starPoint, current.vertices[vertexCheck]) == RIGHT:
-#                    print "starjump"
+                    #                    print "starjump"
                     starJump = True
                     res = True
 #                    print "yielding"
@@ -3275,12 +3333,14 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
 #                        yield Polygon(current.vertices, "blue")
 #                    else:
 #                        yield current.edges
-                    #We need to set the right edge
+                    # We need to set the right edge
                     index = current.edges.index(edge)
-                    if starPoint in current.edges[(index+1)%len(current.edges)]:
-                        otherEdge = current.edges[(index+1)%len(current.edges)]
+                    if starPoint in current.edges[(index+1) % len(current.edges)]:
+                        otherEdge = current.edges[(
+                            index+1) % len(current.edges)]
                     else:
-                        otherEdge = current.edges[(index-1)%len(current.edges)]
+                        otherEdge = current.edges[(
+                            index-1) % len(current.edges)]
                     vertexE = 0
                     while turn(edge[0], edge[1], current.vertices[vertexE]) != COLLINEAR:
                         vertexE += 1
@@ -3291,11 +3351,11 @@ def genSpiralWalkCrModified(p, pts, levels=float('inf'), getPols = False):
                         edge = otherEdge
 
                 else:  # The direction changed
-#                    print "wall inside, inversion"
+                    #                    print "wall inside, inversion"
                     break
 #            print 'AAAAAAAAAAAAAAA'
             if not res:
-#                print "wall final, nothing else to do"
+                #                print "wall final, nothing else to do"
                 break
         #################################################### END TO THE RIGHT ###############################################
         print("END LEVEL", nextFound)
@@ -3321,7 +3381,8 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, deb
     # print "initial", initialCr
     # print "start", start.vertices
     # assert(initialCr[0] == crossing.count_crossings(pts+[p]))
-    colors = ["blue", "red", "black", "green", "cyan", "brown", "yellow", "purple", "orange", "pink"]
+    colors = ["blue", "red", "black", "green", "cyan",
+              "brown", "yellow", "purple", "orange", "pink"]
     if debug:
         yield Polygon(start.vertices, fill=random.choice(colors))
     else:
@@ -3358,7 +3419,8 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, deb
     # print cr, "     vs     ", crossing.count_crossings(pts+[z], speedup=False)
     # assert(cr == crossing.count_crossings(pts+[z], speedup=False))
 
-    edge = edge[-1][0]  # edge is the edge which we jumped to land in the current cell
+    # edge is the edge which we jumped to land in the current cell
+    edge = edge[-1][0]
 
     while(level < levels and start is not None):
         if verbose:
@@ -3412,7 +3474,8 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, deb
             # Try a usual jump over every edge
             for i in range(len(current.edges)):
                 edgeCandidadte = current.edges[edgeIndex % len(current.edges)]
-                jumps, midEdge = xJump(p, current, current.edges[edgeIndex % len(current.edges)], getAuxpt=True)
+                jumps, midEdge = xJump(
+                    p, current, current.edges[edgeIndex % len(current.edges)], getAuxpt=True)
 
                 if current.edges == lastVisited:
                     jumps = False
@@ -3486,17 +3549,17 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, deb
                 auxvertices = current.vertices
 
                 if debug:
-                    yield Polygon(current.vertices, fill = random.choice(colors))
+                    yield Polygon(current.vertices, fill=random.choice(colors))
                 else:
                     for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
                         yield x
 
                 while dist != 0:  # Jumping around starPoint
                     index = current.edges.index(edge)
-                    if starPoint in current.edges[(index+1)%len(current.edges)]:
-                        edge = current.edges[(index+1)%len(current.edges)]
+                    if starPoint in current.edges[(index+1) % len(current.edges)]:
+                        edge = current.edges[(index+1) % len(current.edges)]
                     else:
-                        edge = current.edges[(index-1)%len(current.edges)]
+                        edge = current.edges[(index-1) % len(current.edges)]
                     dist += jumpDistance(p, current, edge)
                     current.jumpEdge(edge)
                     cr += chg_cr(M, D, p, edge, auxvertices)
@@ -3504,25 +3567,27 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, deb
                     auxvertices = current.vertices
 
                     if debug:
-                        yield Polygon(current.vertices, fill = random.choice(colors))
+                        yield Polygon(current.vertices, fill=random.choice(colors))
                     else:
                         for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
                             yield x
 
-                #We check than we landed in the right direction
+                # We check than we landed in the right direction
                 auxVertex = 0
                 while turn(edge[0], edge[1], current.vertices[auxVertex]) == COLLINEAR:
                     auxVertex += 1
                 if turn(p, starPoint, current.vertices[auxVertex]) == LEFT:
-                # print "starjump"
+                    # print "starjump"
                     starJump = True
                     jumps = True
                     if current.edges != start.edges:
                         index = current.edges.index(edge)
                         if starPoint in current.edges[(index+1) % len(current.edges)]:
-                            otherEdge = current.edges[(index+1) % len(current.edges)]
+                            otherEdge = current.edges[(
+                                index+1) % len(current.edges)]
                         else:
-                            otherEdge = current.edges[(index-1) % len(current.edges)]
+                            otherEdge = current.edges[(
+                                index-1) % len(current.edges)]
                         vertexE = 0
                         while turn(edge[0], edge[1], current.vertices[vertexE]) != COLLINEAR:
                             vertexE += 1
@@ -3568,10 +3633,11 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, deb
 
             edgeIndex = current.edges.index(edge)
 
-            #Try an usual jump over every edge
+            # Try an usual jump over every edge
             for i in range(len(current.edges)):
-                edgeCandidadte = current.edges[edgeIndex%len(current.edges)]
-                jump, newEdge = xJump(p, current, current.edges[edgeIndex%len(current.edges)], -1, getAuxpt=True)
+                edgeCandidadte = current.edges[edgeIndex % len(current.edges)]
+                jump, newEdge = xJump(
+                    p, current, current.edges[edgeIndex % len(current.edges)], -1, getAuxpt=True)
 
                 if current.edges == lastVisited:
                     jump = False
@@ -3592,7 +3658,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, deb
                     current.jumpEdge(newEdge)
 
                     if debug:
-                        yield Polygon(current.vertices, fill = random.choice(colors))
+                        yield Polygon(current.vertices, fill=random.choice(colors))
                     else:
                         for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
                             yield x
@@ -3602,13 +3668,13 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, deb
                     update_lambda_matrix(M, D, p, newEdge, midvertices)
 
                     if debug:
-                        yield Polygon(current.vertices, fill = random.choice(colors))
+                        yield Polygon(current.vertices, fill=random.choice(colors))
                     else:
                         for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
                             yield x
 
                     edge = newEdge
-                    if firstIndex == None:
+                    if firstIndex is None:
                         firstIndex = edgeIndex
 
                     break
@@ -3662,7 +3728,7 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, deb
                     auxvertices = current.vertices
 
                     if debug:
-                        yield Polygon(current.vertices, fill = random.choice(colors))
+                        yield Polygon(current.vertices, fill=random.choice(colors))
                     else:
                         for x in checkNeighbors(current, initialCr, cr, M, D, p, pts, strict):
                             yield x
@@ -3674,12 +3740,14 @@ def genSpiralWalkCr(p, pts, levels=float('inf'), initialJump=3, strict=True, deb
                 if turn(p, starPoint, current.vertices[vertexCheck]) == RIGHT:
                     starJump = True
                     jump = True
-                    #We need to set the right edge
+                    # We need to set the right edge
                     index = current.edges.index(edge)
                     if starPoint in current.edges[(index+1) % len(current.edges)]:
-                        otherEdge = current.edges[(index+1) % len(current.edges)]
+                        otherEdge = current.edges[(
+                            index+1) % len(current.edges)]
                     else:
-                        otherEdge = current.edges[(index-1) % len(current.edges)]
+                        otherEdge = current.edges[(
+                            index-1) % len(current.edges)]
                     vertexE = 0
                     while turn(edge[0], edge[1], current.vertices[vertexE]) != COLLINEAR:
                         vertexE += 1
@@ -3721,7 +3789,8 @@ def checkNeighbors(cell, initialCr, cr, M, D, p, pts, strict=True):
 
     for e in cell.edges:
         change = chg_cr(M, D, p, e, cell.vertices)
-        condition = ((cr+change) < initialCr[0]) if strict else ((cr+change) <= initialCr[0])
+        condition = (
+            (cr+change) < initialCr[0]) if strict else ((cr+change) <= initialCr[0])
         if condition:
             # print "yup neighbors", cr+change
             # print initialCr[0]

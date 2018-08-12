@@ -8,7 +8,7 @@
 #
 #    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation version 2. 
+#    the Free Software Foundation version 2.
 #
 #    This program is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -33,8 +33,13 @@ Created on Mon Jul 21 21:43:38 2014
 """
 
 from . import holes, datastructures, pointExplorer
-import random, time, pickle, sys, argparse
+import random
+import time
+import pickle
+import sys
+import argparse
 #import holes, pointExplorer, datastructures, random, time, pickle
+
 
 def extend(pts, speedup='try'):
     if holes.count_convex_rholes(pts, 6) != 0:
@@ -58,17 +63,18 @@ def extend(pts, speedup='try'):
             print("trying with", q)
             Aq, Bq = holes.count_convex_rholes_p(q, pts, 6, speedup=speedup)
             newH = minH + Aq - Ap + Bp - Bq
-            
+
             if newH <= minH:
                 if newH < minH:
-                    print("%d points, %d 6 holes"%(len(pts)+1, newH))
+                    print("%d points, %d 6 holes" % (len(pts)+1, newH))
                 minH = newH
                 Ap, Bp = Aq, Bq
                 bestp = q[:]
-                
+
                 if minH == 0:
                     print("yay!")
-                    name = "%d_pts%d_holes%d.pts"%(len(pts)+1, minH, int(time.time()) )
+                    name = "%d_pts%d_holes%d.pts" % (
+                        len(pts)+1, minH, int(time.time()))
                     pts.append(bestp)
                     f = open(name, "wb")
                     pickle.dump(pts, f)
@@ -77,48 +83,49 @@ def extend(pts, speedup='try'):
     print("Checked", regionsChecked, "best result:", minH, "with", bestp)
     return emptyRegions
 
-def hill_climbing(pts = None, tries = 1000, start=10, t=1000000000, run_time=300, days=0, save_interval = 300, speedup='try'):
-    
-    if days>0:
-        run_time=24*3600*days
-        
+
+def hill_climbing(pts=None, tries=1000, start=10, t=1000000000, run_time=300, days=0, save_interval=300, speedup='try'):
+
+    if days > 0:
+        run_time = 24*3600*days
+
     start_time = time.time()
     last_save = time.time()
-    
+
     if pts is None:
         pts = [datastructures.randPoint(t) for i in range(start)]
     else:
         for i in range(start - len(pts)):
             pts.append(datastructures.randPoint(t))
-        
+
 #    p = random.choice(pts)
-            
+
 #    for i in range(n-len(pts)):
-#            if colored: 
+#            if colored:
 #               pts.append([random.randint(-k,k),random.randint(-k,k),random.randint(0,1)])
 #            else:
-#               pts.append([random.randint(-k,k),random.randint(-k,k)]) 
+#               pts.append([random.randint(-k,k),random.randint(-k,k)])
     minH = holes.count_convex_rholes(pts, 6, speedup=speedup)
-    
+
     while minH == 0:
         pts.append(datastructures.randPoint(t))
-        minH = holes.count_convex_rholes(pts, 6, speedup=speedup)    
-    
-    while time.time()-start_time<run_time:
+        minH = holes.count_convex_rholes(pts, 6, speedup=speedup)
+
+    while time.time()-start_time < run_time:
         minH = holes.count_convex_rholes(pts, 6)
-        print("Starting with %d points, %d holes"%(len(pts), minH))
-        
+        print("Starting with %d points, %d holes" % (len(pts), minH))
+
         if time.time()-last_save > save_interval:
-            Id = str(int(time.time()))+"_%d_pts_%d_h"%(len(pts), minH)
+            Id = str(int(time.time()))+"_%d_pts_%d_h" % (len(pts), minH)
             f = open(Id, "w")
             pickle.dump(pts, f)
-            f.close()        
+            f.close()
             last_save = time.time()
-       
-        idx = random.randint(0,len(pts)-1)
+
+        idx = random.randint(0, len(pts)-1)
         p = pts.pop(idx)
         Ap, Bp = holes.count_convex_rholes_p(p, pts, 6, speedup=speedup)
-        
+
         for pol in pointExplorer.getRandomWalkDFS(p, pts, tries):
             q = pointExplorer.getCenter(pol)
             if q is None:
@@ -127,38 +134,41 @@ def hill_climbing(pts = None, tries = 1000, start=10, t=1000000000, run_time=300
 #            pts[idxp] = q
             Aq, Bq = holes.count_convex_rholes_p(q, pts, 6, speedup=speedup)
             newH = minH + Aq - Ap + Bp - Bq
-            
+
             if newH <= minH:
                 if newH < minH:
-                    print("%d points, %d 6 holes"%(len(pts)+1, newH))
+                    print("%d points, %d 6 holes" % (len(pts)+1, newH))
                 minH = newH
                 Ap, Bp = Aq, Bq
                 p = q[:]
-                
+
                 if minH == 0:
                     print("yay!")
                     break
         pts.append(p)
         if minH == 0:
            # return pts
-            Id = str(int(time.time()))+"_%d_pts_%d_h"%(len(pts), minH)
+            Id = str(int(time.time()))+"_%d_pts_%d_h" % (len(pts), minH)
             f = open(Id, "w")
             pickle.dump(pts, f)
             f.close()
             print(pts)
-            
+
             pts.append(datastructures.randPoint(t))
-                
+
     print("Done!")
-    Id = str(int(time.time()))+"_%d_pts_%d_h"%(len(pts), minH)
+    Id = str(int(time.time()))+"_%d_pts_%d_h" % (len(pts), minH)
     f = open(Id, "w")
     pickle.dump(pts, f)
     f.close()
     return pts
 
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(formatter_class = argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-filename', default = None, type = str, help = "Name of a file containing a set of points")
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('-filename', default=None, type=str,
+                        help="Name of a file containing a set of points")
 #    parser.add_argument('-start', default = 10, type = int, help = "Nummber of points to start the search")
 #    parser.add_argument('-tries', default = 300, type = int, help = "Number of tries to move a point")
 #    parser.add_argument('-t', default = 1000000, type = int, help = "Maximum absolute value of the coordinate for a random point")
@@ -170,8 +180,10 @@ if __name__ == '__main__':
         f = open(args.filename, 'r')
         pts = pickle.load(f)
         f.close()
- 
-        hill_climbing(pts = pts, tries = args.tries, start = args.start, run_time = args.run_time, save_interval = args.save_interval, days = args.days)
+
+        hill_climbing(pts=pts, tries=args.tries, start=args.start,
+                      run_time=args.run_time, save_interval=args.save_interval, days=args.days)
     else:
-        hill_climbing(tries = args.tries, start = args.start, run_time = args.run_time, save_interval = args.save_interval, days = args.days)
+        hill_climbing(tries=args.tries, start=args.start, run_time=args.run_time,
+                      save_interval=args.save_interval, days=args.days)
 #    hill_climbing(tries=300, start = 29, run_time = 43200, save_interval = 3600)

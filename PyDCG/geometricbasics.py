@@ -8,7 +8,7 @@
 #
 #    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation version 2. 
+#    the Free Software Foundation version 2.
 #
 #    This program is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -45,7 +45,8 @@ def turn_py(p0, p1, p2):
     elif t < 0:
         return LEFT
     return COLLINEAR
-    
+
+
 def turn(p, q, r, speedup=False):
     """Sorts `points` around `p` in CCW order."""
     if utilities.__config['PURE_PYTHON'] or not speedup:
@@ -62,7 +63,8 @@ def isSorted(p, pts):
         if turn(p, pts[i], pts[i + 1]) > 0:
             return False
     return True
-    
+
+
 def sap(p, pts, join=True, checkConcave=True):
     def comp(q, r):
         if q == p and r != p:
@@ -72,18 +74,18 @@ def sap(p, pts, join=True, checkConcave=True):
         qxcoord = q[0]-p[0]
         rxcoord = r[0]-p[0]
         xprod = qxcoord*rxcoord
-        #Special cases:
-        if xprod < 0: # xprod < 0: #One point to the left and one to the right of p, the one to the right goes first
+        # Special cases:
+        if xprod < 0:  # xprod < 0: #One point to the left and one to the right of p, the one to the right goes first
             return 1 if q[0] < p[0] else -1
-        elif xprod == 0: #At least one point with same x-coordinate than p
+        elif xprod == 0:  # At least one point with same x-coordinate than p
             qycoord = q[1]-p[1]
             rycoord = r[1]-p[1]
-            if q[0] != r[0]: #Exactly one point with same x-coordinate than p, and that point is below p. The one below p goes last
+            if q[0] != r[0]:  # Exactly one point with same x-coordinate than p, and that point is below p. The one below p goes last
                 if q[0] == p[0] and q[1] < p[1]:
                     return 1
                 if r[0] == p[0] and r[1] < p[1]:
                     return -1
-            elif qycoord*rycoord == 0:#Two with same x-coordinate than p, one above and one below. The one below p goes last
+            elif qycoord*rycoord == 0:  # Two with same x-coordinate than p, one above and one below. The one below p goes last
                 return 1 if q[1] < p[1] else -1
         return turn(p, q, r)
 
@@ -98,20 +100,21 @@ def sap(p, pts, join=True, checkConcave=True):
         if start is not None:
             same = 0
             while tpts[same] == p:
-                same+=1
+                same += 1
             start += 1
             tpts = tpts[:same] + tpts[start:len(tpts)] + tpts[same:start]
         return tpts
     else:
         return tpts
-        
+
+
 def sort_around_point_py(p, points, join=True):
     """Python version of sort_around_point"""
-    #print "recieved ", p
+    # print "recieved ", p
     p1 = [p[0], p[1] + 1]
     r, l = [], []
     same = 0
-    
+
     for q in points:
         if q == p:
             same += 1
@@ -127,7 +130,7 @@ def sort_around_point_py(p, points, join=True):
     l.sort(key=cmp_to_key(lambda v1, v2: turn(p, v1, v2)))
     r.sort(key=cmp_to_key(lambda v1, v2: turn(p, v1, v2)))
     r = [p[:] for i in range(same)] + r
-    
+
     if not join:
         return r, l
 
@@ -144,6 +147,7 @@ def sort_around_point_py(p, points, join=True):
         r = r[:same] + r[start:len(r)] + r[same:start]
 
     return r
+
 
 def sort_around_point(p, points, join=True, speedup=False):
     """Sorts `points` around `p` in CCW order."""
@@ -163,7 +167,7 @@ def iterate_over_points(pts, f):
     newVal = pts[0][:]
     for i in range(len(tmp)):
         res.append(f(newVal, tmp))
-        newVal, tmp[i] = tmp[i][:], newVal[:]        
+        newVal, tmp[i] = tmp[i][:], newVal[:]
     res.append(f(newVal, tmp))
     return res
 

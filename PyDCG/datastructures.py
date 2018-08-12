@@ -539,9 +539,13 @@ class dynamic_half_hull(object):
             if v.key[0] >= u.key[0]:
                 if v.key[0] == u.key[0]:
                     print("Same Coordinate")
-                    print("v:J", v.J, "v.data", v.obj, "v.points", v.obj.getPoints())
-                    print("u:J", u.J, "u.data", u.obj, "u.points", u.obj.getPoints())
-                    raise Exception("Trying to insert a point with the same x-coordinate as an existing one")  # TODO: This means that there are points with the same x-coordinate.
+                    print("v:J", v.J, "v.data", v.obj,
+                          "v.points", v.obj.getPoints())
+                    print("u:J", u.J, "u.data", u.obj,
+                          "u.points", u.obj.getPoints())
+                    # TODO: This means that there are points with the same x-coordinate.
+                    raise Exception(
+                        "Trying to insert a point with the same x-coordinate as an existing one")
                     # Make a descriptive exception or find a way to handle this case
                 aux.key = [u.key[0], 0]
                 aux.left = u
@@ -567,16 +571,17 @@ class dynamic_half_hull(object):
         #        print "deleting", p
         aux = self.Node(key=p)
         if self.root is None:  # TODO: borrar
-#            print "FAIL! Empty treap"
-#            print self.toList()
+            #            print "FAIL! Empty treap"
+            #            print self.toList()
             raise Exception()
         u = self.DOWN(self.root, aux)
 #        print "DOWN gave", u
 
         if u.key != p:
-#            warnings.warn("Point" + str(p) + "not found.", stacklevel=3)
+            #            warnings.warn("Point" + str(p) + "not found.", stacklevel=3)
             self.UP(u)
-            raise Exception("Point" + str(p) + "not found.")  # TODO: Check this exception
+            # TODO: Check this exception
+            raise Exception("Point" + str(p) + "not found.")
             return
 
         if u.parent is None:  # u is the only element in the tree
@@ -611,7 +616,8 @@ class dynamic_half_hull(object):
         if not v.isLeaf():
             Q1, r, Q2 = v.Q.split(v.J)
             if Q1 is None or Q2 is None:
-                raise Exception("Inside DOWN, split failed")  # TODO: This shouldn't happen anymore, right?
+                # TODO: This shouldn't happen anymore, right?
+                raise Exception("Inside DOWN, split failed")
             Q1.insert_node(r)
             if v.left is not None:
                 v.left.Q = Q1.join(v.left.Q)
@@ -641,9 +647,11 @@ class dynamic_half_hull(object):
                 # We will continue UP at v or its sibling new position
                 # depending on who gets a lower position after rotating
                     if grandpa.right == parent:
-                        self.left_rotation(grandpa)   # v's parent became v's rson
+                        # v's parent became v's rson
+                        self.left_rotation(grandpa)
                     else:
-                        self.right_rotation(grandpa)  # v's parent became v's lson
+                        # v's parent became v's lson
+                        self.right_rotation(grandpa)
                     if sibling.parent == grandpa:  # TODO: DUH!
                         v = sibling
 
@@ -1054,6 +1062,7 @@ def verifyBinaryTree(T):
         raise Exception
     else:
         print("ALL GOOD")
+
 
 def inOrder(node):
     if node.right is None and node.left is None:

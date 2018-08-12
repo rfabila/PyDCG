@@ -2,12 +2,13 @@ from . import geometricbasics
 import hashlib
 from . import convexhull
 
+
 def points_index(pts):
     """Returns a dictionary with the indices of the points in pts"""
-    D={}
+    D = {}
     for i in range(len(pts)):
-        q=(pts[i][0],pts[i][1])
-        D[q]=i
+        q = (pts[i][0], pts[i][1])
+        D[q] = i
     return D
 
 
@@ -57,15 +58,15 @@ def unique_signature(pts):
     """Similar to signature, it produces a string associated to the point set,
        but it is independent of the labelling of the point set.
        It runs in O(n^3 \logn) time"""
-    pts=[x[:] for x in pts]
-    D=points_index(pts)
-    ch=convexhull.CH(pts)
-    S=[]
+    pts = [x[:] for x in pts]
+    D = points_index(pts)
+    ch = convexhull.CH(pts)
+    S = []
     for p in ch:
-        idx=D[tuple(p)]
-        pts2=pts[:idx]
+        idx = D[tuple(p)]
+        pts2 = pts[:idx]
         pts2.extend(pts[idx+1:])
-        pts2=geometricbasics.sort_around_point(p,pts2)
+        pts2 = geometricbasics.sort_around_point(p, pts2)
         pts2.append(p)
         S.append(signature(pts2))
     print(S)
@@ -74,9 +75,7 @@ def unique_signature(pts):
 
 def remove_duplicates(P):
     """Given a set of pointsets, removes any duplicates"""
-    D={}
+    D = {}
     for pts in P:
-        D[signature(pts)]=pts
+        D[signature(pts)] = pts
     return list(D.values())
-    
-        
