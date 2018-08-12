@@ -101,8 +101,9 @@ def count_halving_lines(pts):
     #print pts
     V=k_edges_vector(pts)
     if n%2==0:
-        return V[n/2-1]/2
-    return V[(n-1)/2]
+        return V[n//2-1]//2
+    return V[(n-1)//2]
+
 
 def count_crossings_py(pts):
     """Returns the he number of crossings in the complete
@@ -126,11 +127,11 @@ def count_crossings_py(pts):
                 j=j+1
                     
             ni=(j-i)%(n-1)
-            cr=cr+ni*(ni-1)/2
+            cr=cr+ni*(ni-1)//2
 
-    total=n*(n-1)*(n-2)*(n-3)/2    
+    total=n*(n-1)*(n-2)*(n-3)//2    
         
-    return cr-(total/4)
+    return cr-(total//4)
 
 def count_crossings(pts, speedup=True):
     """Sorts `points` around `p` in CCW order."""
@@ -140,6 +141,7 @@ def count_crossings(pts, speedup=True):
         return crossingCpp.count_crossings(pts)
     except OverflowError:
         return count_crossings_py(pts)
+
 
 def count_crossings_candidate_list_py(point_index,candidate_list,pts):
     """Let k=len(candidate_list), n=len(pts). Returns the
@@ -226,7 +228,7 @@ def count_crossings_candidate_list_py(point_index,candidate_list,pts):
                         (j+1)%(n-1)!=k):
                     j=j+1
                         
-            cr_q_in_candidatelist[q[2]]=((j-k)%(n-1))*((j-k)%(n-1)-1)/2
+            cr_q_in_candidatelist[q[2]]=((j-k)%(n-1))*((j-k)%(n-1)-1)//2
         return cr_q_in_candidatelist
     def index_pts_without_pointindex(point_index,pts):
         i=0
@@ -255,7 +257,7 @@ def count_crossings_candidate_list_py(point_index,candidate_list,pts):
         
         # Suma 2
         for k in index_pts_without_pointindex(pos_p_in_tps,tmp_pts):
-            cr2=cr2+nis[k]*(nis[k]-1)/2
+            cr2=cr2+nis[k]*(nis[k]-1)//2
         #    
         united_pts=join_pts_antipodal_candidatelist(point_index,pts,pts[i],tmp_pts,candidate_list)
         position_p=searchpoint(pts[point_index],united_pts)   
@@ -266,13 +268,13 @@ def count_crossings_candidate_list_py(point_index,candidate_list,pts):
         #-----------------------
         
         # Suma 3
-        cr3=cr3+nis[pos_p_in_tps]*(nis[pos_p_in_tps]-1)/2
+        cr3=cr3+nis[pos_p_in_tps]*(nis[pos_p_in_tps]-1)//2
         #
         for j in range(len(candidate_list)): 
-            cr_list3[j]=cr_list3[j]+(count_change_of_list[j]+nis[pos_p_in_tps])*(count_change_of_list[j]+nis[pos_p_in_tps]-1)/2
+            cr_list3[j]=cr_list3[j]+(count_change_of_list[j]+nis[pos_p_in_tps])*(count_change_of_list[j]+nis[pos_p_in_tps]-1)//2
         #----------------------
 
-    total=n*(n-1)*(n-2)*(n-3)/8    
+    total=n*(n-1)*(n-2)*(n-3)//8    
     cr_list=[0 for x in candidate_list]
     for i in range(len(candidate_list)):
         cr_list2[i]=cr_list2[i]+cr2
@@ -326,8 +328,8 @@ def cr_remove_point(pts):
         
         crp=0
         for k in range(len(tmp_pts)):
-            cr=cr+nis[k]*(nis[k]-1)/2 #para calcular el cr base
-            crp=crp+nis[k]*(nis[k]-1)/2
+            cr=cr+nis[k]*(nis[k]-1)//2 #para calcular el cr base
+            crp=crp+nis[k]*(nis[k]-1)//2
         lista_cr[i]=lista_cr[i]-2*crp
             
         j=n-2
@@ -377,7 +379,7 @@ def cr_remove_point(pts):
         
 
     #total=n*(n-1)*(n-2)*(n-3)/8
-    total2=(n-1)*(n-2)*(n-3)*(n-4)/8
+    total2=(n-1)*(n-2)*(n-3)*(n-4)//8
     
     #print "base  "+str(cr-total) +"  vs  "+  str(count_crossings(pts))
         

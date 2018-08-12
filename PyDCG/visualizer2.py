@@ -210,7 +210,10 @@ class Vis:
         min_x=min(X)
         max_y=max(Y)
         min_y=min(Y)
-        return [Fraction((max_x+min_x),2),Fraction((max_y+min_y),2)]
+        # print("vis stuff", type(max_x + min_x), max_y + min_y)
+        # print("cx", Fraction(max_x + min_x) / 2)
+        # print("cy", Fraction(max_y + min_y, 2))
+        return [Fraction((max_x + min_x), 2), Fraction((max_y + min_y), 2)]
         
     
     def convert_to_screen_coords(self,point):

@@ -9,7 +9,7 @@
 #
 #    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation version 2. 
+#    the Free Software Foundation version 2.
 #
 #    This program is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -41,6 +41,8 @@ LOWER = 4
 # Or I am just a bad programmer.
 # This could be a source for big improvement in the future.
 # Seems to be working ok though.
+
+
 class Treap(object):
 
     """An implementation of a treap. Note that
@@ -60,9 +62,9 @@ class Treap(object):
         self.empty = True
 
     # def clear(self):
-     #   self.root=None
-     #   self.empty=True
-     #   self.free_nodes=self.nodes[:]
+    #   self.root=None
+    #   self.empty=True
+    #   self.free_nodes=self.nodes[:]
 
     def find(self, key):
         if self.empty:
@@ -450,9 +452,9 @@ def treapToList(T):
 
     if T.empty:
         return l
-        
+
     inOrder(T.root)
-    
+
     return l
 
 
@@ -515,23 +517,23 @@ class dynamic_half_hull(object):
             self.root = v
             self.empty = False
             return
-            
+
         u = self.DOWN(self.root, v)
-                
+
         if u.key != v.key:
             aux = self.Node()
             aux.priority[0] = random.random()
             parent = u.parent
-            
+
             if parent is None:                       # u is currently the root
                 self.root = aux
-            elif parent.right is u:     # u is a right son
+            elif parent.right is u:                  # u is a right child
                 parent.right = aux
                 aux.parent = parent
             else:
-                parent.left = aux      # u is a left son
+                parent.left = aux                    # u is a left child
                 aux.parent = parent
-                
+
             u.parent = aux
             v.parent = aux
             if v.key[0] >= u.key[0]:
@@ -539,8 +541,8 @@ class dynamic_half_hull(object):
                     print("Same Coordinate")
                     print("v:J", v.J, "v.data", v.obj, "v.points", v.obj.getPoints())
                     print("u:J", u.J, "u.data", u.obj, "u.points", u.obj.getPoints())
-                    raise Exception("Trying to insert a point with the same x-coordinate as an existing one") #TODO: This means that there are points with the same x-coordinate. 
-                                    #Make a descriptive exception or find a way to handle this case
+                    raise Exception("Trying to insert a point with the same x-coordinate as an existing one")  # TODO: This means that there are points with the same x-coordinate.
+                    # Make a descriptive exception or find a way to handle this case
                 aux.key = [u.key[0], 0]
                 aux.left = u
                 aux.right = v
@@ -550,10 +552,10 @@ class dynamic_half_hull(object):
                 aux.right = u
 
         else:
-            #            print "Point", p, "is already in the tree"
+            # print "Point", p, "is already in the tree"
             self.UP(u)
             return
-            
+
         self.UP(v)
 #        print "DONE!"
 #        print "Currently we have:"
@@ -564,7 +566,7 @@ class dynamic_half_hull(object):
     def delete(self, p):
         #        print "deleting", p
         aux = self.Node(key=p)
-        if self.root is None:#TODO: borrar
+        if self.root is None:  # TODO: borrar
 #            print "FAIL! Empty treap"
 #            print self.toList()
             raise Exception()
@@ -574,7 +576,7 @@ class dynamic_half_hull(object):
         if u.key != p:
 #            warnings.warn("Point" + str(p) + "not found.", stacklevel=3)
             self.UP(u)
-            raise Exception("Point" + str(p) + "not found.") #TODO: Check this exception
+            raise Exception("Point" + str(p) + "not found.")  # TODO: Check this exception
             return
 
         if u.parent is None:  # u is the only element in the tree
@@ -609,7 +611,7 @@ class dynamic_half_hull(object):
         if not v.isLeaf():
             Q1, r, Q2 = v.Q.split(v.J)
             if Q1 is None or Q2 is None:
-                raise Exception("Inside DOWN, split failed") #TODO: This shouldn't happen anymore, right?
+                raise Exception("Inside DOWN, split failed")  # TODO: This shouldn't happen anymore, right?
             Q1.insert_node(r)
             if v.left is not None:
                 v.left.Q = Q1.join(v.left.Q)
@@ -629,7 +631,7 @@ class dynamic_half_hull(object):
             if v.parent != self.root:
                 parent = v.parent
                 grandpa = parent.parent
-                
+
                 while parent.priority == grandpa.priority:
                     parent.priority.append(random.random())
                     grandpa.priority.append(random.random())
@@ -639,10 +641,10 @@ class dynamic_half_hull(object):
                 # We will continue UP at v or its sibling new position
                 # depending on who gets a lower position after rotating
                     if grandpa.right == parent:
-                        self.left_rotation(grandpa)   #v's parent became v's rson
+                        self.left_rotation(grandpa)   # v's parent became v's rson
                     else:
-                        self.right_rotation(grandpa)  #v's parent became v's lson
-                    if sibling.parent == grandpa: #TODO: DUH!
+                        self.right_rotation(grandpa)  # v's parent became v's lson
+                    if sibling.parent == grandpa:  # TODO: DUH!
                         v = sibling
 
             Q1, Q2, Q3, Q4, J = dynamic_half_hull.bridge(
@@ -775,7 +777,7 @@ class dynamic_half_hull(object):
 #                y_num = ap*cq - aq*cp
 #                y_den = aq*bp - ap*bq
 # If we are calculating the upper/lower hulls we solve for x
-                #x = (-cp*bq + cq*bp)/(-ap*bq + bp*aq)
+                # x = (-cp*bq + cq*bp)/(-ap*bq + bp*aq)
                 x_num = cq * bp - cp * bq
                 x_den = aq * bp - ap * bq
 
@@ -826,12 +828,12 @@ class dynamic_half_hull(object):
         Q1, q, Q2 = Left.split(q)
         Q3, p, Q4 = Right.split(p)
 
-        if Q1 is None or Q2 is None or Q3 is None or Q4 is None: #TODO: This shouldn't happen anymore either
+        if Q1 is None or Q2 is None or Q3 is None or Q4 is None:  # TODO: This shouldn't happen anymore either
             raise Exception("Inside bridge, split failed")
 
         Q1.insert_node(q)
         Q4.insert_node(p)
-        
+
         return Q1, Q2, Q3, Q4, J
 
     def toList(self):
@@ -843,14 +845,12 @@ class dynamic_half_hull(object):
         return res
 
     class Node(object):
-
         def __init__(self, key=[0, 0], obj=None):
-
-            # A point is the node is a leaf, otherwise [0, maxy] where maxy is
+            # A point in the node is a leaf, otherwise [0, maxy] where maxy is
             # the biggest y coordinate in the left subtree
             self.key = key
-            # Q is the part does not contribute to the lc-hull of parent
-            self.Q = Treap(lambda p, q: p[0] - q[0])  
+            # Q is the part that does not contribute to the lc-hull of parent
+            self.Q = Treap(lambda p, q: p[0] - q[0])
             # J is the position of the support point in parent's lc-hull
             self.J = key
             self.parent = None
@@ -958,7 +958,7 @@ def in_order_priorities(node):
 def randPoint(k=1000000, color=False):
     p = [random.randint(-k, k), random.randint(-k, k)]
     if color:
-        p.append(random.randint(0,1))
+        p.append(random.randint(0, 1))
     return p
 
 
