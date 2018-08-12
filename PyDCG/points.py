@@ -371,9 +371,9 @@ def best_halving_lines_pts(n):
     return best_specimen("halving_lines",n)
 
 #submitting functions
-def _pack_sp(pts,species,comment="",user_id=None):
+def _pack_sp(pts, species, comment="", user_id=None):
     if not geometricbasics.general_position(pts):
-        #this should probably be an exception
+        # this should probably be an exception
         print("Point set not in general position!! I ain't sending nothing.")
 
         return None
@@ -411,20 +411,20 @@ def _submit_point_set_list(P,species,comment=" ",user_id=None):
     os.system("rm temp_subs/*")
     os.system("rmdir temp_subs")
     print("Done")
-        
 
-def _submit_point_set(pts,species,comment=" ",user_id=None):
-    sp=_pack_sp(pts,species,comment=comment,user_id=user_id)
-    #to avoid collisions
-    date_discovered=datetime.datetime.today()
-    idx=''.join(random.choice(string.ascii_letters + string.digits) for _ in range(10))
-    name=str(len(pts))+"_"+species+"_"+str(date_discovered.date())+"_"+idx+".sp"
-    file_sp=open(name,"w")
-    pickle.dump((species,sp),file_sp)
+
+def _submit_point_set(pts, species, comment=" ", user_id=None):
+    sp = _pack_sp(pts, species, comment=comment, user_id=user_id)
+    # to avoid collisions
+    date_discovered = datetime.datetime.today()
+    idx = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(10))
+    name = str(len(pts))+"_"+species+"_"+str(date_discovered.date())+"_"+idx+".sp"
+    file_sp = open(name, "wb")
+    pickle.dump((species, sp), file_sp)
     file_sp.close()
-    com="scp "+name+" naturalist@monk.math.cinvestav.mx:~/naturalist/captured_specimens/"
+    com = "scp "+name+" naturalist@monk.math.cinvestav.mx:~/naturalist/captured_specimens/"
     os.system(com)
-    #print com
+    # print com
     os.system("rm "+name)
 
 #submitting functions for specific species

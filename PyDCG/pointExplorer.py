@@ -1921,14 +1921,14 @@ def randPointTriang(triang, tries=100):
             b = random.random()
         p = [0, 0]
         try:
-            p[0] = a*float(v1[0])+b*float(v2[0])+float(triang[0][0])
+            p[0] = a * float(v1[0]) + b * float(v2[0]) + float(triang[0][0])
         except Exception as e:
-            p[0] = a*(v1[0].toDecimal())+b*(v2[0].toDecimal())+(triang[0][0].toDecimal())
+            p[0] = decimal.Decimal(a) * v1[0].toDecimal() + decimal.Decimal(b) * v2[0].toDecimal() + triang[0][0].toDecimal()
 
         try:
-            p[1] = a*float(v1[1].toDecimal())+b*float(v2[1].toDecimal())+float(triang[0][1].toDecimal())
+            p[1] = a * float(v1[1]) + b * float(v2[1]) + float(triang[0][1])
         except Exception as e:
-            p[1] = a*(v1[1])+b*(v2[1])+(triang[0][1])
+            p[1] = decimal.Decimal(a) * v1[1].toDecimal() + decimal.Decimal(b) * v2[1].toDecimal() + triang[0][1].toDecimal()
 
         for f in funcs:
             for g in funcs:
