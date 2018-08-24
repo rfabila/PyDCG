@@ -225,8 +225,8 @@ class Vis:
         y=-(point[1]-self.center[1])
         x=x*self.zoom
         y=y*self.zoom
-        x=x+width/2
-        y=y+height/2
+        x=x+width/2.0
+        y=y+height/2.0
         x=int(x)
         y=int(y)
         
@@ -454,17 +454,17 @@ class Vis:
             [x0,y0]=self.convert_to_screen_coords(s[0])
             [x1,y1]=self.convert_to_screen_coords(s[1])
             if len(s)>2:    
-                self.drawnsegments.append(self.paper.create_line(x0+self.t/2,
-                                                                 y0+self.t/2,
-                                                                 x1+self.t/2,
-                                                                 y1+self.t/2,
+                self.drawnsegments.append(self.paper.create_line(x0,
+                                                                 y0,
+                                                                 x1,
+                                                                 y1,
                                                                  fill=s[2],
                                                                  width=[3]))#TODO: restore this part, it was width=s[3])
             else:
-                self.drawnsegments.append(self.paper.create_line(x0+self.t/2,
-                                                                 y0+self.t/2,
-                                                                 x1+self.t/2,
-                                                                 y1+self.t/2,
+                self.drawnsegments.append(self.paper.create_line(x0,
+                                                                 y0,
+                                                                 x1,
+                                                                 y1,
                                                                  fill="grey"))
     
 
