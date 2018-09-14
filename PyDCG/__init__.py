@@ -36,3 +36,4 @@ import utilities
 import extendSet
 import ordertypes
 import kgons
+import drawing

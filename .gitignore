@@ -3,3 +3,4 @@
 *.o
 *_h
 *.so
+*rectilinear_crossing_number.pkl

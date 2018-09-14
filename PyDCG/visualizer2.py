@@ -31,7 +31,7 @@ import convexhull
 class Vis:
     
     def __init__(self, h=500, w=500, points=[],lines=[],segments=[],center=None,
-                 deltazoom=Fraction(1,10),t=3,zoom=None,pic_button=False,paper_side=BOTTOM,
+                 deltazoom=Fraction(1,10),objects=[],t=3,zoom=None,pic_button=False,paper_side=BOTTOM,
                  pack=True,show_grid=False,grid_color="light gray",move_points_button=False,polygons=[],
                  add_point_button=False,delete_point_button=False,update_objects=None,keyboard_events=[]):
         self.root=Tk()
@@ -60,6 +60,14 @@ class Vis:
         
         self.state="view"
         
+        self.objects=[]
+        
+        for x in objects:
+            if type(x)==list:
+                self.objects.extend(x)
+            else:
+                self.objects.append(x)
+                
         self.update_objects=update_objects
         self.show_grid=show_grid
         self.grid_color=grid_color
@@ -74,6 +82,7 @@ class Vis:
         self.drawnlines=[]
         self.drawnsegments=[]
         self.drawnpolygons=[]
+        self.drawnobjects=[]
         self.paper.bind("<Button-1>", self.leftclick)
         self.paper.bind("<ButtonRelease-1>", self.release)
         self.paper.bind("<Double-Button-1>", self.doubleclickleft)
@@ -225,8 +234,8 @@ class Vis:
         y=-(point[1]-self.center[1])
         x=x*self.zoom
         y=y*self.zoom
-        x=x+width/2
-        y=y+height/2
+        x=x+width/2.0
+        y=y+height/2.0
         x=int(x)
         y=int(y)
         
@@ -242,12 +251,22 @@ class Vis:
         if self.show_grid:
             self.draw_grid()
             
+        self.drawObjects()    
         self.drawLines()
         self.drawSegments()
         self.drawPolygons()
         self.drawPoints()
         self.first_time=False
-    
+        
+    def drawObjects(self):
+        self.destroyobjects()
+        
+        for O in self.objects:
+            f=getattr(self.paper,O.f)
+            args=O.compute_arguments(self.convert_to_screen_coords)
+            Q=f(*args,**O.keywords)
+            self.drawnobjects.append(Q)
+        
     def drawPolygons(self):
         self.destroypolygons()
         
@@ -454,17 +473,17 @@ class Vis:
             [x0,y0]=self.convert_to_screen_coords(s[0])
             [x1,y1]=self.convert_to_screen_coords(s[1])
             if len(s)>2:    
-                self.drawnsegments.append(self.paper.create_line(x0+self.t/2,
-                                                                 y0+self.t/2,
-                                                                 x1+self.t/2,
-                                                                 y1+self.t/2,
+                self.drawnsegments.append(self.paper.create_line(x0,
+                                                                 y0,
+                                                                 x1,
+                                                                 y1,
                                                                  fill=s[2],
                                                                  width=[3]))#TODO: restore this part, it was width=s[3])
             else:
-                self.drawnsegments.append(self.paper.create_line(x0+self.t/2,
-                                                                 y0+self.t/2,
-                                                                 x1+self.t/2,
-                                                                 y1+self.t/2,
+                self.drawnsegments.append(self.paper.create_line(x0,
+                                                                 y0,
+                                                                 x1,
+                                                                 y1,
                                                                  fill="grey"))
     
 
@@ -484,7 +503,12 @@ class Vis:
     def setzoom(self,zoom):
         self.zoom=zoom
         self.draw()
-     
+    
+    def destroyobjects(self):
+        for s in self.drawnobjects:
+            self.paper.delete(s)
+        self.drawnobjects=[]
+    
     def destroysegments(self):
         for s in self.drawnsegments:
             self.paper.delete(s)
