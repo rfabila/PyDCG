@@ -20,20 +20,20 @@
 '''
 PyDCG, a collection of Discrete and Computational Geometry tools
 '''
-import crossing
-import geometricbasics
-import points
-import combinatorics
-import datastructures
-import line
-import visualizer
-import visualizer2
-import holes
-import heuristics
-import convexhull
-import pointExplorer
-import utilities
-import extendSet
-import ordertypes
-import kgons
-import drawing
+from . import crossing
+from . import geometricbasics
+from . import points
+from . import combinatorics
+from . import datastructures
+from . import line
+from . import visualizer
+from . import visualizer2
+from . import holes
+from . import heuristics
+from . import convexhull
+from . import pointExplorer
+from . import utilities
+from . import extendSet
+from . import ordertypes
+from . import kgons
+from . import drawing

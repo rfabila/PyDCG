@@ -6,7 +6,7 @@
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation version 2. 
+   the Free Software Foundation version 2.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -405,9 +405,28 @@ PyMethodDef holesCppMethods[] =
     {NULL, NULL, 0, NULL}
 };
 
-extern "C" PyMODINIT_FUNC
-initholesCpp(void)
-{
-    (void) Py_InitModule3("holesCpp", holesCppMethods,
-                          "Extension written in C++ intended to help finding sets with few r-holes.");
-}
+#if PY_MAJOR_VERSION >= 3
+    static struct PyModuleDef moduledef2 = {
+        PyModuleDef_HEAD_INIT,
+        "holesCpp",     /* m_name */
+        "Extension written in C++ intended to help finding sets with few r-holes.",  /* m_doc */
+        -1,                  /* m_size */
+        holesCppMethods,    /* m_methods */
+        NULL,                /* m_reload */
+        NULL,                /* m_traverse */
+        NULL,                /* m_clear */
+        NULL,                /* m_free */
+    };
+
+    extern "C" PyMODINIT_FUNC initholesCpp(void)
+    {
+        (void) PyModule_Create(&moduledef2);
+    }
+#else
+    extern "C" PyMODINIT_FUNC
+    initholesCpp(void)
+    {
+        (void) Py_InitModule3("holesCpp", holesCppMethods,
+                              "Extension written in C++ intended to help finding sets with few r-holes.");
+    }
+#endif

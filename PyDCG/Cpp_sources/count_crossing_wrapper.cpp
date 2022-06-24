@@ -103,10 +103,10 @@ extern "C" PyObject* crossing_wrapper(PyObject* self, PyObject* args)
             return (PyObject*)NULL;
         }
 
-        x = PyInt_AsLong(PyList_GetItem(point, 0)); //Borrowed References
+        x = PyLong_AsLong(PyList_GetItem(point, 0)); //Borrowed References
         if(PyErr_Occurred() != NULL)
             return (PyObject*)NULL;
-        y = PyInt_AsLong(PyList_GetItem(point, 1));
+        y = PyLong_AsLong(PyList_GetItem(point, 1));
         if(PyErr_Occurred() != NULL)
             return (PyObject*)NULL;
 
@@ -164,10 +164,10 @@ extern "C" PyObject* count_crossings_candidate_list_wrapper(PyObject* self, PyOb
             return (PyObject*)NULL;
         }
 
-        x = PyInt_AsLong(PyList_GetItem(punto, 0)); //Borrowed References
+        x = PyLong_AsLong(PyList_GetItem(punto, 0)); //Borrowed References
         if(PyErr_Occurred() != NULL)
             return (PyObject*)NULL;
-        y = PyInt_AsLong(PyList_GetItem(punto, 1));
+        y = PyLong_AsLong(PyList_GetItem(punto, 1));
         if(PyErr_Occurred() != NULL)
             return (PyObject*)NULL;
 
@@ -193,10 +193,10 @@ extern "C" PyObject* count_crossings_candidate_list_wrapper(PyObject* self, PyOb
             return (PyObject*)NULL;
         }
 
-        x = PyInt_AsLong(PyList_GetItem(punto, 0)); //Borrowed References
+        x = PyLong_AsLong(PyList_GetItem(punto, 0)); //Borrowed References
         if(PyErr_Occurred() != NULL)
             return (PyObject*)NULL;
-        y = PyInt_AsLong(PyList_GetItem(punto, 1));
+        y = PyLong_AsLong(PyList_GetItem(punto, 1));
         if(PyErr_Occurred() != NULL)
             return (PyObject*)NULL;
 
@@ -215,7 +215,7 @@ extern "C" PyObject* count_crossings_candidate_list_wrapper(PyObject* self, PyOb
 
     for(auto &crossings : res)
     {
-        PyObject* py_crossings = PyInt_FromLong(crossings);
+        PyObject* py_crossings = PyLong_FromLong(crossings);
         if(PyList_Append(py_res, py_crossings) == -1) //Append increases reference count
             return (PyObject*)NULL;
         Py_DECREF(py_crossings);
@@ -231,9 +231,28 @@ extern "C" PyObject* count_crossings_candidate_list_wrapper(PyObject* self, PyOb
     {NULL, NULL, 0, NULL}
 };
 
-PyMODINIT_FUNC
-initcrossingCpp(void)
-{
-    (void) Py_InitModule3("crossingCpp", crossingCppMethods,
-                          "Extension in C++ with functions to find the rectilinear crossing number of a point set.");
-}
+#if PY_MAJOR_VERSION >= 3
+    static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "crossingCpp",     /* m_name */
+        "Extension in C++ with functions to find the rectilinear crossing number of a point set.",  /* m_doc */
+        -1,                  /* m_size */
+        crossingCppMethods,    /* m_methods */
+        NULL,                /* m_reload */
+        NULL,                /* m_traverse */
+        NULL,                /* m_clear */
+        NULL,                /* m_free */
+    };
+
+    PyMODINIT_FUNC initcrossingCpp(void)
+    {
+        (void) PyModule_Create(&moduledef);
+    }
+#else
+    PyMODINIT_FUNC
+    initcrossingCpp(void)
+    {
+        (void) Py_InitModule3("crossingCpp", crossingCppMethods,
+                              "Extension in C++ with functions to find the rectilinear crossing number of a point set.");
+    }
+#endif
