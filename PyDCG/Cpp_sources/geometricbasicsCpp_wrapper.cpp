@@ -218,9 +218,11 @@ PyMethodDef geometricbasicsCppMethods[] =
         NULL,                /* m_free */
     };
 
-    extern "C" PyMODINIT_FUNC initgeometricbasicsCpp(void)
+    //extern "C" PyMODINIT_FUNC initgeometricbasicsCpp(void
+    extern "C" PyMODINIT_FUNC PyInit_geometricbasicsCpp(void)
     {
-        (void) PyModule_Create(&moduledef3);
+        //(void) PyModule_Create(&moduledef3);
+        return PyModule_Create(&moduledef3);
     }
 #else
     extern "C" PyMODINIT_FUNC

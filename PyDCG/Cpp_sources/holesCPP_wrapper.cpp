@@ -418,9 +418,11 @@ PyMethodDef holesCppMethods[] =
         NULL,                /* m_free */
     };
 
-    extern "C" PyMODINIT_FUNC initholesCpp(void)
+    //extern "C" PyMODINIT_FUNC initholesCpp(void)
+    extern "C" PyMODINIT_FUNC PyInit_holesCpp(void)
     {
-        (void) PyModule_Create(&moduledef2);
+        //(void) PyModule_Create(&moduledef2);
+        return PyModule_Create(&moduledef2);
     }
 #else
     extern "C" PyMODINIT_FUNC

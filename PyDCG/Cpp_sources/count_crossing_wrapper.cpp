@@ -244,9 +244,11 @@ extern "C" PyObject* count_crossings_candidate_list_wrapper(PyObject* self, PyOb
         NULL,                /* m_free */
     };
 
-    PyMODINIT_FUNC initcrossingCpp(void)
+    //PyMODINIT_FUNC initcrossingCpp(void)
+    PyMODINIT_FUNC PyInit_crossingCpp(void)
     {
-        (void) PyModule_Create(&moduledef);
+        //(void) PyModule_Create(&moduledef);
+        return PyModule_Create(&moduledef);
     }
 #else
     PyMODINIT_FUNC

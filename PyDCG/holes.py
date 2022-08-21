@@ -24,7 +24,7 @@ from . import utilities
 from .utilities import cppWrapper
 
 if utilities.__load_extensions:
-    import holesCpp
+    import PyDCG.holesCpp as holesCpp
 
 def count_four_islands(pts,colored=False):
     """Counts the number of four-islands in a point set."""

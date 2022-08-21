@@ -22,15 +22,15 @@
 
 """Implementation of the basic geometric primitives"""
 
-#import utilities
-from . import utilities
+import PyDCG.utilities as utilities
+#from . import utilities
 
 LEFT = -1
 COLLINEAR = 0
 RIGHT = 1
 
 if utilities.__load_extensions:
-    import geometricbasicsCpp as gbCpp
+    import PyDCG.geometricbasicsCpp as gbCpp
 
 
 def turn_py(p0, p1, p2):

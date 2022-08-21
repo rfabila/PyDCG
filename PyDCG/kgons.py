@@ -6,7 +6,7 @@
 #
 #    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation version 2. 
+#    the Free Software Foundation version 2.
 #
 #    This program is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,7 +18,9 @@
 #    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-import geometricbasics, itertools, convexhull
+import PyDCG.geometricbasics as geometricbasics
+import itertools
+import PyDCG.convexhull as convexhull
 
 def max_cup(pts):
     pts=[x[:] for x in pts]
@@ -39,7 +41,7 @@ def max_cup(pts):
         if M[e]>m:
             m=M[e]
     return m
-    
+
 def max_cap(pts):
     pts=[x[:] for x in pts]
     n=len(pts)
@@ -59,7 +61,7 @@ def max_cap(pts):
         if M[e]>m:
             m=M[e]
     return m
-    
+
 
 LEFT = -1
 COLLINEAR = 0
@@ -69,8 +71,8 @@ def sortAroundPoint(p, ptsIdx, pts):
     p1 = [p[0], p[1] + 1]
     r=[]
     l=[]
-    
-    for i in ptsIdx:    
+
+    for i in ptsIdx:
         q = pts[i]
         if geometricbasics.turn(p, p1, q) == RIGHT:
             r.append(i)
@@ -98,30 +100,30 @@ def sortAroundPoint(p, ptsIdx, pts):
         r = [r[(start + i) % len(r)] for i in range(len(r))]
 
     return r
-    
+
 
 def maxKgon(pts): #Finds the largest rgon in pts in time O(n^3))
     allSorted = []
     tmp = list(range(1, len(pts)))
-        
+
     p = 0
     allSorted = [[] for i in range(len(pts))]
     allSorted[0].extend(sortAroundPoint(pts[p], tmp, pts))
-    
+
     for i in range(len(tmp)):
         p, tmp[i] = tmp[i], p
         allSorted[i+1].extend(sortAroundPoint(pts[p], tmp, pts))
-    
+
     lkp = {(i,j):-1 for i in range(len(pts)) for j in range(len(pts))}
-    
+
     for p in range(len(allSorted)):
         srtd = allSorted[p]
         for i in range(len(srtd)):
             q = srtd[i]
             lkp[p, q] = i
-    
+
     maxRgon = 0
-    
+
     def findNext(i, j): #Finds the point that makes the smallest ccw angle with line pts[i]pts[j], measured around pts[j]
         if i == j:
             return -1
@@ -135,19 +137,19 @@ def maxKgon(pts): #Finds the largest rgon in pts in time O(n^3))
             k +=1
             r = pts[allSorted[i][k]]
         lim2 = lim*2
-        
+
         while(k < lim2 and geometricbasics.turn(q, p, r) >= 0):
             k += 1
             r = pts[allSorted[i][k%lim]]
         if k == lim2:
             k = -1
-        
+
         return allSorted[i][k%lim]
-    
+
     nextpt = [[findNext(i, j) for j in range(len(pts))] for i in range(len(pts))]
-        
+
     tab = [[-1 for j in range(len(pts))] for i in range(len(pts))]
-    
+
     def step(p, q, r):
         if q < 0 or r < 0:
             return
@@ -155,25 +157,25 @@ def maxKgon(pts): #Finds the largest rgon in pts in time O(n^3))
             return 2
         if tab[q][r] != -1:
             return tab[q][r]
-        
-        tab[q][r] = max(1+step(p, r, nextpt[r][q]) if pts[r] >= pts[p] else 0, 
+
+        tab[q][r] = max(1+step(p, r, nextpt[r][q]) if pts[r] >= pts[p] else 0,
                         step(p, q, allSorted[q][lkp[q,r]+1]) if lkp[q,r] < len(allSorted[q])-1 else 0)
         return tab[q][r]
-        
+
     for i in range(len(pts)):
-        tab = [[-1 for m in range(len(pts))] for n in range(len(pts))] 
+        tab = [[-1 for m in range(len(pts))] for n in range(len(pts))]
         for j in range(len(pts)):
             if i == j:
                 continue
             if pts[i] <= pts[j] and nextpt[j][i] != -1:
                 maxRgon = max(maxRgon, step(i, j, nextpt[j][i]))
-    
+
     return maxRgon
 
 def maxKgonN4(pts): #Finds the largest rgon in pts in time O(n^4))
     maxH = 0
     tab = [[-1 for j in range(len(pts))] for i in range(len(pts))]
-    
+
     def step(q, i, j): #Finds the largest rgon with q as left-most point and pts[i], pts[j] as last vertices, when sorted ccw beginning at q
         if tab[i][j] != -1: #already know the max
             return tab[i][j]
@@ -186,7 +188,7 @@ def maxKgonN4(pts): #Finds the largest rgon in pts in time O(n^4))
         if tab[i][j] == -1:
             tab[i][j] = 3
         return tab[i][j]
-        
+
     for i in range(len(pts)):
         q = pts[i] #left-most point of the rgon
         for m in range(len(pts)): #reset table
@@ -202,7 +204,7 @@ def maxKgonN4(pts): #Finds the largest rgon in pts in time O(n^4))
                     continue #both r and s are to the right of q and (q, r, s) form a left turn
                 maxH = max(step(q, j, k), maxH)
     return maxH
-    
+
 def naiveMaxKgon(pts): #Super naive function. Tries every combination of n points (starting with n=3) and checks if they are in convex position.
     maxH = 0
     s = []
