@@ -19,13 +19,13 @@
 
 """This is the original visualizer module extended to handle
    lines. In the future it will substitute the module visualizer"""
-from Tkinter import *
-from tkFileDialog import *
+from tkinter import *
+from tkinter.filedialog import *
 from fractions import *
 import os
-import line
-import geometricbasics
-import convexhull
+from . import line
+from . import geometricbasics
+from . import convexhull
 
 
 class Vis:
@@ -38,7 +38,7 @@ class Vis:
         self.paper=Canvas(self.root,background="white",
                           height=h,
                           width=w)
-        print self.paper['width'], self.paper['height']
+        print(self.paper['width'], self.paper['height'])
         
         self.points=points
         
@@ -47,7 +47,7 @@ class Vis:
         else:
             self.center=self.compute_center()
         
-        print "center",self.center
+        print("center",self.center)
             
         if zoom!=None:
             self.zoom=zoom

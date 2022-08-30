@@ -48,11 +48,11 @@ int pyPoint_CPoint(PyObject* py_p, Punto& p)
         return FAIL;
     }
 
-    p.x = PyInt_AsLong(PyList_GetItem(py_p, 0)); //Borrowed References
-    p.y = PyInt_AsLong(PyList_GetItem(py_p, 1)); //Borrowed References
+    p.x = PyLong_AsLong(PyList_GetItem(py_p, 0)); //Borrowed References
+    p.y = PyLong_AsLong(PyList_GetItem(py_p, 1)); //Borrowed References
     if(size_pt == 3)
     {
-        p.color = (int)PyInt_AsLong(PyList_GetItem(py_p, 2)); //Borrowed References
+        p.color = (int)PyLong_AsLong(PyList_GetItem(py_p, 2)); //Borrowed References
         p._has_color = true;
     }
 
@@ -76,19 +76,19 @@ PyObject* CPoint_PyPoint(Punto point)
 
     PyObject* py_point = PyList_New(n);
 
-    PyObject* coord = PyInt_FromLong(point.x);
+    PyObject* coord = PyLong_FromLong(point.x);
     if(PyList_SetItem(py_point, 0, coord) == -1) //Append increases reference count -- Changed to set item, which steals the reference
         return NULL;
     //Py_DECREF(coord);
 
-    coord = PyInt_FromLong(point.y);
+    coord = PyLong_FromLong(point.y);
     if(PyList_SetItem(py_point, 1, coord) == -1) //Append increases reference count
         return NULL;
     //Py_DECREF(coord);
 
     if(point._has_color)
     {
-        coord = PyInt_FromLong(point.color);
+        coord = PyLong_FromLong(point.color);
         if(PyList_SetItem(py_point, 2, coord) == -1) //Append increases reference count
             return NULL;
         Py_DECREF(coord);

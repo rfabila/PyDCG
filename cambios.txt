@@ -1,0 +1,65 @@
+gcc (GCC) 12.1.1 20220507 (Red Hat 12.1.1-1)
+g++ (GCC) 12.1.1 20220507 (Red Hat 12.1.1-1)
+Python 3.10.4
+
+
+############ falta modificar convexhull.py, crossing.py
+
+main modifications: print, import . , xrange for range
+
+weird modifications: 
+file: heuristics.py: 
+-	 rand_move(p,int(k_f.next()))
++        rand_move(p,int(next(k_f)))
+-        if P(vcurrent,vnew,T.next(),minimize=minimize):
++        if P(vcurrent,vnew,next(T),minimize=minimize):
+
+file: holes.py:
+-        idx_list=range(len(right_points))
++        idx_list=list(range(len(right_points)))
+-            idx_inc=range(len(incoming_vertices))
++            idx_inc=list(range(len(incoming_vertices)))
+-            idx=range(len(outgoing_vertices))
++            idx=list(range(len(outgoing_vertices)))
+-        idx_list=range(len(right_points))
++        idx_list=list(range(len(right_points)))
+-            idx_inc=range(len(incoming_vertices))
++            idx_inc=list(range(len(incoming_vertices)))
+-            idx = range(len(outgoing_vertices))
++            idx = list(range(len(outgoing_vertices)))
+
+file: kgons.py
+xrange for range 
+range() for list(range())
+
+file: ordertypes.py
+xrange for range
+
+file: pointExplorer.py
+Check lambda function
+xrange for range, raw_input for input, map() to list(map())
+-    for (p, pts) in sortedpoints.iteritems():
++    for (p, pts) in sortedpoints.items():
+-    inst = raw_input("Instruction: ")
++    inst = input("Instruction: ")
+-    weights = map(triangArea, triangs)
++    weights = list(map(triangArea, triangs))
+-    weights = map(lambda x : x/totalArea, weights)
++    weights = [x/totalArea for x in weights]
+
+file: points.py
+-        config=ConfigParser.RawConfigParser()
++        config=configparser.RawConfigParser()
+
+file: visualizer.py
+-from tkFileDialog import *
++from tkinter.filedialog import *
+
+file: visualizer2.py
+-from tkFileDialog import *
++from tkinter.filedialog import *
+
+FILES: count_crossing_wrapper.cpp, holesCPP_wrapper.cpp, geometricbasicsCpp_wrapper.cpp
+PyInt_AsLong to PyLong_AsLong
+PyInt_FromLong to PyLong_FromLong
+Py_InitModule3 to PyModule_Create

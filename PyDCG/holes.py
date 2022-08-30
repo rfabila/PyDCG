@@ -6,7 +6,7 @@
 #
 #    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation version 2. 
+#    the Free Software Foundation version 2.
 #
 #    This program is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,13 +18,13 @@
 #    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 from math import sqrt
-from geometricbasics import sort_around_point, turn
+from .geometricbasics import sort_around_point, turn
 from collections import deque
-import utilities
-from utilities import cppWrapper
+from . import utilities
+from .utilities import cppWrapper
 
 if utilities.__load_extensions:
-    import holesCpp
+    import PyDCG.holesCpp as holesCpp
 
 def count_four_islands(pts,colored=False):
     """Counts the number of four-islands in a point set."""
@@ -82,7 +82,7 @@ def count_emptymon_triangles_p(p,points):
                                 B=B+1
     B=B/3
     return (A,B)
-    
+
 def count_non_convex_four_islands_p(p,points,colored=False):
     """Counts the number of four islands containing p. CHECK, Maybe wrong"""
     G=visibility_graph_around_p(p,points)
@@ -111,7 +111,7 @@ def count_non_convex_four_islands_p(p,points,colored=False):
                                 elif (color==sorted_points[I[i]][2] and
                                         color==sorted_points[O[k]][2]):
                                     B=B+1
-        
+
     B=B/3
     return B
 
@@ -171,7 +171,7 @@ def pointInTriang(p, triang):
     sign3 = turn(triang[2],p,triang[0])
 
     #p esta en la frontera
-    if sign1==0 or sign2==0 or sign3==0: 
+    if sign1==0 or sign2==0 or sign3==0:
         return False
 
     if sign1 > 0:
@@ -191,7 +191,7 @@ def pointsInTriang(points,triang):
         if pointInTriang(p,triang):
             return True
     return False
-                     
+
 #cuenta el numero de triangulos
 #vacios en points (tiempo O(n^4))
 def slowcountemptyTriang(points):
@@ -216,18 +216,18 @@ def scale(p,r):
         q.append([int(round(v[0]*r)),
                      int(round(v[1]*r))])
     return q
-                    
+
 
 #regresa un arreglo de los puntos ordenados por angulo alrededor de x
 # en dos listas
 def orderandsplit(points):
-    
+
     orderedpoints = []
     for p in points:
         l=[]
         r=[]
         p1=[p[0],p[1]+1]
-        
+
         for x in points:
             if not p is x:
                 if turn(p,p1,x) > 0:
@@ -240,11 +240,11 @@ def orderandsplit(points):
                             l.append(x)
                         else:
                             r.append(x)
-                            
+
         l.sort(lambda v1,v2:turn(p,v1,v2))
         r.sort(lambda v1,v2:turn(p,v1,v2))
         orderedpoints.append([p,r,l])
-        
+
     return orderedpoints
 
 def sortpoints(pts):
@@ -255,10 +255,10 @@ def sortpoints(pts):
     return ptsordsplit
 
 def countEmptyTriangsVertex(rpoints):
-    
+
     triangs=0
     q=[]
-    
+
     #sacada verbatim(casi) de searching for empty convex polygons
     #Ojo agrego aristas cuando estan alineados los puntos
     def proceed(i,j):
@@ -266,29 +266,29 @@ def countEmptyTriangsVertex(rpoints):
         while q[i] and turn(rpoints[q[i][0]],rpoints[i],rpoints[j])<=0:
             tmp=tmp+proceed(q[i][0],j)
             q[i].pop(0)
-        
+
         q[j].append(i)
         return tmp+1
 
     for i in range(0,len(rpoints)):
         q.append([])
-    
+
     for i in range(0,len(rpoints)-1):
         triangs=triangs+proceed(i,i+1)
-        
+
     return triangs
 
 #@accelerate(holesCpp.countEmptyTriangs)
 def countEmptyTriangs_py(points):
-    
+
     ordpoints=orderandsplit(points)
     triangs=0
-    
+
     for i in range(0,len(points)):
         triangs=triangs+countEmptyTriangsVertex(ordpoints[i][1])
-    
+
     return triangs
-    
+
 def countEmptyTriangs(points, speedup=True):
     if utilities.__config['PURE_PYTHON'] or not speedup:
         return countEmptyTriangs_py(points)
@@ -302,8 +302,8 @@ def slow_count_empty_triangles_p(p,points):
     B=slow_count_empty_triangles_containing_p(p,points)
     A=count_empty_triangles_around_p(p,points)
     return (A,B)
-    
-#@accelerate_p(holesCpp.count_empty_triangles_p)    
+
+#@accelerate_p(holesCpp.count_empty_triangles_p)
 def count_empty_triangles_p_py(p,points):
     """Returns (A,B). Where A is the number of empty triangles.
         that contain p as a vertex and B the number of triangles
@@ -331,8 +331,8 @@ def count_empty_triangles_p_py(p,points):
                                 B=B+1
     B=B/3
     return (A,B)
-    
-    
+
+
 def count_empty_triangles_p(p, points, speedup=True):
     if utilities.__config['PURE_PYTHON'] or not speedup:
         return count_empty_triangles_p_py(p, points)
@@ -340,7 +340,7 @@ def count_empty_triangles_p(p, points, speedup=True):
         return holesCpp.count_empty_triangles_p(p, points)
     except OverflowError:
         return count_empty_triangles_p_py(p, points)
-    
+
 #@accelerate_p(holesCpp.report_empty_triangles_p)
 def report_empty_triangles_p_py(p,points):
     """Returns (A,B). Where A is a list with the empty triangles
@@ -364,7 +364,7 @@ def report_empty_triangles_p_py(p,points):
             if j < len(outgoing):
                 for k in range(j,len(outgoing)):
                     if (turn(p, sorted_points[incoming[i]],
-                             sorted_points[outgoing[k]]) >= 0 
+                             sorted_points[outgoing[k]]) >= 0
                         and
                         incoming[i] in G[outgoing[k]][1]):
                         t = sorted([incoming[i], q, outgoing[k]])
@@ -374,7 +374,7 @@ def report_empty_triangles_p_py(p,points):
         a,b,c = t
         B.append([sorted_points[a],sorted_points[b],sorted_points[c]])
     return (A,B)
-                      
+
 def report_empty_triangles_p(p, points, speedup=True):
     if utilities.__config['PURE_PYTHON'] or not speedup:
         return report_empty_triangles_p_py(p, points)
@@ -383,7 +383,7 @@ def report_empty_triangles_p(p, points, speedup=True):
     except OverflowError:
         return report_empty_triangles_p_py(p, points)
 
-    
+
 def count_empty_triangles_pb(p,points):
     """Returns (A,B). Where A is the number of empty triangles.
         that contain p as a vertex and B the number of triangles
@@ -398,8 +398,8 @@ def count_empty_triangles_pb(p,points):
         if turn(q,sorted_points[oedges[mid]],sorted_points[e])<0:
             return find(q,e,oedges,mid+1, end)
         return True
-        
-        
+
+
     G=visibility_graph_around_p(p,points)
     sorted_points=sort_around_point(p,points)
     A=0
@@ -420,12 +420,12 @@ def count_empty_triangles_pb(p,points):
                         B=B+1
     B=B/3
     return (A,B)
-                            
-                     
+
+
 def slow_count_empty_triangles_containing_p(p,points):
     """Counts the number of emptuy triangles in points
         that contain p in their interior."""
-        
+
     r=0
     for i in range(len(points)):
         for j in range(i+1,len(points)):
@@ -435,7 +435,7 @@ def slow_count_empty_triangles_containing_p(p,points):
                     if pointInTriang(p,t):
                         r=r+1
     return r
-                    
+
 
 def count_empty_triangles_around_p(p,points):
     """Counts the number of empty triangles of
@@ -463,20 +463,20 @@ def debug_count_empty_triangles_around_p(points):
     L=[]
     pt=points[0]
     for i in range(len(points)):
-        print "punto:",points[i]
+        print("punto:",points[i])
         pt=points[i]
         points[i]=points[0]
         points[0]=pt
         c=count_empty_triangles_around_p(points[0],points[1:])
         s=slow_count_empty_triangles_around_p(points[0],points[1:])
         if c!=s:
-            print "diff=",s-c          
+            print("diff=",s-c)
             L.append(points[0][:])
         pt=points[i]
         points[i]=points[0]
         points[0]=pt
     return L
-        
+
 
 def slow_count_empty_triangles_for_each_p(points):
     """Sums the the number of empty triangles
@@ -489,7 +489,7 @@ def slow_count_empty_triangles_for_each_p(points):
         points[0]=pt
         triangs=triangs+slow_count_empty_triangles_around_p(points[0],points[1:])
     return triangs
-        
+
 def slow_count_empty_triangles_around_p(p,points):
     triangs=0
     for i in range(len(points)):
@@ -501,7 +501,7 @@ def slow_count_empty_triangles_around_p(p,points):
 def visibility_graph_around_p(p,points,debug=False):
     """Computes the visibility of the point set
     around p. The point set must not include p."""
-    
+
     def proceed(i,j,first_pass):
         k=0
         while (k<len(Q[i]) and
@@ -517,14 +517,14 @@ def visibility_graph_around_p(p,points,debug=False):
         if not first_pass:
             vis_graph[j][0].append(i)
             vis_graph[i][1].append(j)
-         
+
     (sorted_points,l)=sort_around_point(p,points,join=False)
     limit=len(sorted_points)
-    
+
     sorted_points.extend(l)
     vis_graph=[[[],[]] for x in range(len(sorted_points))]
     Q=[[] for x in range(len(sorted_points))]
-    
+
     #We check wheter p is a convex_hull point point.
     for i in range(len(sorted_points)):
         if turn(p,sorted_points[i],
@@ -536,55 +536,55 @@ def visibility_graph_around_p(p,points,debug=False):
             for j in range(len(sorted_points)-1):
                 proceed(j,j+1,False)
             return vis_graph
-    
+
     for j in range(limit-1):
         proceed(j,j+1,True)
-    
+
     proceed(limit-1,limit,False)
-        
+
     for j in range(limit,len(sorted_points)-1):
         proceed(j,j+1,False)
-    
+
     vis_graph_temp=[vis_graph[x][1] for x in range(limit)]
 
 
-    
+
     if debug:
-        print "PRIMER COLA"
-    
+        print("PRIMER COLA")
+
         for x in range(len(sorted_points)):
-            print "cola de", x
+            print("cola de", x)
             for q in Q[x]:
-                print "cola:",q
-    
+                print("cola:",q)
+
     for i in range(limit):
         vis_graph[i][1]=[]
         Q[i]=[]
-    
+
     proceed(len(sorted_points)-1,0,False)
-    
+
     if debug:
-        print "SEGUNDA COLA"
-    
+        print("SEGUNDA COLA")
+
         for x in range(len(sorted_points)):
-            print "cola de", x
+            print("cola de", x)
             for q in Q[x]:
-                print "cola:",q
-    
+                print("cola:",q)
+
     for j in range(limit-1):
         if debug:
-            print j
+            print(j)
         proceed(j,j+1,False)
-    
+
     for i in range(limit):
         vis_graph[i][1].extend(vis_graph_temp[i])
-        
+
     return vis_graph
-        
+
 def VGp(p,points,debug=False):
     """Computes the visibility of the point set
     around p. The point set must not include p."""
-    
+
     def proceed(i,j,first_pass):
         k=0
         while (k<len(Q[i]) and
@@ -600,14 +600,14 @@ def VGp(p,points,debug=False):
         if not first_pass:
             vis_graph[j][0].append(i)
             vis_graph[i][1].append(j)
-         
+
     (sorted_points,l)=sort_around_point(p,points,join=False)
     limit=len(sorted_points)
-    
+
     sorted_points.extend(l)
     vis_graph=[[[],[]] for x in range(len(sorted_points))]
     Q=[[] for x in range(len(sorted_points))]
-    
+
     #We check wheter p is a convex_hull point point.
     for i in range(len(sorted_points)):
         if turn(p,sorted_points[i],
@@ -619,27 +619,27 @@ def VGp(p,points,debug=False):
             for j in range(len(sorted_points)-1):
                 proceed(j,j+1,False)
             return vis_graph
-    
-    for j in range(limit-1):   
+
+    for j in range(limit-1):
         proceed(j,j+1,True)
-        
+
     for j in range(limit-1,len(sorted_points)-1):
         proceed(j,j+1,False)
-    
+
     vis_graph_temp=[vis_graph[x][1] for x in range(limit)]
-   
+
     for i in range(limit):
         vis_graph[i][1]=[]
         Q[i]=[]
-    
+
     proceed(len(sorted_points)-1,0,False)
-        
+
     for j in range(limit-1):
         proceed(j,j+1,False)
-    
+
     for i in range(limit):
         vis_graph[i][1].extend(vis_graph_temp[i])
-        
+
     return vis_graph
 
 
@@ -647,14 +647,14 @@ def VGp(p,points,debug=False):
 def compute_visibility_graph(sorted_points):
     """Computes the visibility of every
         point as described in searching for empty convex polygons"""
-    
+
     #G are the visibity graphs
     G=[]
-    
+
     #assumes the points are already sorted
     #We sort the points by angle around each point
     #sorted_points=orderandsplit(points)
-    
+
     def proceed(i,j):
         while Q[i] and turn(right_points[Q[i][0]],
                                   right_points[i],
@@ -666,7 +666,7 @@ def compute_visibility_graph(sorted_points):
         #We add ij to the graph
         vis_graph[j][0].append(i)
         vis_graph[i][1].append(j)
-        
+
     for i in range(len(sorted_points)):
         right_points=sorted_points[i][1]
         vis_graph=[[[],[]] for x in range(len(right_points))]
@@ -674,15 +674,15 @@ def compute_visibility_graph(sorted_points):
         for j in range(len(right_points)-1):
             proceed(j,j+1)
         G.append(vis_graph)
-        
+
     return G
 
 #@accelerate(holesCpp.count_convex_rholes)
 def count_convex_rholes_py(points,r,mono=False):
     """Counts the number of rholes in points; as described
         in search for empty convex polygons"""
-     
-    total=0  
+
+    total=0
     sorted_points=orderandsplit(points)
     G=compute_visibility_graph(sorted_points)
     L_array=[]
@@ -690,14 +690,14 @@ def count_convex_rholes_py(points,r,mono=False):
     for p in range(len(points)):
         right_points=sorted_points[p][1]
         L={}
-        idx_list=range(len(right_points))
+        idx_list=list(range(len(right_points)))
         idx_list.reverse()
         for q in idx_list:
             outgoing_vertices=G[p][q][1]
             incoming_vertices=G[p][q][0]
             max=0
             l=len(outgoing_vertices)-1
-            idx_inc=range(len(incoming_vertices))
+            idx_inc=list(range(len(incoming_vertices)))
             idx_inc.reverse()
             for vi in idx_inc:
                 L[(incoming_vertices[vi],q)]=max+1
@@ -710,9 +710,9 @@ def count_convex_rholes_py(points,r,mono=False):
                     l=l-1
         L_array.append(L)
     #print L_array
-    
+
     #END OF MAX CHAIN
-        
+
     #We will implement using pythons native list
     #In later revisions we should use proper lists
     #Actually for the time being since we are only counting
@@ -728,15 +728,15 @@ def count_convex_rholes_py(points,r,mono=False):
         #If we follow the exposition of Searching for Empty Convex Polygons
         #here would the treat proceedure (the one after chains) start.
         for q in range(len(right_points)-1):
-          
+
             outgoing_vertices=G[p][q][1]
             incoming_vertices=G[p][q][0]
-            
-            idx=range(len(outgoing_vertices))
-            
+
+            idx=list(range(len(outgoing_vertices)))
+
             idx.sort(lambda x,y:L[(q,outgoing_vertices[y])]-L[q,outgoing_vertices[x]])
             outgoing_by_W=[outgoing_vertices[i] for i in idx]
-                
+
             for vo in outgoing_vertices:
                 if L[(q,vo)]>=r-2:
                     if mono:
@@ -749,20 +749,20 @@ def count_convex_rholes_py(points,r,mono=False):
                         C[(q,vo)]=[1]
                 else:
                     C[(q,vo)]=[]
-            
+
             m=0
             mprime=len(outgoing_vertices)
             for vi in incoming_vertices:
-                    
+
                 while (m <len(outgoing_vertices) and
                             turn(right_points[vi],
                                 right_points[q],
                                 right_points[outgoing_vertices[m]])==1):
-                        
+
                     outgoing_by_W.remove(outgoing_vertices[m])
                     mprime=mprime-1
                     m=m+1
-                    
+
                 for ch in C[(vi,q)]:
                     t=0
                     l=ch #this line is l:=LENGTH(ch) in Searchingfor
@@ -783,9 +783,9 @@ def count_convex_rholes_py(points,r,mono=False):
                             else:
                                 C[(q,outgoing_by_W[t])].append(chprime)
                         t=t+1
-                            
+
     return total
-    
+
 def count_convex_rholes(points, r, mono=False, speedup=True):
     if not utilities.__load_extensions or not speedup:
         return count_convex_rholes_py(points, r, mono)
@@ -807,7 +807,7 @@ def report_empty_triangles_py(points):
             for r in G[p][q][0]:
                 triangles.append([points[p],right_points[r],right_points[q]])
     return triangles
-                      
+
 def report_empty_triangles(points, speedup=True):
     if utilities.__config['PURE_PYTHON'] or not speedup:
         return report_empty_triangles_py(points)
@@ -815,11 +815,11 @@ def report_empty_triangles(points, speedup=True):
         return holesCpp.report_empty_triangles(points)
     except OverflowError:
         return report_empty_triangles_py(points)
-    
+
 def report_convex_rholes_py(points,r,mono=False):
     """Reports the number of rholes in points; as described
         in search for empty convex polygons"""
-     
+
     report = deque()
     sorted_points=orderandsplit(points)
     G=compute_visibility_graph(sorted_points)
@@ -828,14 +828,14 @@ def report_convex_rholes_py(points,r,mono=False):
     for p in range(len(points)):
         right_points=sorted_points[p][1]
         L={}
-        idx_list=range(len(right_points))
+        idx_list=list(range(len(right_points)))
         idx_list.reverse()
         for q in idx_list:
             outgoing_vertices=G[p][q][1]
             incoming_vertices=G[p][q][0]
             max=0
             l=len(outgoing_vertices)-1
-            idx_inc=range(len(incoming_vertices))
+            idx_inc=list(range(len(incoming_vertices)))
             idx_inc.reverse()
             for vi in idx_inc:
                 L[(incoming_vertices[vi],q)]=max+1
@@ -847,9 +847,9 @@ def report_convex_rholes_py(points,r,mono=False):
                         L[(incoming_vertices[vi],q)]=max+1
                     l=l-1
         L_array.append(L)
-    
+
     #END OF MAX CHAIN
-    
+
     for p in range(len(points)):
         if mono:
             color = points[p][2]
@@ -859,17 +859,17 @@ def report_convex_rholes_py(points,r,mono=False):
         C={}
         #If we follow the exposition of Searching for Empty Convex Polygons
         #here would be the treat proceedure (the one after chains) start.
-        
+
         for q in range(len(right_points)-1):
-          
+
             outgoing_vertices = G[p][q][1]
             incoming_vertices = G[p][q][0]
-            
-            idx = range(len(outgoing_vertices))
-            
+
+            idx = list(range(len(outgoing_vertices)))
+
             idx.sort(lambda x,y:L[(q,outgoing_vertices[y])]-L[q,outgoing_vertices[x]])
             outgoing_by_W = [outgoing_vertices[i] for i in idx]
-                
+
             for vo in outgoing_vertices:
                 if L[(q,vo)]>=r-2:
                     if mono:
@@ -881,23 +881,23 @@ def report_convex_rholes_py(points,r,mono=False):
                     else:
                         tmplist = [right_points[vo], right_points[q], points[p]]
                         C[(q,vo)]=[tmplist]
-                        
+
                 else:
                     C[(q,vo)]=[]
-            
+
             m = 0
             mprime = len(outgoing_vertices)
             for vi in incoming_vertices:
-                    
+
                 while (m <len(outgoing_vertices) and
                             turn(right_points[vi],
                                 right_points[q],
                                 right_points[outgoing_vertices[m]])==1):
-                        
+
                     outgoing_by_W.remove(outgoing_vertices[m])
                     mprime=mprime-1
                     m=m+1
-                    
+
                 for ch in C[(vi,q)]:
                     t=0
                     #l=ch #this line is l:=LENGTH(ch) in Searchingfor
@@ -925,7 +925,7 @@ def report_convex_rholes_py(points,r,mono=False):
                                 C[(q,outgoing_by_W[t])].append(chprime)
                         t=t+1
     return list(report)
-                      
+
 def report_convex_rholes(points, r, mono=False, speedup=True):
     if utilities.__config['PURE_PYTHON'] or not speedup:
         return report_convex_rholes_py(points, r, mono)
@@ -933,23 +933,23 @@ def report_convex_rholes(points, r, mono=False, speedup=True):
         return holesCpp.report_convex_rholes(points, r, mono)
     except OverflowError:
         return report_convex_rholes_py(points, r, mono)
-                
-                
-def count_rholes_maker(r,mono=False):      
+
+
+def count_rholes_maker(r,mono=False):
     def f(pts):
-        return count_convex_rholes(pts,r,mono=mono)        
+        return count_convex_rholes(pts,r,mono=mono)
     return f
 
-def report_rholes_maker(r,mono=False):      
+def report_rholes_maker(r,mono=False):
     def f(pts):
-        return report_convex_rholes(pts,r,mono=mono)        
+        return report_convex_rholes(pts,r,mono=mono)
     return f
-    
+
 def countEmptyMonoTriangsVertex(rpoints,color):
-    
+
     triangs=0
     q=[]
-    
+
     #sacada verbatim(casi) de searching for empty convex polygons
     #Ojo agrego aristas cuando estan alineados los puntos
     def proceed(i,j):
@@ -957,7 +957,7 @@ def countEmptyMonoTriangsVertex(rpoints,color):
         while q[i] and turn(rpoints[q[i][0]],rpoints[i],rpoints[j])<=0:
             tmp=tmp+proceed(q[i][0],j)
             q[i].pop(0)
-        
+
         q[j].append(i)
         if color == rpoints[i][2] and color == rpoints[j][2]:
             return tmp+1
@@ -965,20 +965,20 @@ def countEmptyMonoTriangsVertex(rpoints,color):
 
     for i in range(0,len(rpoints)):
         q.append([])
-    
+
     for i in range(0,len(rpoints)-1):
         triangs=triangs+proceed(i,i+1)
-        
+
     return triangs
-        
+
 def countEmptyMonoTriangs(points):
-    
+
     ordpoints=orderandsplit(points)
     triangs=0
-    
+
     for i in range(0,len(points)):
         triangs=triangs+countEmptyMonoTriangsVertex(ordpoints[i][1],points[i][2])
-    
+
     return triangs
 
 #funcion de tiempo O(n^3) para verificiar si un conjunto
@@ -1006,7 +1006,7 @@ def countEmptyMonoTriangs(points):
 #        for i in range(len(rpoints)-1):
 #            col=col+slow_generalposition([point, rpoints[i], rpoints[i+1]])
 #    return col
-    
+
 
 #Deberia mover esta funciona otro modulo
 #la he movido a pointsets la dejo porque
@@ -1014,24 +1014,24 @@ def countEmptyMonoTriangs(points):
 #def HortonSet(k):
 #    """construct the Horton set of 2^k vertices
 #        we follow Pavel Valtr's construction (and thus Hortons)"""
-#    
+#
 #    if k<=0:
 #        return [[0,0]]
-#    
+#
 #    if k==1:
 #        return [[0,0],[1,0]]
-#    
+#
 #    n=2**(k-1)
 #    dn=(3**n)-1
 #    previoushorton=HortonSet(k-1)
 #    newhorton=[]
-#    
+#
 #    for p in previoushorton:
 #        newhorton.append([2*p[0],p[1]])
 #        newhorton.append([2*p[0]+1,p[1]+dn])
 #
 #    return newhorton
-                              
+
 
 def slow_count_monoquad(points):
     """Counts in time n^5 the number of empty monochromatic cuadrilaterals."""
@@ -1059,17 +1059,17 @@ def slow_count_monoquad(points):
                                     convex=False
                                 if pointInTriang(points[l],[points[i],points[j],points[k]]):
                                     convex=False
-                            
+
                                 if convex and empty:
                                     quads=quads+1
-                                    print points[i],points[j],points[k],points[l]
+                                    print(points[i],points[j],points[k],points[l])
     return quads
-    
+
 ##TALLER DE OAXACA CAMBIAR A OTRO MODULO LO RESCATABLE
-    
-    
+
+
 def count_deg_triang_vertex(rpoints,degs,k,points):
-    
+
     #print degs
     triangs=0
     q=[]
@@ -1093,14 +1093,14 @@ def count_deg_triang_vertex(rpoints,degs,k,points):
 
     for i in range(0,len(rpoints)):
         q.append([])
-    
+
     for i in range(0,len(rpoints)-1):
         triangs=triangs+proceed(i,i+1,degs,k)
-        
+
     return triangs
-        
+
 def count_deg_triang(points):
-    
+
     ordpoints=orderandsplit(points)
     triangs=0
     degs=[]
@@ -1109,18 +1109,18 @@ def count_deg_triang(points):
         s=[0 for j in range(len(points))]
         #print s
         degs.append(s)
-    
+
     for i in range(0,len(points)):
         triangs=triangs+count_deg_triang_vertex(ordpoints[i][1],degs,i,points)
     for i in range(0,len(points)):
         for j in range(0,len(points)):
             if degs[i][j]> max:
                 max=degs[i][j]
-    
+
     return max
-  
+
 def count_deg_triang_degs(points):
-    
+
     ordpoints=orderandsplit(points)
     triangs=0
     degs=[]
@@ -1131,7 +1131,7 @@ def count_deg_triang_degs(points):
         s=[0 for j in range(len(points))]
         #print s
         degs.append(s)
-    
+
     for i in range(0,len(points)):
         triangs=triangs+count_deg_triang_vertex(ordpoints[i][1],degs,i,points)
     for i in range(0,len(points)):
@@ -1140,9 +1140,9 @@ def count_deg_triang_degs(points):
                 max=degs[i][j]
                 I=i
                 J=j
-    
+
     return (I,J)
-    
+
 
 def count_convex_rholes_maker(r, colored=False,speedup=True):
     def f(pts):
@@ -1162,13 +1162,13 @@ def count_convex_rholes_difference_maker(r,colored=False):
 def count_convex_rholes_difference(p,q,pts,r,colored=False):
     """Computes the change in the number of rholes when
        moving p to q in pts."""
-    
+
     n=len(pts)
     if colored:
         points_temp=[[0,0,0]for i in range(n-1)]
     else:
         points_temp=[[0,0]for i in range(n-1)]
-        
+
     k=0
     for j in range(n):
             if pts[j]!=p:
@@ -1176,7 +1176,7 @@ def count_convex_rholes_difference(p,q,pts,r,colored=False):
                 k+=1
     if r==3:
         (Ap,Bp)=count_empty_triangles_p(p,points_temp)
-        (Aq,Bq)=count_empty_triangles_p(q,points_temp)  
+        (Aq,Bq)=count_empty_triangles_p(q,points_temp)
     else:
         (Ap, Bp)=count_convex_rholes_p(p, points_temp, r, mono=colored)
         (Aq, Bq)=count_convex_rholes_p(q, points_temp, r, mono=colored)
@@ -1187,7 +1187,7 @@ def count_convex_rholes_difference(p,q,pts,r,colored=False):
 def count_convex_rholes_p_py(p, points, r, mono = False):
     '''
     Returns (A,B). Where A is the number of empty r-holes that contain p as
-    a vertex and B the number of r-holes that contain only contain p in 
+    a vertex and B the number of r-holes that contain only contain p in
     their interior.
     '''
     rA, rB = r, r+1
@@ -1203,38 +1203,38 @@ def count_convex_rholes_p_py(p, points, r, mono = False):
 
     for punto in lp:
         il.append(sorted_points.index(punto))
-    
-    indices=[]    
-    
+
+    indices=[]
+
     q = p[:]
     qp = p[:]
-    
+
     for i in reversed(ir):
         indices.append(i)
         if sorted_points[i][1] > q[1]:
             q[1]=sorted_points[i][1]
         if sorted_points[i][1] < qp[1]:
             qp[1]=sorted_points[i][1]
-            
+
     for i in reversed(il):
         indices.append(i)
         if sorted_points[i][1] > q[1]:
             q[1]=sorted_points[i][1]
         if sorted_points[i][1] < qp[1]:
             qp[1]=sorted_points[i][1]
-                    
+
     q[1]+=1
     qp[1]-=1
-    
+
     #MAX_CHAIN_1
-    VG=visibility_graph_around_p(p, points)    
+    VG=visibility_graph_around_p(p, points)
     #L contiene los pesos de cada arista
     L={}
-        
+
     for v in indices:
         inc=VG[v][0]
         out=VG[v][1]
-        
+
         pt=sorted_points[v]
         l=len(out)-1
         m=0
@@ -1243,24 +1243,24 @@ def count_convex_rholes_p_py(p, points, r, mono = False):
             #Checar si es arista prohibida
             if(turn(p, q, sorted_points[i]) != turn(p, q, sorted_points[v])) and \
             (turn(sorted_points[v], sorted_points[i], p) != turn(sorted_points[v], sorted_points[i], q)) and turn(p, q, sorted_points[v])!=0:
-                L[i, v]=0 
-            
+                L[i, v]=0
+
             while l>=0 and turn(sorted_points[i], pt, sorted_points[out[l]])<0:
                 if ((v, out[l]) in L) and L[v, out[l]]>m and L[i, v]>0:
                     m=L[v, out[l]]
                     L[i, v]=m+1
                 l-=1
     #END MAX_CHAIN_1
-    
+
     #REPORTING_1
     ChainsA={}
-    ChainsB={}    
-    
+    ChainsB={}
+
     for x in range(len(VG)):
         for v in VG[x][0]:
             ChainsA[v, x]=[]
             ChainsB[v, x]=[]
-            
+
     for v in reversed(indices):
         #Indice del punto que se esta tratando
         pt=sorted_points[v]
@@ -1277,10 +1277,10 @@ def count_convex_rholes_p_py(p, points, r, mono = False):
         So.extend(VG[v][1])
         Sop.extend(VG[v][1])
         Sop.sort(comp)
-        
+
         for out in So:
             if L[v, out]>=rA-2:
-                if mono:                
+                if mono:
                     if pt[2] == p[2] and sorted_points[out][2]==p[2]:
                         ChainsA[v, out].append([v, out])
                 else:
@@ -1291,12 +1291,12 @@ def count_convex_rholes_p_py(p, points, r, mono = False):
                         ChainsB[v, out].append([v, out])
                 else:
                     ChainsB[v, out].append([v, out])
-        
+
         #Para las cadenas de longitud r-2 con p como vertice:
-                
+
         m=0
         mp=len(So)-1
-        
+
         for inc in Si:
             while m<len(So) and turn(sorted_points[inc], sorted_points[v], sorted_points[So[m]])>0:
                 ind=Sop.index(So[m])
@@ -1329,16 +1329,16 @@ def count_convex_rholes_p_py(p, points, r, mono = False):
                         else:
                             ChainsA[v, Sop[t]].append(chp)
                     t+=1
-                    
+
         #Para las cadenas de longitud r-1 con p en su interior
-        
+
         m=0
         mp=len(So)-1
-        
+
         Sop=[]
         Sop.extend(So)
         Sop.sort(comp)
-        
+
         for inc in Si:
             while m<len(So) and turn(sorted_points[inc], sorted_points[v], sorted_points[So[m]])>0:
                 ind=Sop.index(So[m])
@@ -1357,7 +1357,7 @@ def count_convex_rholes_p_py(p, points, r, mono = False):
                         if turn(sorted_points[chp[-1]], sorted_points[chp[0]], p)<0 and \
                         (turn(sorted_points[chp[-2]], sorted_points[chp[-1]], sorted_points[chp[0]])<0 and \
                         turn(sorted_points[chp[-1]], sorted_points[chp[0]], sorted_points[chp[1]])<0) and \
-                        L.has_key((chp[-1], chp[0])):
+                        (chp[-1], chp[0]) in L:
                             if mono:
                                 if sorted_points[ch[0]][2]==sorted_points[Sop[t]][2]:
                                     #Se checa si forma un r-hoyo convexo con p en su interior
@@ -1374,12 +1374,12 @@ def count_convex_rholes_p_py(p, points, r, mono = False):
                         else:
                             ChainsB[v, Sop[t]].append(chp)
                     t+=1
-                    
+
     #END_REPORTING_1
-    
-    #Se vuelve a tratar a los puntos para encontrar cadenas 
+
+    #Se vuelve a tratar a los puntos para encontrar cadenas
     #omitidas al tomas como referencia a q.
-    
+
     def cruza_q(ch):
         for i in range(len(ch)-1):
             v1 = sorted_points[ch[i]]
@@ -1387,22 +1387,22 @@ def count_convex_rholes_p_py(p, points, r, mono = False):
             if (turn(v1, v2, q) != turn(v1, v2, p)) and (turn(p, q, v1) != turn(p, q, v2)) and turn(v2, p, q) != 0:
                 return True
         return False
-    
+
     indices=[]
-    
+
     for i in reversed(il):
         indices.append(i)
-        
+
     for i in reversed(ir):
         indices.append(i)
-    
+
     #MAX_CHAIN_2
     L={}
-        
+
     for v in indices:
         inc=VG[v][0]
         out=VG[v][1]
-        
+
         pt=sorted_points[v]
         l=len(out)-1
         m=0
@@ -1411,24 +1411,24 @@ def count_convex_rholes_p_py(p, points, r, mono = False):
             #Checar si es arista prohibida
             if(turn(p, qp, sorted_points[i]) != turn(p, qp, sorted_points[v])) and \
             (turn(sorted_points[v], sorted_points[i], p) != turn(sorted_points[v], sorted_points[i], qp)):
-                L[i, v]=0 
-            
+                L[i, v]=0
+
             while l>=0 and turn(sorted_points[i], pt, sorted_points[out[l]])<0:
                 if ((v, out[l]) in L) and L[v, out[l]]>m and L[i, v]>0:
                     m=L[v, out[l]]
                     L[i, v]=m+1
                 l-=1
     #END MAX_CHAIN_2
-    
+
     #REPORTING_2
     ChainsA={}
-    
+
     for x in range(len(VG)):
         for v in VG[x][0]:
             ChainsA[v, x]=[]
-            
+
     del comp
-            
+
     for v in reversed(indices):
         #Indice del punto que se esta tratando
         pt=sorted_points[v]
@@ -1445,7 +1445,7 @@ def count_convex_rholes_p_py(p, points, r, mono = False):
         So.extend(VG[v][1])
         Sop.extend(VG[v][1])
         Sop.sort(comp)
-        
+
         for out in So:
             ChainsA[v, out]=[]
             if L[v, out]>=rA-2:
@@ -1454,12 +1454,12 @@ def count_convex_rholes_p_py(p, points, r, mono = False):
                         ChainsA[v, out].append([v, out])
                 else:
                     ChainsA[v, out].append([v, out])
-        
+
         #Para las cadenas de longitud r-2 con p como vertice:
-                
+
         m=0
         mp=len(So)-1
-        
+
         for inc in Si:
             while m<len(So) and turn(sorted_points[inc], sorted_points[v], sorted_points[So[m]])>0:
                 ind=Sop.index(So[m])
@@ -1473,7 +1473,7 @@ def count_convex_rholes_p_py(p, points, r, mono = False):
                     chp=[]
                     chp.extend(ch)
                     chp.append(Sop[t])
-                    if l==rA-3: 
+                    if l==rA-3:
                         #CHECAR LAS ULTIMAS 2 CONDICIONES SON NECESARIAS
                         if turn(sorted_points[chp[-1]], p, sorted_points[chp[0]])<0 and \
                         cruza_q(chp) and \
@@ -1494,7 +1494,7 @@ def count_convex_rholes_p_py(p, points, r, mono = False):
                             ChainsA[v, Sop[t]].append(chp)
                     t+=1
     return resA, resB
-    
+
 def count_convex_rholes_p(p, points, r, mono=False, speedup=True):
     if utilities.__config['PURE_PYTHON'] or not speedup:
         return count_convex_rholes_p_py(p, points, r, mono)

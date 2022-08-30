@@ -75,12 +75,12 @@ PyObject* turn_wrapper(PyObject* self, PyObject* args, PyObject *keywds)
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!O!O!:turn", (char**)kwlist, &PyList_Type, &py_p, &PyList_Type, &py_q, &PyList_Type, &py_r))
         return NULL;
 
-    p[0] = PyInt_AsLong(PyList_GetItem(py_p, 0));
-	p[1] = PyInt_AsLong(PyList_GetItem(py_p, 1));
-	q[0] = PyInt_AsLong(PyList_GetItem(py_q, 0));
-	q[1] = PyInt_AsLong(PyList_GetItem(py_q, 1));
-	r[0] = PyInt_AsLong(PyList_GetItem(py_r, 0));
-	r[1] = PyInt_AsLong(PyList_GetItem(py_r, 1));
+    p[0] = PyLong_AsLong(PyList_GetItem(py_p, 0));
+	p[1] = PyLong_AsLong(PyList_GetItem(py_p, 1));
+	q[0] = PyLong_AsLong(PyList_GetItem(py_q, 0));
+	q[1] = PyLong_AsLong(PyList_GetItem(py_q, 1));
+	r[0] = PyLong_AsLong(PyList_GetItem(py_r, 0));
+	r[1] = PyLong_AsLong(PyList_GetItem(py_r, 1));
 
     if(PyErr_Occurred() != NULL)
         return (PyObject*)NULL;
@@ -146,13 +146,13 @@ PyObject* sort_around_point_wrapper(PyObject* self, PyObject* args, PyObject *ke
 
 	Py_ssize_t pts_size = PyList_Size(py_pts);
 
-	long long (**c_pts) = new long long* [pts_size];
+	long long **c_pts = new long long* [pts_size];
 	for(int i=0; i<pts_size; i++)
         c_pts[i] = new long long[2];
 	long long p[2];
 
-	p[0] = PyInt_AsLong(PyList_GetItem(py_p, 0));
-	p[1] = PyInt_AsLong(PyList_GetItem(py_p, 1));
+	p[0] = PyLong_AsLong(PyList_GetItem(py_p, 0));
+	p[1] = PyLong_AsLong(PyList_GetItem(py_p, 1));
 
 	if(abs(p[0]) > max_val || abs(p[1]) > max_val)
     {
@@ -163,8 +163,8 @@ PyObject* sort_around_point_wrapper(PyObject* self, PyObject* args, PyObject *ke
 	for(int i=0; i<pts_size; i++)
 	{
 		PyObject* temp = PyList_GetItem(py_pts, i); //Borrowed Reference
-		c_pts[i][0] = PyInt_AsLong(PyList_GetItem(temp, 0)); //Borrowed References
-		c_pts[i][1] = PyInt_AsLong(PyList_GetItem(temp, 1)); //Borrowed References
+		c_pts[i][0] = PyLong_AsLong(PyList_GetItem(temp, 0)); //Borrowed References
+		c_pts[i][1] = PyLong_AsLong(PyList_GetItem(temp, 1)); //Borrowed References
 		if(abs(c_pts[i][0]) > max_val || abs(c_pts[i][1]) > max_val)
         {
             PyErr_SetString(PyExc_OverflowError, max_val_error);
@@ -174,20 +174,25 @@ PyObject* sort_around_point_wrapper(PyObject* self, PyObject* args, PyObject *ke
     sort_around_point(p, c_pts, pts_size);
 
     if(PyErr_Occurred() != NULL)
-        return (PyObject*)NULL;
+        {
+            return (PyObject*)NULL;
+        }
 
 	PyObject* res = PyList_New(pts_size);
 
 	for(int i=0; i<pts_size; i++)
 	{
 		PyObject* temp = PyList_New(2); //New Reference
-		PyList_SetItem(temp, 0, PyInt_FromLong(c_pts[i][0])); //Steals Reference
-		PyList_SetItem(temp, 1, PyInt_FromLong(c_pts[i][1]));
+		PyList_SetItem(temp, 0, PyLong_FromLong(c_pts[i][0])); //Steals Reference
+		PyList_SetItem(temp, 1, PyLong_FromLong(c_pts[i][1]));
 		PyList_SetItem(res, i, temp);
 	}
 
     for(int i=0; i<pts_size; i++)
-        delete[] c_pts[i];
+        {
+            delete[] c_pts[i];
+        }
+
 	delete[] c_pts;
 
 	return res;
@@ -200,9 +205,30 @@ PyMethodDef geometricbasicsCppMethods[] =
     {NULL, NULL, 0, NULL}
 };
 
-extern "C" PyMODINIT_FUNC
-initgeometricbasicsCpp(void)
-{
-    (void) Py_InitModule3("geometricbasicsCpp", geometricbasicsCppMethods,
-                          "Extension written in C++ with basic geometric functions.");
-}
+#if PY_MAJOR_VERSION >= 3
+    static struct PyModuleDef moduledef3 = {
+        PyModuleDef_HEAD_INIT,
+        "geometricbasicsCpp",     /* m_name */
+        "Extension written in C++ with basic geometric functions.",  /* m_doc */
+        -1,                  /* m_size */
+        geometricbasicsCppMethods,    /* m_methods */
+        NULL,                /* m_reload */
+        NULL,                /* m_traverse */
+        NULL,                /* m_clear */
+        NULL,                /* m_free */
+    };
+
+    //extern "C" PyMODINIT_FUNC initgeometricbasicsCpp(void
+    extern "C" PyMODINIT_FUNC PyInit_geometricbasicsCpp(void)
+    {
+        //(void) PyModule_Create(&moduledef3);
+        return PyModule_Create(&moduledef3);
+    }
+#else
+    extern "C" PyMODINIT_FUNC
+    initgeometricbasicsCpp(void)
+    {
+        (void) Py_InitModule3("geometricbasicsCpp", geometricbasicsCppMethods,
+                              "Extension written in C++ with basic geometric functions.");
+    }
+#endif
