@@ -60,15 +60,15 @@ else:
 
 geometricbasicsCpp = Extension('PyDCG.geometricbasicsCpp',
                     sources = [sources_dir+"geometricbasicsCpp_wrapper.cpp", sources_dir+"geometricbasicsCpp.cpp"])
-geometricbasicsCpp.extra_compile_args = ['--std=c++0x', '-O3', arch]
+geometricbasicsCpp.extra_compile_args = ['-I/usr/include/python3.10','-lpython3.10','--std=c++0x', '-O3', arch]
 
 holesCpp = Extension('PyDCG.holesCpp',
                     sources = [sources_dir+"holesCPP_wrapper.cpp", sources_dir+"holesCPP.cpp", sources_dir+"geometricbasicsCpp.cpp"])
-holesCpp.extra_compile_args = ['--std=c++0x', '-O3', arch];
+holesCpp.extra_compile_args = ['-I/usr/include/python3.10','-lpython3.10','--std=c++0x', '-O3', arch];
 
 crossingCpp = Extension('PyDCG.crossingCpp',
                     sources = [sources_dir+"count_crossing_wrapper.cpp", sources_dir+"count_crossing.cpp", sources_dir+"geometricbasicsCpp.cpp"])
-crossingCpp.extra_compile_args = ['--std=c++0x', '-O3', arch];
+crossingCpp.extra_compile_args = ['-I/usr/include/python3.10','-lpython3.10','--std=c++0x', '-O3', arch];
 
 modules = []
 

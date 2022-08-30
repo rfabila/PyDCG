@@ -20,7 +20,7 @@
 """Module used to count the number of crossings in the complete
 geometric graph"""
 
-from PyDCG.geometricbasics import *
+import PyDCG.geometricbasics as geometricbasics
 #import geometricbasics
 import PyDCG.utilities as utilities
 
